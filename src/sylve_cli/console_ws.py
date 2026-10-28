@@ -310,11 +310,13 @@ def build_resize_frame(cols: int, rows: int) -> bytes:
     return encode_client_frame(CTRL_RESIZE + body, _OP_BINARY)
 
 
-def scan_detach_escape(data: bytes, at_line_start: bool) -> tuple[bytes, bool, bool]:
+def scan_detach_escape(data: bytes, at_line_start: bool) -> tuple[bytes, bool, bool, bytes]:
     """Filter SSH-style ``~.`` detach sequences after a newline or session start.
 
-    Returns ``(forwarded_bytes, new_at_line_start, detach_requested)``.
-    ``~~`` after a newline forwards a single ``~``.
+    Returns ``(forwarded_bytes, new_at_line_start, detach_requested, pending)``.
+    ``~~`` after a newline forwards a single ``~``. A trailing lone ``~`` is held
+    in ``pending`` and must be prepended to the next read: a raw terminal
+    delivers each keystroke separately, so ``~`` and ``.`` rarely arrive together.
     """
     out = bytearray()
     i = 0
@@ -322,21 +324,20 @@ def scan_detach_escape(data: bytes, at_line_start: bool) -> tuple[bytes, bool, b
     while i < n:
         byte = data[i]
         if at_line_start and byte == ord("~"):
-            if i + 1 < n:
-                nxt = data[i + 1]
-                if nxt == ord("."):
-                    return bytes(out), False, True
-                if nxt == ord("~"):
-                    out.append(ord("~"))
-                    at_line_start = False
-                    i += 2
-                    continue
-            else:
-                return bytes(out), True, False
+            if i + 1 == n:
+                return bytes(out), True, False, b"~"
+            nxt = data[i + 1]
+            if nxt == ord("."):
+                return bytes(out), False, True, b""
+            if nxt == ord("~"):
+                out.append(ord("~"))
+                at_line_start = False
+                i += 2
+                continue
         out.append(byte)
         at_line_start = byte in (0x0A, 0x0D)
         i += 1
-    return bytes(out), at_line_start, False
+    return bytes(out), at_line_start, False, b""
 
 
 def _send_terminal_size(sock: Any) -> None:
@@ -364,7 +365,7 @@ def attach_console(
 
     sock, buffer = _open_websocket(client, path, params, target_host)
     if banner:
-        err_console.print(f"[dim]{banner} (type Enter then ~. to detach)[/dim]")
+        err_console.print(f"[dim]{banner} (press Enter, then type ~. to detach)[/dim]")
 
     _send_terminal_size(sock)
     if takeover:
@@ -404,6 +405,7 @@ def attach_console(
         sel.register(stdin_fd, selectors.EVENT_READ)
 
     at_line_start = True
+    pending = b""
     try:
         while True:
             events = sel.select(timeout=1.0)
@@ -438,7 +440,9 @@ def attach_console(
                     raw = os.read(stdin_fd, 1024)
                     if not raw:
                         return
-                    forwarded, at_line_start, detach = scan_detach_escape(raw, at_line_start)
+                    forwarded, at_line_start, detach, pending = scan_detach_escape(
+                        pending + raw, at_line_start
+                    )
                     if forwarded:
                         sock.sendall(encode_client_frame(CTRL_INPUT + forwarded, _OP_BINARY))
                     if detach:

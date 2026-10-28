@@ -365,15 +365,26 @@ def test_console_ws_auth_and_protocol() -> None:
     err_401 = format_console_http_error(401, b"", "/info/terminal")
     assert "sylve login" in str(err_401)
 
-    fwd, at_bol, detach = scan_detach_escape(b"hello\r~.", True)
+    fwd, at_bol, detach, pending = scan_detach_escape(b"hello\r~.", True)
     assert fwd == b"hello\r"
     assert not at_bol
     assert detach is True
 
-    fwd2, at_bol2, detach2 = scan_detach_escape(b"~~abc\n", True)
+    fwd2, at_bol2, detach2, pending2 = scan_detach_escape(b"~~abc\n", True)
     assert fwd2 == b"~abc\n"
     assert at_bol2 is True
     assert detach2 is False
+    assert pending2 == b""
+
+    # Raw terminals deliver each keystroke separately: `~` then `.` must still detach.
+    fwd3, at_bol3, detach3, pending3 = scan_detach_escape(b"\r~", True)
+    assert fwd3 == b"\r"
+    assert detach3 is False
+    assert pending3 == b"~"
+    fwd4, _, detach4, pending4 = scan_detach_escape(pending3 + b".", at_bol3)
+    assert fwd4 == b""
+    assert detach4 is True
+    assert pending4 == b""
 
     # Server frame round-trip (unmasked binary frame from server)
     class _FakeSock:

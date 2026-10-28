@@ -87,7 +87,7 @@ and jail templates.
 - `NEW_NAME` (required for `rename`): new jail name.
 - `-n, --node NODE`: target node.
 - `-f, --format`, `-c, --column`: output options (`guest-info` only).
-- `console` attaches over WebSocket; type `Enter` then `~.` to detach.
+- `console` attaches over WebSocket. Press `Enter`, then type `~.` to detach.
 
 ### `jail snapshot`, `jail bootstrap`, and `jail template`
 

@@ -65,8 +65,8 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
   `-p, --param KEY=VALUE`, `-n, --node NODE`. Mints a short-lived `sse_token`
   automatically via `POST /auth/sse-tokens` and streams `/events/stream`.
 - `terminal`: `--kill-on-exit / --keep-alive` (default: `--kill-on-exit`),
-  `-n, --node NODE`. Opens an interactive host shell over WebSocket; type
-  `Enter` then `~.` to detach.
+  `-n, --node NODE`. Opens an interactive host shell over WebSocket. Press
+  `Enter`, then type `~.` to detach.
 - `notes-show ID`: `ID` (required), `-n, --node NODE`, `-f, --format`,
   `-c, --column`. Displays one host note without truncation.
 

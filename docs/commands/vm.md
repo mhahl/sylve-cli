@@ -188,7 +188,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `NEW_NAME` (required for `rename`): new VM name.
 - `--baudrate, -b N` (`console` only): serial baud rate (default: `115200`).
 - `--takeover / --observe` (`console` only): request input control or attach
-  read-only (default: `--takeover`). Type `Enter` then `~.` to detach. VNC
+  read-only (default: `--takeover`). Press `Enter`, then type `~.` to detach. VNC
   graphical consoles remain browser-only.
 - `-n, --node NODE`: target node.
 - `-f, --format`, `-c, --column`: output options (`guest-agent` only).
