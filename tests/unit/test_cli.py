@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -13,7 +14,7 @@ import pytest
 from typer.testing import CliRunner
 
 from sylve_cli.config import ContextConfig, SylveConfig, save_config
-from sylve_cli.main import app
+from sylve_cli.main import app, run
 
 runner = CliRunner()
 
@@ -214,3 +215,29 @@ def test_api_and_formatter_errors_exit_nonzero(cli_env: Path) -> None:
 
     bad_column = runner.invoke(app, ["jail", "list", "-c", "nope"])
     assert bad_column.exit_code == 1
+
+
+def test_run_without_login_prints_clean_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """No configured session must print a one-line error, not a traceback."""
+    monkeypatch.setenv("SYLVE_CONFIG", str(tmp_path / "missing.yaml"))
+    for var in ("SYLVE_SERVER", "SYLVE_TOKEN", "SYLVE_CONTEXT"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setattr(sys, "argv", ["sylve", "whoami"])
+    with pytest.raises(SystemExit) as exc_info:
+        run()
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Not logged in" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_yes_flag_only_on_destructive_generic_commands(cli_env: Path) -> None:
+    readonly = runner.invoke(app, ["task", "active", "--help"])
+    assert readonly.exit_code == 0
+    assert "--yes" not in readonly.stdout
+
+    destructive = runner.invoke(app, ["system", "notes-delete", "--help"])
+    assert destructive.exit_code == 0
+    assert "--yes" in destructive.stdout

@@ -43,6 +43,7 @@ app = typer.Typer(
     ),
     no_args_is_help=True,
     rich_markup_mode=None,
+    add_completion=False,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
@@ -168,7 +169,9 @@ def run() -> None:
     """Console script entry point with clean error reporting."""
     try:
         app()
-    except (FormatterError, SylveError) as exc:
+    except (FormatterError, SylveError, RuntimeError) as exc:
+        # RuntimeError covers "not logged in / unknown context" from config
+        # resolution, which must print as a one-line error, not a traceback.
         err_console.print(f"[bold red]Error:[/bold red] {exc}")
         raise SystemExit(1) from exc
 

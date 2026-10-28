@@ -191,6 +191,36 @@ def _path_for(template: str, args: list[str] | None) -> str:
     return re.sub(r"\{[^}]+\}", lambda _: next(values), template)
 
 
+def _execute_generic(
+    ctx: typer.Context,
+    method: str,
+    path: str,
+    args: list[str] | None,
+    data: str | None,
+    param: list[str] | None,
+    yes: bool,
+    node: str | None,
+    fmt: OutputFormat,
+    title: str,
+) -> None:
+    """Run one generic API request and print the result."""
+    state: CLIState = ctx.obj
+    target_path = _path_for(path, args)
+    destructive = method == "DELETE" or "delete" in path.lower()
+    if destructive and not yes and sys.stdin.isatty():
+        typer.confirm(f"Run destructive request {method} {target_path}?", abort=True)
+    with state.get_client(node_override=node) as client:
+        result = client.request(
+            method,
+            target_path,
+            params=_parse_params(param),
+            json_body=_parse_data(data),
+            node=node,
+            require_auth=path not in _PUBLIC_PATHS,
+        )
+    _print_result(result, fmt, title)
+
+
 def _add(
     app: typer.Typer,
     name: str,
@@ -204,6 +234,7 @@ def _add(
 ) -> None:
     title = description.split(".")[0]
     help_text = description if not args_help else f"{description} Arguments: {args_help}."
+    destructive = method == "DELETE" or "delete" in path.lower()
 
     if binary:
 
@@ -212,7 +243,10 @@ def _add(
             args: Annotated[
                 list[str] | None, typer.Argument(help="Path arguments in URL order.")
             ] = None,
-            param: Annotated[list[str] | None, typer.Option("--param", "-p")] = None,
+            param: Annotated[
+                list[str] | None,
+                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+            ] = None,
             output: Annotated[Path, typer.Option("--output", "-o")] = ...,  # type: ignore[assignment]
             node: NodeOption = None,
         ) -> None:
@@ -234,7 +268,10 @@ def _add(
                 Path,
                 typer.Option("--file", exists=True, dir_okay=False, readable=True),
             ] = ...,  # type: ignore[assignment]
-            param: Annotated[list[str] | None, typer.Option("--param", "-p")] = None,
+            param: Annotated[
+                list[str] | None,
+                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+            ] = None,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
         ) -> None:
@@ -248,6 +285,30 @@ def _add(
                 )
             _print_result(result, fmt, title)
 
+    elif destructive:
+
+        def command(  # type: ignore[misc]
+            ctx: typer.Context,
+            args: Annotated[
+                list[str] | None, typer.Argument(help="Path arguments in URL order.")
+            ] = None,
+            data: Annotated[
+                str | None,
+                typer.Option("--data", "-d", help="JSON/YAML body or @file."),
+            ] = None,
+            param: Annotated[
+                list[str] | None,
+                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+            ] = None,
+            yes: Annotated[
+                bool,
+                typer.Option("-y", "--yes", help="Skip confirmation prompt."),
+            ] = False,
+            node: NodeOption = None,
+            fmt: FormatOption = OutputFormat.table,
+        ) -> None:
+            _execute_generic(ctx, method, path, args, data, param, yes, node, fmt, title)
+
     else:
 
         def command(  # type: ignore[misc]
@@ -259,29 +320,14 @@ def _add(
                 str | None,
                 typer.Option("--data", "-d", help="JSON/YAML body or @file."),
             ] = None,
-            param: Annotated[list[str] | None, typer.Option("--param", "-p")] = None,
-            yes: Annotated[
-                bool,
-                typer.Option("-y", "--yes", help="Skip delete confirmation."),
-            ] = False,
+            param: Annotated[
+                list[str] | None,
+                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+            ] = None,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
         ) -> None:
-            state: CLIState = ctx.obj
-            target_path = _path_for(path, args)
-            destructive = method == "DELETE" or "delete" in path.lower()
-            if destructive and not yes and sys.stdin.isatty():
-                typer.confirm(f"Run destructive request {method} {target_path}?", abort=True)
-            with state.get_client(node_override=node) as client:
-                result = client.request(
-                    method,
-                    target_path,
-                    params=_parse_params(param),
-                    json_body=_parse_data(data),
-                    node=node,
-                    require_auth=path not in _PUBLIC_PATHS,
-                )
-            _print_result(result, fmt, title)
+            _execute_generic(ctx, method, path, args, data, param, False, node, fmt, title)
 
     command.__name__ = f"{app.info.name}_{name}".replace("-", "_")
     command.__doc__ = help_text
@@ -1181,8 +1227,20 @@ _add(
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
     (system_app, "init", "POST", "/basic/initialize", "Initialize Sylve."),
-    (system_app, "basic-settings", "GET", "/basic/settings", "Show basic Sylve settings."),
-    (system_app, "settings", "GET", "/system/basic-settings", "Show system basic settings."),
+    (
+        system_app,
+        "basic-settings",
+        "GET",
+        "/basic/settings",
+        "Show basic Sylve settings from /basic/settings.",
+    ),
+    (
+        system_app,
+        "settings",
+        "GET",
+        "/system/basic-settings",
+        "Show system basic settings from /system/basic-settings.",
+    ),
     (
         system_app,
         "settings-pools",

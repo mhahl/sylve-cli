@@ -126,7 +126,7 @@ def download_show(
     raise ResourceNotFoundError(f"Download '{identifier}' not found.")
 
 
-@download_app.command("create")
+@download_app.command("create", hidden=True)
 @download_app.command("start")
 def download_create(
     ctx: typer.Context,
