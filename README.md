@@ -139,6 +139,7 @@ sylve node list
 sylve vm list
 sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
 sylve jail list -f json
+sylve jail console 201     # interactive jail console; Enter then ~. to detach
 ```
 
 Run the development and test targets:
