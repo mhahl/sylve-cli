@@ -20,6 +20,7 @@ READ_CASES: list[tuple[tuple[str, ...], tuple[str, ...]]] = [
     (("cluster", "show", "-f", "json"), ()),
     (("cluster", "resources", "-f", "json"), ()),
     (("cluster", "note", "list", "-f", "json"), ()),
+    (("cluster", "note", "show", "$note", "-f", "json"), ("note",)),
     (("node", "list", "-f", "json"), ()),
     (("node", "drain", "$node", "--dry-run", "-f", "json"), ("node",)),
     (("node", "show", "-f", "json"), ()),

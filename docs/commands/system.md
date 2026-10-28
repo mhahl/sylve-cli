@@ -25,7 +25,7 @@ Most subcommands are generic API bindings whose request payloads are passed via
 | Category | Subcommands |
 |---|---|
 | Initialization & settings | `init`, `basic-settings` (from `/basic/settings`), `settings` (from `/system/basic-settings`), `settings-pools`, `service SERVICE` |
-| Host notes | `notes-list`, `notes-create`, `notes-update ID`, `notes-delete ID`, `notes-bulk-delete` |
+| Host notes | `notes-list`, `notes-show ID`, `notes-create`, `notes-update ID`, `notes-delete ID`, `notes-bulk-delete` |
 | Disks | `disk-list`, `disk-partition-delete PARTITION`, `disk-gpt-init DEVICE`, `disk-gpt-clear DEVICE`, `disk-partition-create DEVICE` |
 | SMART | `disk-smart-info`, `disk-smart-start`, `disk-smart-abort`, `disk-smart-schedules`, `disk-smart-schedule-create`, `disk-smart-schedule-update ID`, `disk-smart-schedule-delete ID` |
 | PCI passthrough | `pci-list`, `ppt-list`, `ppt-enable`, `ppt-import`, `ppt-prepare`, `ppt-disable ID` |
@@ -38,8 +38,8 @@ Most subcommands are generic API bindings whose request payloads are passed via
 
 ### Generic Subcommands
 
-All subcommands except `file-upload`, `file-download`, `cert-archive`, and
-`events` accept:
+All subcommands except `file-upload`, `file-download`, `cert-archive`,
+`events`, and `notes-show` accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
@@ -62,6 +62,8 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`, and
   `-p, --param KEY=VALUE`, `-n, --node NODE`.
 - `events`: `-p, --param KEY=VALUE`, `-n, --node NODE`. Streams raw server-sent
   events (`SSE`) to standard output until interrupted.
+- `notes-show ID`: `ID` (required), `-n, --node NODE`, `-f, --format`,
+  `-c, --column`. Displays one host note without truncation.
 
 ## EXIT STATUS
 
@@ -97,11 +99,12 @@ sylve system tunable-set \
   --format json
 ```
 
-Create, list, and delete host notes:
+Create, list, show, and delete host notes:
 
 ```sh
 sylve system notes-create --data '{"title":"Maintenance","content":"Disk replacement 22:00"}'
 sylve system notes-list -f json
+sylve system notes-show 3 -f json
 sylve system notes-delete 3 --yes
 ```
 

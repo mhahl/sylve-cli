@@ -19,7 +19,7 @@ from typing import Annotated, Any
 import typer
 import yaml
 
-from sylve_cli.client import SylveError
+from sylve_cli.client import ResourceNotFoundError, SylveError
 from sylve_cli.commands.backup import backup_event_app, job_app, target_app
 from sylve_cli.commands.cluster import cluster_app, cluster_note_app
 from sylve_cli.commands.download import download_app
@@ -44,7 +44,7 @@ from sylve_cli.formatter import (
     print_dict,
     print_list,
 )
-from sylve_cli.state import CLIState, FormatOption, NodeOption
+from sylve_cli.state import CLIState, ColumnsOption, FormatOption, NodeOption
 
 system_app = typer.Typer(
     name="system",
@@ -1425,6 +1425,27 @@ for spec in [  # type: ignore[assignment]
     (system_app, "health-http", "GET", "/health/http", "Run an HTTP health check."),
 ]:
     _add(*spec)
+
+
+@system_app.command("notes-show")
+def system_notes_show(
+    ctx: typer.Context,
+    note_id: Annotated[str, typer.Argument(help="Host note ID to display.")],
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+    columns: ColumnsOption = None,
+) -> None:
+    """Display full details of a host note."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        notes = client.get("/info/notes", node=node) or []
+    if isinstance(notes, list):
+        for note in notes:
+            if isinstance(note, dict) and str(note.get("id")) == note_id:
+                print_dict(note, fmt=fmt, selected_columns=columns, title=f"Host Note {note_id}")
+                return
+    raise ResourceNotFoundError(f"Host note '{note_id}' not found.")
+
 
 _add(
     system_app,

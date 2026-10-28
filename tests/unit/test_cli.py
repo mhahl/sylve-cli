@@ -117,6 +117,21 @@ def cli_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             )
         if path in ("/api/vm/simple", "/api/jail/simple"):
             return httpx.Response(200, json={"status": "success", "data": []})
+        if path in ("/api/cluster/notes", "/api/info/notes"):
+            return httpx.Response(
+                200,
+                json={
+                    "status": "success",
+                    "data": [
+                        {
+                            "id": 1,
+                            "title": "Maintenance",
+                            "content": "Disk replacement 22:00",
+                            "updatedAt": "2026-10-28T20:00:00Z",
+                        }
+                    ],
+                },
+            )
         if path == "/api/vm/999":
             return httpx.Response(
                 404,
@@ -241,3 +256,19 @@ def test_yes_flag_only_on_destructive_generic_commands(cli_env: Path) -> None:
     destructive = runner.invoke(app, ["system", "notes-delete", "--help"])
     assert destructive.exit_code == 0
     assert "--yes" in destructive.stdout
+
+
+def test_note_show_commands(cli_env: Path) -> None:
+    show = runner.invoke(app, ["cluster", "note", "show", "1", "-f", "json"])
+    assert show.exit_code == 0
+    assert json.loads(show.stdout)["content"] == "Disk replacement 22:00"
+
+    missing = runner.invoke(app, ["cluster", "note", "show", "9", "-f", "json"])
+    assert missing.exit_code == 1
+
+    host = runner.invoke(app, ["system", "notes-show", "1", "-f", "json"])
+    assert host.exit_code == 0
+    assert json.loads(host.stdout)["title"] == "Maintenance"
+
+    host_missing = runner.invoke(app, ["system", "notes-show", "9", "-f", "json"])
+    assert host_missing.exit_code == 1

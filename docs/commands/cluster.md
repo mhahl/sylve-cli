@@ -27,6 +27,7 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 | `join` | Join this node to an existing cluster |
 | `leave` | Remove this node from the cluster |
 | `note list` | List cluster notes |
+| `note show NOTE_ID` | Display full details of a cluster note |
 | `note create` | Create a cluster note |
 | `note delete NOTE_ID` | Delete a cluster note |
 | `note update ID`, `note bulk-delete`, `accept-join` | Generic API commands |
@@ -97,6 +98,15 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
   Select columns: `id`, `title`, `content`, `updatedAt`.
 - `--long`
   Add the `Content` column.
+
+### `cluster note show`
+
+- `NOTE_ID` (required)
+  Cluster note ID.
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
+- `-c, --column NAME`
+  Select fields.
 
 ### `cluster note create`
 
@@ -194,7 +204,7 @@ sylve cluster leave --no-retain-guests --force --yes
 # Node has left the cluster.
 ```
 
-Create, list, and delete a cluster note:
+Create, list, show, and delete a cluster note:
 
 ```sh
 sylve cluster note create --title "Maintenance" --content "node2 drains at 22:00"
@@ -213,6 +223,7 @@ Cluster Notes
 ```
 
 ```sh
+sylve cluster note show 1 -f json
 sylve cluster note delete 1
 # Deleted cluster note #1.
 ```

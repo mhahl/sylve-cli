@@ -6,6 +6,7 @@ from typing import Annotated, Any
 
 import typer
 
+from sylve_cli.client import ResourceNotFoundError
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
@@ -346,6 +347,27 @@ def cluster_note_list(
         selected_columns=columns,
         title="Cluster Notes",
     )
+
+
+@cluster_note_app.command("show")
+def cluster_note_show(
+    ctx: typer.Context,
+    note_id: Annotated[int, typer.Argument(help="Cluster note ID to display.")],
+    fmt: FormatOption = OutputFormat.table,
+    columns: ColumnsOption = None,
+) -> None:
+    """Display full details of a cluster note."""
+    state: CLIState = ctx.obj
+    with state.get_client() as client:
+        notes = client.get("/cluster/notes") or []
+    if isinstance(notes, list):
+        for note in notes:
+            if isinstance(note, dict) and int(note.get("id") or 0) == note_id:
+                print_dict(
+                    note, fmt=fmt, selected_columns=columns, title=f"Cluster Note #{note_id}"
+                )
+                return
+    raise ResourceNotFoundError(f"Cluster note #{note_id} not found.")
 
 
 @cluster_note_app.command("create")
