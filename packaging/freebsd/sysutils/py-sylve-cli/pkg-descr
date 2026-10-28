@@ -1,0 +1,7 @@
+sylve-cli provides a command-line interface (sylve) for managing Sylve
+FreeBSD virtualization clusters, Bhyve virtual machines, FreeBSD jails,
+ZFS storage pools and snapshots, network switches/firewalls, downloads,
+HA replication policies, cluster backups, and node draining.
+
+It supports multi-context CLI authentication with persistent session tokens
+and automatic cluster-wide request routing across all nodes.
