@@ -7,6 +7,7 @@ from typing import Annotated, Any
 import typer
 
 from sylve_cli.client import SylveClient, SylveError
+from sylve_cli.commands.vm_create import register_vm_create_commands
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
@@ -49,6 +50,7 @@ vm_template_app = typer.Typer(
 
 vm_app.add_typer(vm_snapshot_app, name="snapshot")
 vm_app.add_typer(vm_template_app, name="template")
+register_vm_create_commands(vm_app)
 
 
 def _run_vm_action(
@@ -182,11 +184,12 @@ def vm_show(
         data["state_name"] = format_vm_state(data.get("state"))
         data["node"] = host or client.context.hostname or "local"
         selected = {
-            part.strip().casefold()
-            for column in (columns or [])
-            for part in column.split(",")
+            part.strip().casefold() for column in (columns or []) for part in column.split(",")
         }
-        if fmt in (OutputFormat.table, OutputFormat.csv, OutputFormat.value) and "state" not in selected:
+        if (
+            fmt in (OutputFormat.table, OutputFormat.csv, OutputFormat.value)
+            and "state" not in selected
+        ):
             data.pop("state", None)
 
     print_dict(
@@ -226,7 +229,9 @@ def vm_stop(
 @vm_app.command("shutdown")
 def vm_shutdown(
     ctx: typer.Context,
-    vms: Annotated[list[str], typer.Argument(help="One or more VM RIDs or names to gracefully shut down.")],
+    vms: Annotated[
+        list[str], typer.Argument(help="One or more VM RIDs or names to gracefully shut down.")
+    ],
     node: NodeOption = None,
     wait: WaitOption = False,
 ) -> None:
@@ -253,10 +258,14 @@ def vm_reboot(
 def vm_migrate(
     ctx: typer.Context,
     vm: Annotated[str, typer.Argument(help="VM RID or name to migrate.")],
-    target: Annotated[str, typer.Option("--target", "-t", help="Target cluster node hostname or UUID.")],
+    target: Annotated[
+        str, typer.Option("--target", "-t", help="Target cluster node hostname or UUID.")
+    ],
     validate_only: Annotated[
         bool,
-        typer.Option("--validate-only", "--dry-run", help="Only run migration preflight validation."),
+        typer.Option(
+            "--validate-only", "--dry-run", help="Only run migration preflight validation."
+        ),
     ] = False,
     node: NodeOption = None,
     wait: WaitOption = True,
@@ -280,7 +289,9 @@ def vm_migrate(
             if isinstance(val_res, dict):
                 print_dict(val_res, title=f"VM {rid} Migration Preflight -> {target_host}")
             else:
-                console.print(f"[green]Migration preflight passed for VM {rid} -> {target_host}.[/green]")
+                console.print(
+                    f"[green]Migration preflight passed for VM {rid} -> {target_host}.[/green]"
+                )
             return
 
         resp = client.post(
@@ -310,7 +321,9 @@ def vm_delete(
     ] = True,
     delete_raw_disks: Annotated[
         bool,
-        typer.Option("--delete-raw-disks/--keep-raw-disks", help="Delete attached RAW disk images."),
+        typer.Option(
+            "--delete-raw-disks/--keep-raw-disks", help="Delete attached RAW disk images."
+        ),
     ] = True,
     delete_macs: Annotated[
         bool,
@@ -437,7 +450,9 @@ def vm_snapshot_create(
     ctx: typer.Context,
     vm: Annotated[str, typer.Argument(help="VM RID or name.")],
     name: Annotated[str, typer.Option("--name", "-m", help="Snapshot name.")],
-    description: Annotated[str, typer.Option("--description", "-d", help="Snapshot description.")] = "",
+    description: Annotated[
+        str, typer.Option("--description", "-d", help="Snapshot description.")
+    ] = "",
     node: NodeOption = None,
 ) -> None:
     """Create a crash-consistent ZFS snapshot for a virtual machine."""

@@ -29,13 +29,48 @@ network_app = typer.Typer(
     rich_markup_mode=None,
 )
 
-iface_app = typer.Typer(name="interface", help="Query host network interfaces and L3 addresses.", no_args_is_help=True, rich_markup_mode=None)
-switch_app = typer.Typer(name="switch", help="Query and manage standard and manual network switches.", no_args_is_help=True, rich_markup_mode=None)
-route_app = typer.Typer(name="route", help="Query and manage static routes.", no_args_is_help=True, rich_markup_mode=None)
-dhcp_app = typer.Typer(name="dhcp", help="Query and manage DHCP configuration, ranges, and leases.", no_args_is_help=True, rich_markup_mode=None)
-firewall_app = typer.Typer(name="firewall", help="Query PF firewall traffic rules, NAT rules, counters, and live logs.", no_args_is_help=True, rich_markup_mode=None)
-object_app = typer.Typer(name="object", help="Query and manage network/firewall alias objects.", no_args_is_help=True, rich_markup_mode=None)
-wg_app = typer.Typer(name="wireguard", help="Query WireGuard VPN server, peers, and outbound clients.", no_args_is_help=True, rich_markup_mode=None)
+iface_app = typer.Typer(
+    name="interface",
+    help="Query host network interfaces and L3 addresses.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+switch_app = typer.Typer(
+    name="switch",
+    help="Query and manage standard and manual network switches.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+route_app = typer.Typer(
+    name="route",
+    help="Query and manage static routes.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+dhcp_app = typer.Typer(
+    name="dhcp",
+    help="Query and manage DHCP configuration, ranges, and leases.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+firewall_app = typer.Typer(
+    name="firewall",
+    help="Query PF firewall traffic rules, NAT rules, counters, and live logs.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+object_app = typer.Typer(
+    name="object",
+    help="Query and manage network/firewall alias objects.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+wg_app = typer.Typer(
+    name="wireguard",
+    help="Query WireGuard VPN server, peers, and outbound clients.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
 
 network_app.add_typer(iface_app, name="interface")
 network_app.add_typer(switch_app, name="switch")
@@ -137,7 +172,11 @@ def iface_l3(
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         data = client.get("/network/interface/l3", node=node) or {}
-    if isinstance(data, dict) and isinstance(data.get("entries"), list) and fmt == OutputFormat.table:
+    if (
+        isinstance(data, dict)
+        and isinstance(data.get("entries"), list)
+        and fmt == OutputFormat.table
+    ):
         spec = [
             ColumnSpec("Interface", "name"),
             ColumnSpec("DHCP", "dhcp"),
@@ -145,7 +184,9 @@ def iface_l3(
             ColumnSpec("MTU", "mtu", justify="right"),
             ColumnSpec("Revision", "revision", justify="right"),
         ]
-        print_list(data["entries"], spec, fmt=fmt, selected_columns=columns, title="Host L3 Interfaces")
+        print_list(
+            data["entries"], spec, fmt=fmt, selected_columns=columns, title="Host L3 Interfaces"
+        )
     elif isinstance(data, dict):
         print_dict(data, fmt=fmt, selected_columns=columns, title="Host L3 Configuration")
     else:
@@ -177,8 +218,7 @@ def switch_list(
             if not isinstance(sw, dict):
                 continue
             ports = [
-                str(p.get("name") if isinstance(p, dict) else p)
-                for p in (sw.get("ports") or [])
+                str(p.get("name") if isinstance(p, dict) else p) for p in (sw.get("ports") or [])
             ]
             rows.append(
                 {
@@ -263,11 +303,15 @@ def switch_create_standard(
     vlan: Annotated[int, typer.Option("--vlan", help="VLAN tag.")] = 0,
     vlan_filtering: Annotated[
         bool,
-        typer.Option("--vlan-filtering/--no-vlan-filtering", help="Enable FreeBSD bridge VLAN filtering."),
+        typer.Option(
+            "--vlan-filtering/--no-vlan-filtering", help="Enable FreeBSD bridge VLAN filtering."
+        ),
     ] = False,
     default_access_vlan: Annotated[
         int,
-        typer.Option("--default-access-vlan", help="Default access VLAN when VLAN filtering is enabled."),
+        typer.Option(
+            "--default-access-vlan", help="Default access VLAN when VLAN filtering is enabled."
+        ),
     ] = 0,
     node: NodeOption = None,
 ) -> None:
@@ -292,7 +336,9 @@ def switch_create_standard(
 def switch_create_manual(
     ctx: typer.Context,
     name: Annotated[str, typer.Option("--name", help="Manual switch name.")],
-    bridge: Annotated[str, typer.Option("--bridge", help="Existing host bridge interface (e.g. bridge0).")],
+    bridge: Annotated[
+        str, typer.Option("--bridge", help="Existing host bridge interface (e.g. bridge0).")
+    ],
     node: NodeOption = None,
 ) -> None:
     """Register an existing host bridge as a manual switch."""
@@ -569,8 +615,12 @@ def firewall_nat_list(
 def firewall_logs(
     ctx: typer.Context,
     limit: Annotated[int, typer.Option("--limit", "-l", help="Max log entries.")] = 50,
-    action: Annotated[str | None, typer.Option("--action", help="Filter by action (pass/block).")] = None,
-    interface: Annotated[str | None, typer.Option("--interface", "-i", help="Filter by interface.")] = None,
+    action: Annotated[
+        str | None, typer.Option("--action", help="Filter by action (pass/block).")
+    ] = None,
+    interface: Annotated[
+        str | None, typer.Option("--interface", "-i", help="Filter by interface.")
+    ] = None,
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -583,7 +633,12 @@ def firewall_logs(
             params={"limit": limit, "action": action, "interface": interface},
             node=node,
         )
-    items = data.get("items") if isinstance(data, dict) and isinstance(data.get("items"), list) else (data if isinstance(data, list) else [])
+    raw_items: list[Any] = (
+        data["items"]
+        if isinstance(data, dict) and isinstance(data.get("items"), list)
+        else (data if isinstance(data, list) else [])
+    )
+    items = [item for item in raw_items if isinstance(item, dict)]
     spec = [
         ColumnSpec("Time", "timestamp"),
         ColumnSpec("Action", "action"),
@@ -645,8 +700,12 @@ def object_list(
 def object_create(
     ctx: typer.Context,
     name: Annotated[str, typer.Option("--name", help="Network object name.")],
-    obj_type: Annotated[str, typer.Option("--type", "-t", help="Object type (e.g. Host, Network, Port, Mac).")],
-    values: Annotated[list[str], typer.Option("--value", "-v", help="Object value(s) (repeatable).")],
+    obj_type: Annotated[
+        str, typer.Option("--type", "-t", help="Object type (e.g. Host, Network, Port, Mac).")
+    ],
+    values: Annotated[
+        list[str], typer.Option("--value", "-v", help="Object value(s) (repeatable).")
+    ],
     node: NodeOption = None,
 ) -> None:
     """Create a network object."""

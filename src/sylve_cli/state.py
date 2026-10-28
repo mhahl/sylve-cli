@@ -24,7 +24,21 @@ class CLIState:
     timeout: float = 30.0
 
     def get_client(self, node_override: str | None = None) -> SylveClient:
-        """Create an authenticated SylveClient from the active configuration context."""
+        """Create an authenticated client for the active context.
+
+        Args:
+            node_override: Optional node hostname or UUID for this client.
+
+        Returns:
+            SylveClient: Configured API client. Use it as a context manager.
+
+        Raises:
+            RuntimeError: If no usable context or environment credentials exist.
+
+        Example:
+            >>> with state.get_client() as client:
+            ...     client.get("/cluster")
+        """
         cfg = load_config(self.config_path)
         _, ctx = cfg.get_active_context(self.context_name)
         if self.insecure:

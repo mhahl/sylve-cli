@@ -1,0 +1,94 @@
+.TH SYLVE-CONFIG 5 "2026-10-28" "sylve-cli @VERSION@" "File Formats Manual"
+.SH NAME
+sylve-config \- configuration file format for sylve(1)
+.SH SYNOPSIS
+.I ~/.config/sylve/config.yaml
+.SH DESCRIPTION
+The configuration file is YAML. It stores named contexts and the active
+context. Each context contains the server URL and the session token.
+.PP
+The file is written with mode 0600. Keep it private.
+.SH FORMAT
+.nf
+current_context: prod
+
+contexts:
+  prod:
+    server: https://sylve.example.test
+    username: admin
+    auth_type: sylve
+    node_id: node-uuid
+    hostname: node1.example.test
+    token: eyJ...
+    expires_at: "2026-11-01T12:00:00Z"
+    verify_ssl: true
+    ca_cert: null
+    default_node: node1.example.test
+.fi
+.SH FIELDS
+.TP
+.B current_context
+Name of the context used when
+.B \-\-context
+is not supplied.
+.TP
+.B contexts
+Mapping of context names to context objects.
+.TP
+.B server
+Base URL of the Sylve API. The
+.I /api
+suffix is optional.
+.TP
+.B username
+Login name recorded for the context.
+.TP
+.B auth_type
+.I sylve
+or
+.IR pam .
+.TP
+.B token
+Bearer token. Prefer
+.B sylve login
+over editing this field manually.
+.TP
+.B expires_at
+Optional ISO-8601 token expiry. If omitted, the expiry is read from the JWT.
+.TP
+.B verify_ssl
+Set to false only for self-signed test systems.
+.TP
+.B ca_cert
+Optional path to a CA certificate.
+.TP
+.B default_node
+Optional default target node.
+.SH ENVIRONMENT OVERRIDES
+.TP
+.B SYLVE_SERVER
+Overrides the context server.
+.TP
+.B SYLVE_TOKEN
+Overrides the context token.
+.TP
+.B SYLVE_NODE
+Overrides the default node.
+.TP
+.B SYLVE_INSECURE
+Set to 1, true, or yes to disable TLS verification.
+.SH EXAMPLES
+.nf
+sylve login https://sylve.example.test -u admin
+sylve config get-contexts
+sylve config use-context prod
+sylve --context prod node list
+.fi
+.SH "SEE ALSO"
+.BR sylve (1)
+.SH NOTES
+Manpage source:
+.I docs/man/src/sylve-config.5.in
+.br
+Update the source when the CLI changes, then regenerate with:
+.B make man

@@ -67,7 +67,14 @@ class SylveClient:
         self._resources_cache: list[dict[str, Any]] | None = None
 
     def close(self) -> None:
-        """Close the underlying HTTPX client."""
+        """Close the underlying HTTPX client.
+
+        Returns:
+            None.
+
+        Example:
+            >>> client.close()
+        """
         self._http.close()
 
     def __enter__(self) -> SylveClient:  # noqa: PYI034
@@ -90,7 +97,18 @@ class SylveClient:
             )
 
     def resolve_node_hostname(self, node_identifier: str | None) -> str | None:
-        """Resolve a node hostname or UUID to its canonical hostname for X-Current-Hostname."""
+        """Resolve a node identifier to a canonical hostname.
+
+        Args:
+            node_identifier: Hostname, UUID, or None for the default node.
+
+        Returns:
+            str | None: Canonical hostname, or None for cluster-wide requests.
+
+        Example:
+            >>> client.resolve_node_hostname("node1.lan")
+            'node1.lan'
+        """
         target = node_identifier or self.node_override or self.context.default_node
         if not target:
             return None
@@ -112,7 +130,21 @@ class SylveClient:
         return target
 
     def resolve_node_uuid(self, node_identifier: str) -> tuple[str, str]:
-        """Resolve a node hostname or UUID into (nodeUUID, hostname)."""
+        """Resolve a node identifier to ``(nodeUUID, hostname)``.
+
+        Args:
+            node_identifier: Hostname or UUID.
+
+        Returns:
+            tuple[str, str]: Node UUID and hostname.
+
+        Raises:
+            ResourceNotFoundError: If the node is not in the cluster.
+
+        Example:
+            >>> client.resolve_node_uuid("node1.lan")
+            ('uuid-1', 'node1.lan')
+        """
         target = node_identifier.strip()
         nodes = self.get_cluster_nodes()
         for n in nodes:
@@ -137,14 +169,39 @@ class SylveClient:
         node: str | None = None,
         require_auth: bool = True,
         unwrap_data: bool = True,
+        resolve_node: bool = True,
     ) -> Any:
-        """Send an HTTP request to the Sylve API and unwrap the APIResponse envelope."""
+        """Send an HTTP request and unwrap the APIResponse envelope.
+
+        Args:
+            method: HTTP method.
+            path: API path, without the ``/api`` prefix.
+            params: Optional query parameters.
+            json_body: Optional JSON request body.
+            files: Optional multipart files.
+            headers: Extra request headers.
+            node: Target node hostname or UUID.
+            require_auth: Send the bearer token and resolve node routing.
+            unwrap_data: Return the ``data`` member of an APIResponse.
+            resolve_node: Resolve the target node header before sending.
+
+        Returns:
+            Any: Unwrapped response data, or the full response when not unwrapped.
+
+        Raises:
+            SessionExpiredError: If authentication is missing or rejected.
+            SylveAPIError: If the API returns an error status or payload.
+            SylveError: If the connection fails.
+
+        Example:
+            >>> client.request("GET", "/cluster")
+        """
         req_headers: dict[str, str] = {"Accept": "application/json"}
         if require_auth:
             self._ensure_valid_token()
             req_headers["Authorization"] = f"Bearer {self.context.token}"
 
-        resolved_host = self.resolve_node_hostname(node) if require_auth else None
+        resolved_host = self.resolve_node_hostname(node) if require_auth and resolve_node else None
         if resolved_host:
             req_headers["X-Current-Hostname"] = resolved_host
 
@@ -243,6 +300,89 @@ class SylveClient:
             unwrap_data=unwrap_data,
         )
 
+    def download_file(
+        self,
+        path: str,
+        destination: Path,
+        *,
+        params: dict[str, Any] | None = None,
+        node: str | None = None,
+    ) -> Path:
+        """Stream a binary response to a local file.
+
+        Args:
+            path: API path.
+            destination: Local file to write.
+            params: Optional query parameters.
+            node: Target node hostname or UUID.
+
+        Returns:
+            Path: The written file.
+
+        Raises:
+            SylveError: If the request fails.
+
+        Example:
+            >>> client.download_file("/certificates/1/archive", Path("cert.zip"))
+        """
+        self._ensure_valid_token()
+        headers = {"Accept": "*/*", "Authorization": f"Bearer {self.context.token}"}
+        resolved_host = self.resolve_node_hostname(node)
+        if resolved_host:
+            headers["X-Current-Hostname"] = resolved_host
+        clean_params = {k: v for k, v in (params or {}).items() if v is not None}
+        target = destination.expanduser()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with self._http.stream(
+            "GET", path, params=clean_params or None, headers=headers
+        ) as response:
+            if response.status_code >= 400:
+                raise SylveError(f"HTTP {response.status_code} downloading {path}.")
+            with target.open("wb") as handle:
+                for chunk in response.iter_bytes():
+                    handle.write(chunk)
+        return target
+
+    def stream_lines(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        node: str | None = None,
+    ) -> Any:
+        """Yield server-sent event lines from a streaming endpoint.
+
+        Args:
+            path: API path.
+            params: Optional query parameters.
+            node: Target node hostname or UUID.
+
+        Yields:
+            str: One line from the event stream.
+
+        Raises:
+            SylveError: If the request fails.
+
+        Example:
+            >>> for line in client.stream_lines("/events/stream"):
+            ...     print(line)
+        """
+        self._ensure_valid_token()
+        headers = {
+            "Accept": "text/event-stream",
+            "Authorization": f"Bearer {self.context.token}",
+        }
+        resolved_host = self.resolve_node_hostname(node)
+        if resolved_host:
+            headers["X-Current-Hostname"] = resolved_host
+        clean_params = {k: v for k, v in (params or {}).items() if v is not None}
+        with self._http.stream(
+            "GET", path, params=clean_params or None, headers=headers
+        ) as response:
+            if response.status_code >= 400:
+                raise SylveError(f"HTTP {response.status_code} streaming {path}.")
+            yield from response.iter_lines()
+
     def put(
         self,
         path: str,
@@ -307,7 +447,24 @@ class SylveClient:
         auth_type: str = "sylve",
         remember: bool = True,
     ) -> ContextConfig:
-        """Authenticate via POST /api/auth/login and return an updated ContextConfig."""
+        """Authenticate and update the saved context.
+
+        Args:
+            username: Login name.
+            password: Login password.
+            auth_type: ``sylve`` or ``pam``.
+            remember: Request a long-lived token.
+
+        Returns:
+            ContextConfig: Updated token and node metadata.
+
+        Raises:
+            SylveAPIError: If authentication fails.
+            SylveError: If the request fails.
+
+        Example:
+            >>> client.login("admin", "secret")
+        """
         data = self.request(
             "POST",
             "/auth/login",
@@ -332,7 +489,14 @@ class SylveClient:
         return self.context
 
     def logout(self) -> None:
-        """Revoke the active token on the server if still valid."""
+        """Revoke the active token when it is still valid.
+
+        Returns:
+            None.
+
+        Example:
+            >>> client.logout()
+        """
         if self.context.token and not self.context.is_token_expired():
             try:
                 self.post("/auth/logout")
@@ -343,13 +507,23 @@ class SylveClient:
     # Cluster & Multi-Node Discovery
     # ------------------------------------------------------------------
     def get_cluster_nodes(self, refresh: bool = False) -> list[dict[str, Any]]:
-        """Return all cluster nodes, falling back to local node info on standalone hosts."""
+        """Return cluster nodes, falling back to local node information.
+
+        Args:
+            refresh: Ignore the in-process cache.
+
+        Returns:
+            list[dict[str, Any]]: Node records.
+
+        Example:
+            >>> client.get_cluster_nodes()
+        """
         if self._nodes_cache is not None and not refresh:
             return self._nodes_cache
 
         nodes: list[dict[str, Any]] = []
         try:
-            raw = self.request("GET", "/cluster/nodes", node=None)
+            raw = self.request("GET", "/cluster/nodes", node=None, resolve_node=False)
             if isinstance(raw, list):
                 nodes = [n for n in raw if isinstance(n, dict)]
         except SylveError:
@@ -357,12 +531,14 @@ class SylveClient:
 
         if not nodes:
             try:
-                info = self.request("GET", "/info/node", node=None)
+                info = self.request("GET", "/info/node", node=None, resolve_node=False)
                 if isinstance(info, dict):
                     nodes = [
                         {
                             "nodeUUID": self.context.node_id or "local",
-                            "hostname": info.get("hostname") or self.context.hostname or "localhost",
+                            "hostname": info.get("hostname")
+                            or self.context.hostname
+                            or "localhost",
                             "status": "online",
                             "cpu": info.get("logicalCores") or 0,
                             "cpuUsage": info.get("cpuUsage") or 0.0,
@@ -389,17 +565,33 @@ class SylveClient:
         return nodes
 
     def get_online_nodes(self, refresh: bool = False) -> list[dict[str, Any]]:
-        """Return all online cluster nodes."""
+        """Return online cluster nodes.
+
+        Args:
+            refresh: Ignore the in-process cache.
+
+        Returns:
+            list[dict[str, Any]]: Online node records.
+
+        Example:
+            >>> client.get_online_nodes()
+        """
         nodes = self.get_cluster_nodes(refresh=refresh)
-        online = [
-            n
-            for n in nodes
-            if str(n.get("status") or "online").strip().lower() == "online"
-        ]
+        online = [n for n in nodes if str(n.get("status") or "online").strip().lower() == "online"]
         return online or nodes
 
     def get_cluster_resources(self, refresh: bool = False) -> list[dict[str, Any]]:
-        """Return per-node resources (VMs, Jails, Templates) across the cluster."""
+        """Return per-node VM, Jail, and template resources.
+
+        Args:
+            refresh: Ignore the in-process cache.
+
+        Returns:
+            list[dict[str, Any]]: Per-node resource records.
+
+        Example:
+            >>> client.get_cluster_resources()
+        """
         if self._resources_cache is not None and not refresh:
             return self._resources_cache
 
@@ -452,7 +644,19 @@ class SylveClient:
         params: dict[str, Any] | None = None,
         node: str | None = None,
     ) -> list[tuple[str, Any]]:
-        """Execute a GET request across a single target node or all online cluster nodes."""
+        """Execute a GET request across one node or all online nodes.
+
+        Args:
+            path: API path.
+            params: Optional query parameters.
+            node: Optional target node.
+
+        Returns:
+            list[tuple[str, Any]]: ``(hostname, response)`` pairs.
+
+        Example:
+            >>> client.fan_out_get("/vm/simple")
+        """
         target = self.resolve_node_hostname(node)
         if target:
             data = self.get(path, params=params, node=target)
@@ -497,7 +701,22 @@ class SylveClient:
         identifier: str | int,
         node: str | None = None,
     ) -> tuple[int, str, dict[str, Any]]:
-        """Resolve a VM by RID or Name to (rid, node_hostname, vm_summary)."""
+        """Resolve a VM by RID or name.
+
+        Args:
+            identifier: Numeric RID or VM name.
+            node: Optional node filter.
+
+        Returns:
+            tuple[int, str, dict[str, Any]]: RID, hostname, and summary.
+
+        Raises:
+            ResourceNotFoundError: If no VM matches.
+            SylveError: If multiple VMs match.
+
+        Example:
+            >>> client.resolve_vm("web-01")
+        """
         ident_str = str(identifier).strip()
         is_numeric = ident_str.isdigit()
         target_host = self.resolve_node_hostname(node)
@@ -513,8 +732,7 @@ class SylveClient:
                 rid = vm.get("rid")
                 name = str(vm.get("name") or "")
                 if (
-                    (is_numeric and str(rid) == ident_str)
-                    or (name.lower() == ident_str.lower())
+                    (is_numeric and str(rid) == ident_str) or (name.lower() == ident_str.lower())
                 ) and rid is not None:
                     matches.append((int(rid), host, vm))
 
@@ -556,7 +774,22 @@ class SylveClient:
         identifier: str | int,
         node: str | None = None,
     ) -> tuple[int, str, dict[str, Any]]:
-        """Resolve a Jail by CTID or Name to (ctid, node_hostname, jail_summary)."""
+        """Resolve a Jail by CTID or name.
+
+        Args:
+            identifier: Numeric CTID or Jail name.
+            node: Optional node filter.
+
+        Returns:
+            tuple[int, str, dict[str, Any]]: CTID, hostname, and summary.
+
+        Raises:
+            ResourceNotFoundError: If no Jail matches.
+            SylveError: If multiple Jails match.
+
+        Example:
+            >>> client.resolve_jail("app")
+        """
         ident_str = str(identifier).strip()
         is_numeric = ident_str.isdigit()
         target_host = self.resolve_node_hostname(node)
@@ -572,8 +805,7 @@ class SylveClient:
                 ctid = jail.get("ctId")
                 name = str(jail.get("name") or "")
                 if (
-                    (is_numeric and str(ctid) == ident_str)
-                    or (name.lower() == ident_str.lower())
+                    (is_numeric and str(ctid) == ident_str) or (name.lower() == ident_str.lower())
                 ) and ctid is not None:
                     matches.append((int(ctid), host, jail))
 

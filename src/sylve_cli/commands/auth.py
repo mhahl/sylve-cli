@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 from urllib.parse import urlparse
 
 import typer
@@ -100,7 +100,7 @@ def login_command(
     raw_server = server or (existing_ctx.server if existing_ctx else None)
     if not raw_server:
         raw_server = typer.prompt("Server URL (e.g. https://sylve.lan:8181)")
-    norm_server = normalize_server_url(raw_server)
+    norm_server = normalize_server_url(str(raw_server))
 
     verify_ssl = not (insecure or state.insecure)
 
@@ -127,10 +127,10 @@ def login_command(
                 pass
         updated_ctx = temp_ctx
     else:
-        resolved_user = username or (existing_ctx.username if existing_ctx else None)
+        resolved_user = str(username or (existing_ctx.username if existing_ctx else "")).strip()
         if not resolved_user:
             resolved_user = typer.prompt("Username")
-        resolved_pass = password
+        resolved_pass = str(password or "").strip()
         if not resolved_pass:
             resolved_pass = typer.prompt("Password", hide_input=True)
 
@@ -164,7 +164,9 @@ def login_command(
         f"as [bold]{updated_ctx.username}[/bold] ({updated_ctx.auth_type})."
     )
     if updated_ctx.hostname:
-        console.print(f"Connected node: [cyan]{updated_ctx.hostname}[/cyan] ({updated_ctx.node_id or 'local'})")
+        console.print(
+            f"Connected node: [cyan]{updated_ctx.hostname}[/cyan] ({updated_ctx.node_id or 'local'})"
+        )
     if updated_ctx.expires_at:
         console.print(
             f"Session token valid until [bold]{updated_ctx.expires_at}[/bold] "
@@ -187,7 +189,9 @@ def logout_command(ctx: typer.Context) -> None:
         cfg.contexts[ctx_name].expires_at = None
         save_config(cfg, state.config_path)
 
-    console.print(f"[green]Logged out[/green] of context [bold]{ctx_name}[/bold] ({active_ctx.server}).")
+    console.print(
+        f"[green]Logged out[/green] of context [bold]{ctx_name}[/bold] ({active_ctx.server})."
+    )
 
 
 def whoami_command(
@@ -201,7 +205,9 @@ def whoami_command(
     ctx_name, active_ctx = cfg.get_active_context(state.context_name)
 
     payload = decode_jwt_payload(active_ctx.token)
-    custom = payload.get("custom_claims") if isinstance(payload.get("custom_claims"), dict) else {}
+    custom: dict[str, Any] = (
+        payload["custom_claims"] if isinstance(payload.get("custom_claims"), dict) else {}
+    )
 
     info: dict[str, object] = {
         "context": ctx_name,
@@ -214,7 +220,9 @@ def whoami_command(
         "default_node": active_ctx.default_node or "(all/origin)",
         "verify_ssl": active_ctx.verify_ssl,
         "expires_at": active_ctx.expires_at or extract_token_expiry(active_ctx.token) or "unknown",
-        "token_status": "EXPIRED" if active_ctx.is_token_expired() else f"VALID ({active_ctx.format_remaining()} remaining)",
+        "token_status": "EXPIRED"
+        if active_ctx.is_token_expired()
+        else f"VALID ({active_ctx.format_remaining()} remaining)",
     }
 
     if fmt == OutputFormat.value and not columns:
@@ -236,7 +244,7 @@ def config_view(
     """Display the current CLI configuration."""
     state: CLIState = ctx.obj
     cfg = load_config(state.config_path)
-    data = {
+    data: dict[str, Any] = {
         "config_file": str(state.config_path or get_default_config_path()),
         "current_context": cfg.current_context,
         "contexts": {},
@@ -331,9 +339,13 @@ def config_set_node(
     cfg.contexts[ctx_name].default_node = cleaned
     save_config(cfg, state.config_path)
     if cleaned:
-        console.print(f"Default node for context [bold]{ctx_name}[/bold] set to [cyan]{cleaned}[/cyan].")
+        console.print(
+            f"Default node for context [bold]{ctx_name}[/bold] set to [cyan]{cleaned}[/cyan]."
+        )
     else:
-        console.print(f"Cleared default node for context [bold]{ctx_name}[/bold] (operating cluster-wide).")
+        console.print(
+            f"Cleared default node for context [bold]{ctx_name}[/bold] (operating cluster-wide)."
+        )
 
 
 @config_app.command("delete-context")

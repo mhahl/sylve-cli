@@ -64,8 +64,7 @@ def _select_least_loaded_node(
     return min(
         candidates,
         key=lambda n: (
-            float(n.get("memoryUsage") or 0.0) * 0.7
-            + float(n.get("cpuUsage") or 0.0) * 0.3,
+            float(n.get("memoryUsage") or 0.0) * 0.7 + float(n.get("cpuUsage") or 0.0) * 0.3,
             len(n.get("guestIDs") or []),
         ),
     )
@@ -409,7 +408,9 @@ def node_list(
             ColumnSpec("RAM%", "memoryUsage", formatter=format_percent, justify="right"),
             ColumnSpec("Disk", "disk", formatter=format_bytes, justify="right"),
             ColumnSpec("Disk%", "diskUsage", formatter=format_percent, justify="right"),
-            ColumnSpec("Guests", "guestIDs", formatter=lambda g: str(len(g or [])), justify="right"),
+            ColumnSpec(
+                "Guests", "guestIDs", formatter=lambda g: str(len(g or [])), justify="right"
+            ),
             ColumnSpec("Version", "sylveVersion"),
         ]
     print_list(
@@ -437,10 +438,10 @@ def node_show(
     with state.get_client(node_override=node) as client:
         target_host = client.resolve_node_hostname(node)
         node_info = client.get("/info/node", node=target_host) or {}
-        basic_info = {}
-        cpu_info = {}
-        ram_info = {}
-        swap_info = {}
+        basic_info: dict[str, Any] = {}
+        cpu_info: dict[str, Any] = {}
+        ram_info: dict[str, Any] = {}
+        swap_info: dict[str, Any] = {}
         try:
             basic_info = client.get("/info/basic", node=target_host) or {}
         except SylveError:
@@ -481,7 +482,9 @@ def node_show(
 @node_app.command("drain")
 def node_drain(
     ctx: typer.Context,
-    node: Annotated[str, typer.Argument(help="Hostname or UUID of the node to drain for maintenance.")],
+    node: Annotated[
+        str, typer.Argument(help="Hostname or UUID of the node to drain for maintenance.")
+    ],
     target_node: Annotated[
         str | None,
         typer.Option(
@@ -561,7 +564,9 @@ def node_drain(
             if fmt in (OutputFormat.json, OutputFormat.yaml):
                 print_list([], plan_cols, fmt=fmt, selected_columns=columns)
             else:
-                console.print(f"[green]Node '{source_host}' ({source_uuid}) has no guests to drain.[/green]")
+                console.print(
+                    f"[green]Node '{source_host}' ({source_uuid}) has no guests to drain.[/green]"
+                )
             return
 
         if dry_run:
@@ -670,7 +675,9 @@ def node_drain(
                         wait_for_lifecycle_task(client, item.task_id, node=source_host)
                         item.result = "stopped"
                     else:
-                        item.result = f"queued (task #{item.task_id})" if item.task_id else "stopped"
+                        item.result = (
+                            f"queued (task #{item.task_id})" if item.task_id else "stopped"
+                        )
 
             except SylveError as exc:
                 failures += 1
@@ -733,7 +740,9 @@ def node_remove(
     node: Annotated[str, typer.Argument(help="Node hostname or UUID to remove from the cluster.")],
     retain_guests: Annotated[
         bool,
-        typer.Option("--retain-guests/--no-retain-guests", help="Keep the node's VM and jail registrations."),
+        typer.Option(
+            "--retain-guests/--no-retain-guests", help="Keep the node's VM and jail registrations."
+        ),
     ] = True,
     force: Annotated[
         bool,

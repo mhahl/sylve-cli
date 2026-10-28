@@ -205,10 +205,14 @@ def jail_restart(
 def jail_migrate(
     ctx: typer.Context,
     jail: Annotated[str, typer.Argument(help="Jail CTID or name to migrate.")],
-    target: Annotated[str, typer.Option("--target", "-t", help="Target cluster node hostname or UUID.")],
+    target: Annotated[
+        str, typer.Option("--target", "-t", help="Target cluster node hostname or UUID.")
+    ],
     validate_only: Annotated[
         bool,
-        typer.Option("--validate-only", "--dry-run", help="Only run migration preflight validation."),
+        typer.Option(
+            "--validate-only", "--dry-run", help="Only run migration preflight validation."
+        ),
     ] = False,
     node: NodeOption = None,
     wait: WaitOption = True,
@@ -232,7 +236,9 @@ def jail_migrate(
             if isinstance(val_res, dict):
                 print_dict(val_res, title=f"Jail {ctid} Migration Preflight -> {target_host}")
             else:
-                console.print(f"[green]Migration preflight passed for Jail {ctid} -> {target_host}.[/green]")
+                console.print(
+                    f"[green]Migration preflight passed for Jail {ctid} -> {target_host}.[/green]"
+                )
             return
 
         resp = client.post(
@@ -374,7 +380,9 @@ def jail_snapshot_create(
     ctx: typer.Context,
     jail: Annotated[str, typer.Argument(help="Jail CTID or name.")],
     name: Annotated[str, typer.Option("--name", "-m", help="Snapshot name.")],
-    description: Annotated[str, typer.Option("--description", "-d", help="Snapshot description.")] = "",
+    description: Annotated[
+        str, typer.Option("--description", "-d", help="Snapshot description.")
+    ] = "",
     node: NodeOption = None,
 ) -> None:
     """Create a ZFS snapshot for a jail."""
@@ -453,7 +461,9 @@ def jail_bootstrap_list(
         ColumnSpec("Status", "status"),
         ColumnSpec("Node", "node"),
     ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title=f"Jail Bootstraps (Pool: {pool})")
+    print_list(
+        rows, spec, fmt=fmt, selected_columns=columns, title=f"Jail Bootstraps (Pool: {pool})"
+    )
 
 
 @jail_bootstrap_app.command("create")
@@ -462,7 +472,9 @@ def jail_bootstrap_create(
     pool: Annotated[str, typer.Option("--pool", "-p", help="ZFS pool name.")],
     major: Annotated[int, typer.Option("--major", help="FreeBSD major version (e.g. 14 or 15).")],
     minor: Annotated[int, typer.Option("--minor", help="FreeBSD minor version (e.g. 2).")] = 0,
-    btype: Annotated[str, typer.Option("--type", help="Bootstrap type (e.g. base, minimal).")] = "base",
+    btype: Annotated[
+        str, typer.Option("--type", help="Bootstrap type (e.g. base, minimal).")
+    ] = "base",
     node: NodeOption = None,
 ) -> None:
     """Queue a pkgbase jail bootstrap on a ZFS pool."""
@@ -473,7 +485,9 @@ def jail_bootstrap_create(
             json_body={"pool": pool, "major": major, "minor": minor, "type": btype},
             node=node,
         )
-    console.print(f"[green]Queued jail bootstrap ({major}.{minor} {btype}) on pool '{pool}'.[/green]")
+    console.print(
+        f"[green]Queued jail bootstrap ({major}.{minor} {btype}) on pool '{pool}'.[/green]"
+    )
 
 
 @jail_template_app.command("list")

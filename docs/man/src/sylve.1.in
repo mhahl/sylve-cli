@@ -1,0 +1,184 @@
+.TH SYLVE 1 "2026-10-28" "sylve-cli @VERSION@" "General Commands Manual"
+.SH NAME
+sylve \- manage Sylve FreeBSD clusters, virtual machines, jails, storage,
+and networking
+.SH SYNOPSIS
+.B sylve
+[\fIOPTIONS\fR] \fICOMMAND\fR [\fIARGS\fR...]
+.SH DESCRIPTION
+.B sylve
+is the command-line client for Sylve. It stores a bearer token in the active
+context and sends it to the selected Sylve node.
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Show help and exit.
+.TP
+.BR \-\-config " " \fIFILE\fR
+Path to the CLI configuration file.
+Default:
+.I ~/.config/sylve/config.yaml
+.TP
+.BR \-\-context " " \fINAME\fR
+Use a named login context.
+.TP
+.BR \-n ", " \-\-node " " \fINODE\fR
+Target a cluster node by hostname or UUID.
+.TP
+.BR \-k ", " \-\-insecure
+Skip TLS certificate verification.
+.TP
+.BR \-\-timeout " " \fISECONDS\fR
+HTTP request timeout. Default: 30.
+.TP
+.BR \-\-max\-width " " \fICOLUMNS\fR
+Maximum table width. Default: terminal width.
+.TP
+.BR \-\-no\-truncate
+Wrap long table cells instead of truncating them.
+.TP
+.BR \-V ", " \-\-version
+Print the CLI version and exit.
+.SH COMMANDS
+.SS Authentication and configuration
+.TP
+.BR "login " [\fISERVER\fR] " [" \-u " " USER "]" " [" \-p " " PASSWORD "]"
+Authenticate and save a context.
+.TP
+.BR "logout"
+Revoke the current token and clear it from the active context.
+.TP
+.BR "whoami"
+Show the authenticated user and token status.
+.TP
+.BR "config " \fISUBCOMMAND\fR
+View or edit contexts. Subcommands:
+.BR view ", " get\-contexts ", " use\-context ", " set\-node ", \
+" delete\-context .
+.SS Resource commands
+.TP
+.BR "cluster " \fISUBCOMMAND\fR
+Show cluster status and resources; create, join, or leave a cluster;
+manage notes.
+.TP
+.BR "node " \fISUBCOMMAND\fR
+List nodes, show telemetry, drain a node, reboot it, remove a peer, or
+read audit logs.
+.TP
+.BR "vm " \fISUBCOMMAND\fR
+List, create, inspect, start, stop, migrate, snapshot, template, and
+configure VMs.
+.TP
+.BR "jail " \fISUBCOMMAND\fR
+List, create, inspect, start, stop, migrate, snapshot, template, and
+configure jails.
+.TP
+.BR "network " \fISUBCOMMAND\fR
+Manage interfaces, switches, routes, DHCP, PF firewall, objects, and WireGuard.
+.TP
+.BR "download " \fISUBCOMMAND\fR
+List, start, upload, delete, and download ISO or disk images.
+.TP
+.BR "replication " \fISUBCOMMAND\fR
+Manage HA replication policies and events.
+.TP
+.BR "backup " \fISUBCOMMAND\fR
+Manage backup targets, jobs, snapshots, and events.
+.TP
+.BR "zfs " \fISUBCOMMAND\fR
+Manage pools, datasets, snapshots, periodic snapshots, and dashboard data.
+.TP
+.BR "task " \fISUBCOMMAND\fR
+Inspect, wait for, or cancel guest lifecycle and migration tasks.
+.SS Host and identity commands
+.TP
+.BR "system " \fISUBCOMMAND\fR
+Manage disks, SMART tests, PCI passthrough, files, certificates, settings,
+services, tunables, host notes, and health checks.
+.TP
+.BR "samba " \fISUBCOMMAND\fR
+Manage Samba configuration and shares.
+.TP
+.BR "iscsi " \fISUBCOMMAND\fR
+Manage iSCSI targets, initiators, LUNs, and portals.
+.TP
+.BR "ddns " \fISUBCOMMAND\fR
+Manage dynamic DNS entries.
+.TP
+.BR "mdns " \fISUBCOMMAND\fR
+Manage mDNS configuration and records.
+.TP
+.BR "notifications " \fISUBCOMMAND\fR
+Manage notification transports, rules, and active notifications.
+.TP
+.BR "user " \fISUBCOMMAND\fR
+Manage local, PAM, and imported users, plus passkeys.
+.TP
+.BR "group " \fISUBCOMMAND\fR
+Manage authentication groups and membership.
+.TP
+.BR "auth " \fISUBCOMMAND\fR
+Inspect login configuration, create SSE tokens, and use passkeys.
+.TP
+.BR "cloud-init " \fISUBCOMMAND\fR
+Manage reusable cloud-init templates.
+.SH "WRITE COMMANDS"
+Commands with generic API access accept:
+.TP
+.BR \-\-data " " \fIDATA\fR
+JSON or YAML request body, or
+.I @FILE
+to read it from disk.
+.TP
+.BR \-\-param " " \fIKEY=VALUE\fR
+Query parameter. Repeat for multiple parameters.
+.PP
+Destructive commands prompt for confirmation on a terminal. Use
+.B \-y
+or
+.B \-\-yes
+to skip the prompt.
+.SH EXAMPLES
+.nf
+sylve login https://sylve.example.test
+sylve node list
+sylve vm list -f json
+sylve vm show 101
+sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
+sylve vm create --template debian-13 --rid 120 --start --wait
+sylve jail list -f table
+sylve system disk-list
+sylve system cert-list
+sylve download list --long
+.fi
+.SH FILES
+.TP
+.I ~/.config/sylve/config.yaml
+CLI contexts and session tokens.
+.SH ENVIRONMENT
+.TP
+.B SYLVE_CONFIG
+Configuration file path.
+.TP
+.B SYLVE_CONTEXT
+Active context name.
+.TP
+.B SYLVE_SERVER
+Server URL override.
+.TP
+.B SYLVE_TOKEN
+Bearer token override.
+.TP
+.B SYLVE_NODE
+Default target node.
+.TP
+.B SYLVE_INSECURE
+Set to 1, true, or yes to skip TLS verification.
+.SH "SEE ALSO"
+.BR sylve-config (5)
+.SH NOTES
+Manpage source:
+.I docs/man/src/sylve.1.in
+.br
+Update the source when the CLI changes, then regenerate with:
+.B make man

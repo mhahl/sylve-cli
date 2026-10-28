@@ -15,7 +15,16 @@ import yaml
 
 
 def get_default_config_path() -> Path:
-    """Return the default configuration file path (~/.config/sylve/config.yaml)."""
+    """Return the default configuration file path.
+
+    Returns:
+        Path: ``$SYLVE_CONFIG``, ``$XDG_CONFIG_HOME/sylve/config.yaml``, or
+        ``~/.config/sylve/config.yaml``.
+
+    Example:
+        >>> get_default_config_path().name
+        'config.yaml'
+    """
     env_path = os.environ.get("SYLVE_CONFIG")
     if env_path:
         return Path(env_path).expanduser()
@@ -25,7 +34,18 @@ def get_default_config_path() -> Path:
 
 
 def decode_jwt_payload(token: str) -> dict[str, Any]:
-    """Decode the payload of a JWT token without verifying the signature."""
+    """Decode a JWT payload without verifying its signature.
+
+    Args:
+        token: Compact JWT string.
+
+    Returns:
+        dict[str, Any]: Decoded claims, or an empty dict when malformed.
+
+    Example:
+        >>> decode_jwt_payload("header.payload.signature")
+        {}
+    """
     if not token or "." not in token:
         return {}
     parts = token.split(".")
@@ -42,7 +62,18 @@ def decode_jwt_payload(token: str) -> dict[str, Any]:
 
 
 def extract_token_expiry(token: str) -> str | None:
-    """Extract the ISO-8601 UTC expiration timestamp from a JWT token."""
+    """Extract the JWT ``exp`` claim as an ISO-8601 UTC timestamp.
+
+    Args:
+        token: Compact JWT string.
+
+    Returns:
+        str | None: Timestamp such as ``2026-01-01T00:00:00Z``, or None.
+
+    Example:
+        >>> extract_token_expiry("") is None
+        True
+    """
     payload = decode_jwt_payload(token)
     exp = payload.get("exp")
     if isinstance(exp, (int, float)) and exp > 0:
@@ -52,7 +83,18 @@ def extract_token_expiry(token: str) -> str | None:
 
 
 def parse_iso_datetime(value: str | None) -> datetime | None:
-    """Parse an ISO-8601 timestamp into an aware UTC datetime."""
+    """Parse an ISO-8601 timestamp into an aware UTC datetime.
+
+    Args:
+        value: Timestamp text, with or without a trailing ``Z``.
+
+    Returns:
+        datetime | None: UTC datetime, or None when parsing fails.
+
+    Example:
+        >>> parse_iso_datetime("2026-01-01T00:00:00Z")
+        datetime.datetime(2026, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
+    """
     if not value:
         return None
     try:
@@ -68,7 +110,21 @@ def parse_iso_datetime(value: str | None) -> datetime | None:
 
 
 def normalize_server_url(server: str) -> str:
-    """Normalize a server URL so it has a scheme and no trailing /api or slash."""
+    """Normalize a Sylve server URL.
+
+    Args:
+        server: Hostname or URL, with or without a scheme or ``/api`` suffix.
+
+    Returns:
+        str: URL with an ``http`` or ``https`` scheme and no trailing slash.
+
+    Raises:
+        ValueError: If *server* is empty.
+
+    Example:
+        >>> normalize_server_url("sylve.example.test/api/")
+        'https://sylve.example.test'
+    """
     s = server.strip()
     if not s:
         raise ValueError("Server URL cannot be empty")
@@ -95,7 +151,15 @@ class ContextConfig:
     default_node: str | None = None
 
     def get_expiry_datetime(self) -> datetime | None:
-        """Return the token expiry datetime from config or decoded JWT."""
+        """Return the token expiry from config or the decoded JWT.
+
+        Returns:
+            datetime | None: Aware UTC expiry, or None when unknown.
+
+        Example:
+            >>> ContextConfig("https://example.test").get_expiry_datetime() is None
+            True
+        """
         dt = parse_iso_datetime(self.expires_at)
         if dt is not None:
             return dt
@@ -104,7 +168,18 @@ class ContextConfig:
         return None
 
     def is_token_expired(self, skew_seconds: int = 0) -> bool:
-        """Return True if the token is missing or expired."""
+        """Return whether the token is missing or expired.
+
+        Args:
+            skew_seconds: Treat tokens expiring within this many seconds as stale.
+
+        Returns:
+            bool: True when no token exists or its expiry has passed.
+
+        Example:
+            >>> ContextConfig("https://example.test").is_token_expired()
+            True
+        """
         if not self.token:
             return True
         exp = self.get_expiry_datetime()
@@ -114,7 +189,15 @@ class ContextConfig:
         return (exp.timestamp() - now.timestamp()) <= skew_seconds
 
     def remaining_seconds(self) -> float | None:
-        """Return remaining token lifetime in seconds, or None if unknown."""
+        """Return remaining token lifetime in seconds.
+
+        Returns:
+            float | None: Seconds until expiry, or None when unknown.
+
+        Example:
+            >>> ContextConfig("https://example.test").remaining_seconds() is None
+            True
+        """
         exp = self.get_expiry_datetime()
         if exp is None:
             return None
@@ -122,7 +205,16 @@ class ContextConfig:
         return exp.timestamp() - now.timestamp()
 
     def format_remaining(self) -> str:
-        """Return a human-readable string for remaining token validity."""
+        """Return a human-readable token lifetime.
+
+        Returns:
+            str: Compact duration such as ``2h 5m``, ``expired (...)``, or
+            ``unknown``.
+
+        Example:
+            >>> ContextConfig("https://example.test").format_remaining()
+            'unknown'
+        """
         rem = self.remaining_seconds()
         if rem is None:
             return "unknown"
@@ -154,18 +246,37 @@ class SylveConfig:
     contexts: dict[str, ContextConfig] = field(default_factory=dict)
 
     def get_active_context(self, context_override: str | None = None) -> tuple[str, ContextConfig]:
-        """Resolve the active context name and ContextConfig."""
-        ctx_name = (
-            context_override
-            or os.environ.get("SYLVE_CONTEXT")
-            or self.current_context
-        )
+        """Resolve the active context.
+
+        Args:
+            context_override: Context name that takes precedence over config
+                and ``$SYLVE_CONTEXT``.
+
+        Returns:
+            tuple[str, ContextConfig]: Context name and resolved settings.
+
+        Raises:
+            RuntimeError: If no context is configured and no environment
+                credentials are present.
+
+        Example:
+            >>> config = SylveConfig(
+            ...     contexts={"prod": ContextConfig("https://example.test")}
+            ... )
+            >>> config.get_active_context("prod")[0]
+            'prod'
+        """
+        ctx_name = context_override or os.environ.get("SYLVE_CONTEXT") or self.current_context
         if not ctx_name or ctx_name not in self.contexts:
             # Allow pure environment-driven usage if SYLVE_SERVER and SYLVE_TOKEN are set
             env_server = os.environ.get("SYLVE_SERVER")
             env_token = os.environ.get("SYLVE_TOKEN")
             if env_server and env_token:
-                verify_ssl = os.environ.get("SYLVE_INSECURE", "").lower() not in ("1", "true", "yes")
+                verify_ssl = os.environ.get("SYLVE_INSECURE", "").lower() not in (
+                    "1",
+                    "true",
+                    "yes",
+                )
                 return "env", ContextConfig(
                     server=normalize_server_url(env_server),
                     token=env_token,
@@ -211,7 +322,21 @@ class SylveConfig:
 
 
 def load_config(path: Path | None = None) -> SylveConfig:
-    """Load the Sylve CLI configuration from disk."""
+    """Load configuration from disk.
+
+    Args:
+        path: Config path. Defaults to :func:`get_default_config_path`.
+
+    Returns:
+        SylveConfig: Parsed configuration, or an empty config if absent.
+
+    Raises:
+        RuntimeError: If the file exists but cannot be parsed.
+
+    Example:
+        >>> load_config(Path("/missing.yaml")).contexts
+        {}
+    """
     cfg_path = path or get_default_config_path()
     if not cfg_path.exists():
         return SylveConfig()
@@ -248,7 +373,19 @@ def load_config(path: Path | None = None) -> SylveConfig:
 
 
 def save_config(config: SylveConfig, path: Path | None = None) -> Path:
-    """Persist the Sylve CLI configuration to disk with 0600 permissions."""
+    """Persist configuration with mode 0600.
+
+    Args:
+        config: Configuration object to serialize.
+        path: Destination path. Defaults to :func:`get_default_config_path`.
+
+    Returns:
+        Path: The file that was written.
+
+    Example:
+        >>> save_config(SylveConfig(), Path("/tmp/sylve.yaml")).name
+        'sylve.yaml'
+    """
     cfg_path = path or get_default_config_path()
     cfg_path.parent.mkdir(parents=True, exist_ok=True)
     try:

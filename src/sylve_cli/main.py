@@ -13,6 +13,18 @@ from sylve_cli.commands.auth import config_app, login_command, logout_command, w
 from sylve_cli.commands.backup import backup_app
 from sylve_cli.commands.cluster import cluster_app
 from sylve_cli.commands.download import download_app
+from sylve_cli.commands.extras import (
+    auth_app,
+    cloud_init_app,
+    ddns_app,
+    group_app,
+    iscsi_app,
+    mdns_app,
+    notifications_app,
+    samba_app,
+    system_app,
+    user_app,
+)
 from sylve_cli.commands.jail import jail_app
 from sylve_cli.commands.network import network_app
 from sylve_cli.commands.node import node_app
@@ -140,6 +152,16 @@ app.add_typer(replication_app, name="replication")
 app.add_typer(backup_app, name="backup")
 app.add_typer(zfs_app, name="zfs")
 app.add_typer(task_app, name="task")
+app.add_typer(system_app, name="system")
+app.add_typer(samba_app, name="samba")
+app.add_typer(iscsi_app, name="iscsi")
+app.add_typer(ddns_app, name="ddns")
+app.add_typer(mdns_app, name="mdns")
+app.add_typer(notifications_app, name="notifications")
+app.add_typer(user_app, name="user")
+app.add_typer(group_app, name="group")
+app.add_typer(auth_app, name="auth")
+app.add_typer(cloud_init_app, name="cloud-init")
 
 
 def run() -> None:

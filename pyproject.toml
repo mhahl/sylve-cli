@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "BSD-2-Clause" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Sylve CLI Contributors" }
+    { name = "Sylve CLI Contributors" },
 ]
 keywords = ["freebsd", "sylve", "bhyve", "jails", "zfs", "cluster", "cli"]
 classifiers = [
@@ -35,9 +35,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
 dev = [
-    "pytest>=7.0",
-    "ruff>=0.4.0",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pylint>=3.2,<3.3",
+    "mypy==1.11.2",
+    "tox>=4.15",
+    "build>=1.2",
 ]
 
 [project.scripts]
@@ -46,10 +54,53 @@ sylve = "sylve_cli.main:run"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.data-files]
+"share/man/man1" = ["docs/man/man1/sylve.1"]
+"share/man/man5" = ["docs/man/man5/sylve-config.5"]
+
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+minversion = "8.0"
+testpaths = ["tests/unit"]
+addopts = "-ra"
+markers = [
+    "live: tests that require a running Sylve system and credentials",
+]
 pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["sylve_cli"]
+omit = ["*/tests/*"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pylint.main]
+py-version = "3.10"
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.messages_control]
+disable = [
+    "duplicate-code",
+    "fixme",
+    "line-too-long",
+]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src/sylve_cli"]
+ignore_missing_imports = true
+disable_error_code = ["import-untyped"]
+check_untyped_defs = true
+no_implicit_optional = true
+warn_unused_ignores = false
+warn_return_any = false

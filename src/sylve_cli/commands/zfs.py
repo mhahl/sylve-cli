@@ -32,10 +32,30 @@ zfs_app = typer.Typer(
     rich_markup_mode=None,
 )
 
-pool_app = typer.Typer(name="pool", help="Query and manage ZFS storage pools.", no_args_is_help=True, rich_markup_mode=None)
-dataset_app = typer.Typer(name="dataset", help="Query and manage ZFS filesystems and volumes.", no_args_is_help=True, rich_markup_mode=None)
-snapshot_app = typer.Typer(name="snapshot", help="Query and manage ZFS dataset snapshots.", no_args_is_help=True, rich_markup_mode=None)
-periodic_app = typer.Typer(name="periodic", help="Manage periodic ZFS snapshot schedules.", no_args_is_help=True, rich_markup_mode=None)
+pool_app = typer.Typer(
+    name="pool",
+    help="Query and manage ZFS storage pools.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+dataset_app = typer.Typer(
+    name="dataset",
+    help="Query and manage ZFS filesystems and volumes.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+snapshot_app = typer.Typer(
+    name="snapshot",
+    help="Query and manage ZFS dataset snapshots.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+periodic_app = typer.Typer(
+    name="periodic",
+    help="Manage periodic ZFS snapshot schedules.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
 
 zfs_app.add_typer(pool_app, name="pool")
 zfs_app.add_typer(dataset_app, name="dataset")
@@ -164,7 +184,9 @@ def pool_status(
         data = client.get(f"/zfs/pools/{guid}/status", node=host or None) or {}
     if isinstance(data, dict):
         data["node"] = host
-        print_dict(data, fmt=fmt, selected_columns=columns, title=f"ZFS Pool Status: {pool} ({host})")
+        print_dict(
+            data, fmt=fmt, selected_columns=columns, title=f"ZFS Pool Status: {pool} ({host})"
+        )
 
 
 @pool_app.command("scrub")
@@ -246,7 +268,9 @@ def dataset_list(
 @dataset_app.command("create-fs")
 def dataset_create_fs(
     ctx: typer.Context,
-    parent: Annotated[str, typer.Option("--parent", "-p", help="Parent dataset path (e.g. zroot).")],
+    parent: Annotated[
+        str, typer.Option("--parent", "-p", help="Parent dataset path (e.g. zroot).")
+    ],
     name: Annotated[str, typer.Option("--name", help="New filesystem name.")],
     node: NodeOption = None,
 ) -> None:
@@ -264,7 +288,9 @@ def dataset_create_fs(
 @dataset_app.command("create-vol")
 def dataset_create_vol(
     ctx: typer.Context,
-    parent: Annotated[str, typer.Option("--parent", "-p", help="Parent dataset path (e.g. zroot).")],
+    parent: Annotated[
+        str, typer.Option("--parent", "-p", help="Parent dataset path (e.g. zroot).")
+    ],
     name: Annotated[str, typer.Option("--name", help="New ZFS volume name.")],
     size: Annotated[str, typer.Option("--size", "-s", help="Volume size (e.g. 10G).")],
     node: NodeOption = None,
@@ -299,7 +325,9 @@ def dataset_delete(
     with state.get_client(node_override=node) as client:
         guid, host = _resolve_dataset_guid(client, dataset, node=node)
         if not yes:
-            typer.confirm(f"Delete ZFS {norm_type} '{dataset}' ({guid}) on {host or 'local'}?", abort=True)
+            typer.confirm(
+                f"Delete ZFS {norm_type} '{dataset}' ({guid}) on {host or 'local'}?", abort=True
+            )
         client.delete(f"/zfs/datasets/{norm_type}/{guid}", node=host or None)
     console.print(f"[green]Deleted ZFS {norm_type} '{dataset}'.[/green]")
 
@@ -380,7 +408,9 @@ def snapshot_delete(
     snapshot: Annotated[str, typer.Argument(help="Snapshot name (dataset@snap) or GUID.")],
     recursive: Annotated[
         bool,
-        typer.Option("-r", "--recursive/--no-recursive", help="Delete child snapshots recursively."),
+        typer.Option(
+            "-r", "--recursive/--no-recursive", help="Delete child snapshots recursively."
+        ),
     ] = False,
     node: NodeOption = None,
 ) -> None:

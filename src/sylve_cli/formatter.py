@@ -10,7 +10,7 @@ import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from rich import box
@@ -23,14 +23,7 @@ console = Console()
 err_console = Console(stderr=True)
 
 TABLE_BOX = box.Box(
-    "+-++\n"
-    "| ||\n"
-    "+-++\n"
-    "| ||\n"
-    "+-++\n"
-    "+-++\n"
-    "| ||\n"
-    "+-++\n",
+    "+-++\n| ||\n+-++\n| ||\n+-++\n+-++\n| ||\n+-++\n",
     ascii=True,
 )
 
@@ -61,12 +54,12 @@ class ColumnSpec:
     header: str
     key: str
     formatter: Callable[[Any], str] | None = None
-    justify: str = "left"
+    justify: Literal["default", "left", "center", "right", "full"] = "left"
     state: bool = False
     min_width: int | None = None
     max_width: int | None = None
     no_wrap: bool = True
-    overflow: str = "ellipsis"
+    overflow: Literal["fold", "crop", "ellipsis", "ignore"] = "ellipsis"
 
 
 @dataclass
@@ -81,7 +74,18 @@ _table_options = TableOptions()
 
 
 def configure_table(*, max_width: int | None = None, no_truncate: bool = False) -> None:
-    """Configure table formatting for the current CLI invocation."""
+    """Configure table formatting for the current invocation.
+
+    Args:
+        max_width: Maximum table width in terminal columns.
+        no_truncate: Wrap cells instead of truncating them.
+
+    Returns:
+        None.
+
+    Example:
+        >>> configure_table(max_width=80)
+    """
     _table_options.max_width = max_width
     _table_options.no_truncate = no_truncate
 
@@ -139,10 +143,22 @@ STATE_STYLES: dict[str, str] = {
 
 _NUMERIC_RE = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$")
 _CSV_FORMULA_PREFIXES = frozenset("=+-@\t\r")
+_TRAILING_WHITESPACE_RE = re.compile(r"[ \t]+(?P<ansi>(?:\x1b\[[0-9;]*m)*)$")
 
 
 def format_vm_state(value: Any) -> str:
-    """Convert a libvirt integer or string domain state into a display state string."""
+    """Convert a libvirt domain state into a display string.
+
+    Args:
+        value: Integer, numeric string, or textual state.
+
+    Returns:
+        str: Uppercase state name, or ``UNKNOWN(...)``.
+
+    Example:
+        >>> format_vm_state(1)
+        'RUNNING'
+    """
     if isinstance(value, int):
         return LIBVIRT_DOMAIN_STATES.get(value, f"UNKNOWN({value})")
     if isinstance(value, str):
@@ -154,7 +170,18 @@ def format_vm_state(value: Any) -> str:
 
 
 def format_bytes(num_bytes: Any) -> str:
-    """Format a byte count into human-readable IEC units (KiB, MiB, GiB, TiB)."""
+    """Format a byte count into IEC units.
+
+    Args:
+        num_bytes: Byte count as a number or numeric string.
+
+    Returns:
+        str: Human-readable value such as ``1.5 GiB``, or ``-`` for empty.
+
+    Example:
+        >>> format_bytes(1024 ** 3)
+        '1.0 GiB'
+    """
     if num_bytes is None or num_bytes == "":
         return "-"
     try:
@@ -173,7 +200,18 @@ def format_bytes(num_bytes: Any) -> str:
 
 
 def format_percent(val: Any) -> str:
-    """Format a percentage value."""
+    """Format a percentage value.
+
+    Args:
+        val: Number or numeric string.
+
+    Returns:
+        str: Value with one decimal and ``%``, or ``-`` for empty.
+
+    Example:
+        >>> format_percent(42.56)
+        '42.6%'
+    """
     if val is None or val == "":
         return "-"
     try:
@@ -184,7 +222,18 @@ def format_percent(val: Any) -> str:
 
 
 def state_text(value: str) -> Text:
-    """Return a Text object with a state colour, without interpreting markup."""
+    """Return styled text for a state value.
+
+    Args:
+        value: State label such as ``RUNNING``.
+
+    Returns:
+        Text: Rich text with a color style; markup is not interpreted.
+
+    Example:
+        >>> state_text("RUNNING").style
+        'green'
+    """
     upper = value.strip().upper()
     if upper.startswith("UNKNOWN"):
         style = "red"
@@ -223,12 +272,7 @@ def _stringify_cell(val: Any) -> str:
 
 def _normalize_cell(value: str) -> str:
     """Keep table rows on one line and avoid tab-induced width errors."""
-    return (
-        value.replace("\r\n", " ")
-        .replace("\r", " ")
-        .replace("\n", " ")
-        .replace("\t", "    ")
-    )
+    return value.replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", "    ")
 
 
 def _display_cell(col: ColumnSpec, raw_value: Any) -> str:
@@ -286,7 +330,22 @@ def filter_columns(
     columns: Sequence[ColumnSpec],
     selected: Sequence[str] | None,
 ) -> list[ColumnSpec]:
-    """Filter and order ColumnSpecs according to the user's -c / --column flags."""
+    """Filter and order columns from ``--column`` values.
+
+    Args:
+        columns: Available column definitions.
+        selected: Header/key names, or comma-separated names.
+
+    Returns:
+        list[ColumnSpec]: Columns in the requested order.
+
+    Raises:
+        FormatterError: If a requested column is unknown.
+
+    Example:
+        >>> [c.header for c in filter_columns([ColumnSpec("RID", "rid")], ["rid"])]
+        ['RID']
+    """
     requested = _split_columns(selected)
     if not requested:
         return list(columns)
@@ -299,11 +358,11 @@ def filter_columns(
     resolved: list[ColumnSpec] = []
     unknown: list[str] = []
     for request in requested:
-        col = by_lookup.get(request.casefold())
-        if col is None:
+        match = by_lookup.get(request.casefold())
+        if match is None:
             unknown.append(request)
         else:
-            resolved.append(col)
+            resolved.append(match)
 
     if unknown:
         raise FormatterError(
@@ -352,7 +411,7 @@ def _available_content_width(column_count: int) -> int:
 def _fit_widths(
     columns: Sequence[ColumnSpec],
     rendered_rows: Sequence[Sequence[str]],
-) -> list[int | None]:
+) -> Sequence[int | None]:
     if _table_options.no_truncate:
         return [None] * len(columns)
 
@@ -406,8 +465,7 @@ def _fit_widths(
         return minimums
 
     widths = [
-        minimums[index] + int(extra * growth[index] / total_growth)
-        for index in range(len(columns))
+        minimums[index] + int(extra * growth[index] / total_growth) for index in range(len(columns))
     ]
     remaining = available - sum(widths)
     for index in sorted(
@@ -422,17 +480,35 @@ def _fit_widths(
     return widths
 
 
-def _print_table(table: Table) -> None:
-    if _table_options.max_width is None:
-        console.print(table)
-        return
+def _rstrip_line(line: str) -> str:
+    """Strip trailing spaces while preserving any ANSI reset suffix."""
+    while True:
+        match = _TRAILING_WHITESPACE_RE.search(line)
+        if match is None:
+            return line
+        line = line[: match.start()] + (match.group("ansi") or "")
 
+
+def _rstrip_output(text: str) -> str:
+    """Remove trailing whitespace from every rendered output line."""
+    return "".join(f"{_rstrip_line(line)}\n" for line in text.splitlines())
+
+
+def _print_table(table: Table) -> None:
+    # Rich pads centred titles to the table width with trailing spaces.  Rendering
+    # through a buffer lets us drop that padding so every line ends at the same
+    # column and the final border cannot wrap on terminals of exactly that width.
     previous_width = console.width
     try:
-        console.width = _table_options.max_width
-        console.print(table)
+        if _table_options.max_width is not None:
+            console.width = _table_options.max_width
+        with console.capture() as capture:
+            console.print(table)
     finally:
         console.width = previous_width
+
+    console.file.write(_rstrip_output(capture.get()))
+    console.file.flush()
 
 
 def _add_table_columns(
@@ -460,7 +536,23 @@ def print_list(
     title: str | None = None,
     empty_message: str | None = None,
 ) -> None:
-    """Render a list of records in table, JSON, YAML, value, or CSV form."""
+    """Render records in the selected output format.
+
+    Args:
+        rows: Records to display.
+        columns: Column definitions and formatters.
+        fmt: Output format.
+        selected_columns: Optional subset/order of columns.
+        sort_column: Header or key to sort by.
+        title: Table title or empty-state label.
+        empty_message: Message used when *rows* is empty.
+
+    Raises:
+        FormatterError: If a column or sort key is unknown.
+
+    Example:
+        >>> print_list([{"rid": 1}], [ColumnSpec("RID", "rid")], fmt=OutputFormat.json)
+    """
     items = list(rows)
     selected = _split_columns(selected_columns)
     active_cols = filter_columns(columns, selected)
@@ -481,8 +573,7 @@ def print_list(
     if fmt == OutputFormat.json:
         if selected:
             projected = [
-                {col.key: _extract_value(row, col.key) for col in active_cols}
-                for row in items
+                {col.key: _extract_value(row, col.key) for col in active_cols} for row in items
             ]
             sys.stdout.write(json.dumps(projected, indent=2, default=str) + "\n")
         else:
@@ -492,8 +583,7 @@ def print_list(
     if fmt == OutputFormat.yaml:
         if selected:
             projected = [
-                {col.key: _extract_value(row, col.key) for col in active_cols}
-                for row in items
+                {col.key: _extract_value(row, col.key) for col in active_cols} for row in items
             ]
             sys.stdout.write(yaml.safe_dump(projected, sort_keys=False))
         else:
@@ -531,8 +621,7 @@ def print_list(
         return
 
     table_rows = [
-        [_display_cell(col, _extract_value(item, col.key)) for col in active_cols]
-        for item in items
+        [_display_cell(col, _extract_value(item, col.key)) for col in active_cols] for item in items
     ]
     widths = _fit_widths(active_cols, table_rows)
 
@@ -547,8 +636,7 @@ def print_list(
     for row in table_rows:
         styled_row = [
             state_text(value)
-            if active_cols[index].state
-            or active_cols[index].header.casefold() in STATE_HEADERS
+            if active_cols[index].state or active_cols[index].header.casefold() in STATE_HEADERS
             else Text(value)
             for index, value in enumerate(row)
         ]
@@ -597,9 +685,7 @@ def _format_dict_value(value: Any) -> str:
     if value is None:
         return "-"
     if isinstance(value, (dict, list, tuple)):
-        if value and all(
-            not isinstance(item, (dict, list, tuple)) for item in value
-        ):
+        if value and all(not isinstance(item, (dict, list, tuple)) for item in value):
             return _normalize_cell(_stringify_cell(value))
         if value:
             return json.dumps(value, separators=(",", ":"), default=str)
@@ -613,7 +699,20 @@ def print_dict(
     selected_columns: Sequence[str] | None = None,
     title: str | None = None,
 ) -> None:
-    """Render a single resource dictionary as a Field/Value table, JSON, YAML, etc."""
+    """Render one resource dictionary.
+
+    Args:
+        data: Resource fields.
+        fmt: Output format.
+        selected_columns: Optional field subset/order.
+        title: Table title.
+
+    Raises:
+        FormatterError: If a requested field is unknown.
+
+    Example:
+        >>> print_dict({"name": "node1"}, fmt=OutputFormat.json)
+    """
     filtered = _project_dict(data, _split_columns(selected_columns))
 
     if fmt == OutputFormat.json:
@@ -652,8 +751,7 @@ def print_dict(
         key_name = str(key).casefold()
         value_text = (
             state_text(cell)
-            if key_name in STATE_HEADERS
-            or key_name.endswith(("_state", "_status"))
+            if key_name in STATE_HEADERS or key_name.endswith(("_state", "_status"))
             else Text(cell)
         )
         table.add_row(Text(str(key), style="bold"), value_text)

@@ -44,15 +44,15 @@ def cluster_show(
     """Show cluster status, Raft leader, quorum members, and node health summary."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
-        details = client.get("/cluster") or {}
+        details: dict[str, Any] = client.get("/cluster") or {}
         nodes = client.get_cluster_nodes()
 
-    cluster_cfg = details.get("cluster") if isinstance(details.get("cluster"), dict) else {}
-    raft_nodes = details.get("nodes") if isinstance(details.get("nodes"), list) else []
-
-    online_count = sum(
-        1 for n in nodes if str(n.get("status") or "").lower() == "online"
+    cluster_cfg: dict[str, Any] = (
+        details["cluster"] if isinstance(details.get("cluster"), dict) else {}
     )
+    raft_nodes: list[Any] = details["nodes"] if isinstance(details.get("nodes"), list) else []
+
+    online_count = sum(1 for n in nodes if str(n.get("status") or "").lower() == "online")
     total_guests = sum(len(n.get("guestIDs") or []) for n in nodes)
 
     summary: dict[str, Any] = {
@@ -93,7 +93,9 @@ def cluster_show(
             ColumnSpec("CPU%", "cpuUsage", formatter=format_percent, justify="right"),
             ColumnSpec("RAM%", "memoryUsage", formatter=format_percent, justify="right"),
             ColumnSpec("Disk%", "diskUsage", formatter=format_percent, justify="right"),
-            ColumnSpec("Guests", "guestIDs", formatter=lambda g: str(len(g or [])), justify="right"),
+            ColumnSpec(
+                "Guests", "guestIDs", formatter=lambda g: str(len(g or [])), justify="right"
+            ),
             ColumnSpec("Version", "sylveVersion"),
         ]
         if long:
@@ -105,7 +107,9 @@ def cluster_show(
                 ColumnSpec("CPU%", "cpuUsage", formatter=format_percent, justify="right"),
                 ColumnSpec("RAM%", "memoryUsage", formatter=format_percent, justify="right"),
                 ColumnSpec("Disk%", "diskUsage", formatter=format_percent, justify="right"),
-                ColumnSpec("Guests", "guestIDs", formatter=lambda g: str(len(g or [])), justify="right"),
+                ColumnSpec(
+                    "Guests", "guestIDs", formatter=lambda g: str(len(g or [])), justify="right"
+                ),
                 ColumnSpec("Version", "sylveVersion"),
             ]
         print_list(nodes, node_cols, fmt=fmt, title="Cluster Nodes")
@@ -260,8 +264,12 @@ def cluster_join_key(
 @cluster_app.command("join")
 def cluster_join(
     ctx: typer.Context,
-    leader_ip: Annotated[str, typer.Option("--leader-ip", help="IP address of the cluster leader.")],
-    node_ip: Annotated[str, typer.Option("--node-ip", help="Raft IP address of this joining node.")],
+    leader_ip: Annotated[
+        str, typer.Option("--leader-ip", help="IP address of the cluster leader.")
+    ],
+    node_ip: Annotated[
+        str, typer.Option("--node-ip", help="Raft IP address of this joining node.")
+    ],
     node_id: Annotated[str, typer.Option("--node-id", help="Node UUID of this joining node.")],
     cluster_key: Annotated[str, typer.Option("--cluster-key", help="Cluster join key.")],
 ) -> None:
@@ -285,7 +293,9 @@ def cluster_leave(
     ctx: typer.Context,
     retain_guests: Annotated[
         bool,
-        typer.Option("--retain-guests/--no-retain-guests", help="Keep local VM and jail registrations."),
+        typer.Option(
+            "--retain-guests/--no-retain-guests", help="Keep local VM and jail registrations."
+        ),
     ] = True,
     force: Annotated[
         bool,
@@ -329,7 +339,13 @@ def cluster_note_list(
     ]
     if long:
         spec.insert(2, ColumnSpec("Content", "content"))
-    print_list(notes if isinstance(notes, list) else [], spec, fmt=fmt, selected_columns=columns, title="Cluster Notes")
+    print_list(
+        notes if isinstance(notes, list) else [],
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Cluster Notes",
+    )
 
 
 @cluster_note_app.command("create")

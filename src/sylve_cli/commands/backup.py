@@ -31,9 +31,21 @@ backup_app = typer.Typer(
     rich_markup_mode=None,
 )
 
-target_app = typer.Typer(name="target", help="Manage cluster backup targets.", no_args_is_help=True, rich_markup_mode=None)
-job_app = typer.Typer(name="job", help="Manage scheduled backup jobs.", no_args_is_help=True, rich_markup_mode=None)
-backup_event_app = typer.Typer(name="event", help="Query backup events and live progress.", no_args_is_help=True, rich_markup_mode=None)
+target_app = typer.Typer(
+    name="target",
+    help="Manage cluster backup targets.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+job_app = typer.Typer(
+    name="job", help="Manage scheduled backup jobs.", no_args_is_help=True, rich_markup_mode=None
+)
+backup_event_app = typer.Typer(
+    name="event",
+    help="Query backup events and live progress.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
 
 backup_app.add_typer(target_app, name="target")
 backup_app.add_typer(job_app, name="job")
@@ -95,7 +107,9 @@ def target_show(
     if isinstance(targets, list):
         for t in targets:
             if isinstance(t, dict) and int(t.get("id") or 0) == target_id:
-                print_dict(t, fmt=fmt, selected_columns=columns, title=f"Backup Target #{target_id}")
+                print_dict(
+                    t, fmt=fmt, selected_columns=columns, title=f"Backup Target #{target_id}"
+                )
                 return
     raise ResourceNotFoundError(f"Backup target #{target_id} not found.")
 
@@ -170,8 +184,12 @@ def target_delete(
 @job_app.command("list")
 def job_list(
     ctx: typer.Context,
-    target_id: Annotated[int | None, typer.Option("--target-id", help="Filter by backup target ID.")] = None,
-    guest_type: Annotated[str | None, typer.Option("--guest-type", help="Filter by guest type (vm or jail).")] = None,
+    target_id: Annotated[
+        int | None, typer.Option("--target-id", help="Filter by backup target ID.")
+    ] = None,
+    guest_type: Annotated[
+        str | None, typer.Option("--guest-type", help="Filter by guest type (vm or jail).")
+    ] = None,
     guest_id: Annotated[int | None, typer.Option("--guest-id", help="Filter by guest ID.")] = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -181,10 +199,13 @@ def job_list(
     """List scheduled backup jobs."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
-        jobs = client.get(
-            "/cluster/backups/jobs",
-            params={"targetId": target_id, "guestType": guest_type, "guestId": guest_id},
-        ) or []
+        jobs = (
+            client.get(
+                "/cluster/backups/jobs",
+                params={"targetId": target_id, "guestType": guest_type, "guestId": guest_id},
+            )
+            or []
+        )
     spec = [
         ColumnSpec("ID", "id", justify="right"),
         ColumnSpec("Name", "name"),
@@ -240,8 +261,10 @@ def job_snapshots(
     """List restorable snapshots produced by a backup job."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
-        page = client.get(f"/cluster/backups/jobs/{job_id}/snapshots", params={"limit": limit}) or {}
-    items = page.get("items") if isinstance(page, dict) and isinstance(page.get("items"), list) else []
+        page: dict[str, Any] = (
+            client.get(f"/cluster/backups/jobs/{job_id}/snapshots", params={"limit": limit}) or {}
+        )
+    items = [item for item in page.get("items") or [] if isinstance(item, dict)]
     spec = [
         ColumnSpec("Snapshot", "shortName"),
         ColumnSpec("Used", "used", justify="right"),
@@ -257,7 +280,9 @@ def job_snapshots(
             ColumnSpec("Committed", "committed"),
             ColumnSpec("Created At", "creation"),
         ]
-    print_list(items, spec, fmt=fmt, selected_columns=columns, title=f"Backup Job #{job_id} Snapshots")
+    print_list(
+        items, spec, fmt=fmt, selected_columns=columns, title=f"Backup Job #{job_id} Snapshots"
+    )
 
 
 @job_app.command("restore")
@@ -265,7 +290,9 @@ def job_restore(
     ctx: typer.Context,
     job_id: Annotated[int, typer.Argument(help="Backup job ID.")],
     snapshot: Annotated[str, typer.Option("--snapshot", "-s", help="Snapshot name to restore.")],
-    encryption_key: Annotated[str | None, typer.Option("--encryption-key", help="Decryption key if encrypted.")] = None,
+    encryption_key: Annotated[
+        str | None, typer.Option("--encryption-key", help="Decryption key if encrypted.")
+    ] = None,
 ) -> None:
     """Queue restoration of a snapshot from a backup job."""
     state: CLIState = ctx.obj
@@ -274,7 +301,9 @@ def job_restore(
         body["encryptionKey"] = encryption_key
     with state.get_client() as client:
         client.post(f"/cluster/backups/jobs/{job_id}/restore", json_body=body)
-    console.print(f"[green]Queued restore of snapshot '{snapshot}' from backup job #{job_id}.[/green]")
+    console.print(
+        f"[green]Queued restore of snapshot '{snapshot}' from backup job #{job_id}.[/green]"
+    )
 
 
 @job_app.command("delete")
@@ -307,10 +336,13 @@ def backup_event_list(
     """List recent backup events."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
-        events = client.get(
-            "/cluster/backups/events",
-            params={"jobId": job_id, "limit": limit},
-        ) or []
+        events = (
+            client.get(
+                "/cluster/backups/events",
+                params={"jobId": job_id, "limit": limit},
+            )
+            or []
+        )
     spec = [
         ColumnSpec("ID", "id", justify="right"),
         ColumnSpec("Job ID", "jobId", justify="right"),

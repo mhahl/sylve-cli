@@ -7,9 +7,11 @@ dist/
 *.egg-info/
 .eggs/
 
+.tox/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.pylint.d/
 .coverage
 htmlcov/
 

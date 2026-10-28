@@ -115,7 +115,12 @@ def download_show(
                 ):
                     out = dict(dl)
                     out["node"] = host
-                    print_dict(out, fmt=fmt, selected_columns=columns, title=f"Download {dl.get('name')} ({host})")
+                    print_dict(
+                        out,
+                        fmt=fmt,
+                        selected_columns=columns,
+                        title=f"Download {dl.get('name')} ({host})",
+                    )
                     return
 
     raise ResourceNotFoundError(f"Download '{identifier}' not found.")
@@ -125,14 +130,20 @@ def download_show(
 @download_app.command("start")
 def download_create(
     ctx: typer.Context,
-    url: Annotated[str, typer.Argument(help="HTTP(S) URL, magnet URI, or server local path to download.")],
+    url: Annotated[
+        str, typer.Argument(help="HTTP(S) URL, magnet URI, or server local path to download.")
+    ],
     filename: Annotated[
         str | None,
         typer.Option("--filename", "-O", help="Override target filename."),
     ] = None,
     download_type: Annotated[
         str,
-        typer.Option("--type", "-t", help="Download usage type: 'uncategorized', 'cloud-init', 'base-rootfs'."),
+        typer.Option(
+            "--type",
+            "-t",
+            help="Download usage type: 'uncategorized', 'cloud-init', 'base-rootfs'.",
+        ),
     ] = "uncategorized",
     storage_pool: Annotated[
         str | None,
@@ -144,7 +155,9 @@ def download_create(
     ] = True,
     auto_raw: Annotated[
         bool,
-        typer.Option("--raw-convert/--no-raw-convert", help="Automatically convert disk images to RAW."),
+        typer.Option(
+            "--raw-convert/--no-raw-convert", help="Automatically convert disk images to RAW."
+        ),
     ] = False,
     ignore_tls: Annotated[
         bool,
@@ -179,10 +192,16 @@ def download_create(
 @download_app.command("upload")
 def download_upload(
     ctx: typer.Context,
-    file_path: Annotated[Path, typer.Argument(exists=True, readable=True, help="Local file to upload.")],
+    file_path: Annotated[
+        Path, typer.Argument(exists=True, readable=True, help="Local file to upload.")
+    ],
     download_type: Annotated[
         str,
-        typer.Option("--type", "-t", help="Download usage type: 'uncategorized', 'cloud-init', 'base-rootfs'."),
+        typer.Option(
+            "--type",
+            "-t",
+            help="Download usage type: 'uncategorized', 'cloud-init', 'base-rootfs'.",
+        ),
     ] = "uncategorized",
     storage_pool: Annotated[
         str | None,
@@ -194,7 +213,9 @@ def download_upload(
     ] = True,
     auto_raw: Annotated[
         bool,
-        typer.Option("--raw-convert/--no-raw-convert", help="Automatically convert disk images to RAW."),
+        typer.Option(
+            "--raw-convert/--no-raw-convert", help="Automatically convert disk images to RAW."
+        ),
     ] = False,
     node: NodeOption = None,
 ) -> None:
@@ -290,4 +311,6 @@ def download_storage(
             ColumnSpec("Path", "path"),
             ColumnSpec("Free", "free", formatter=format_bytes, justify="right"),
         ]
-        print_list(storage, spec, fmt=fmt, selected_columns=columns, title="Download Storage Targets")
+        print_list(
+            storage, spec, fmt=fmt, selected_columns=columns, title="Download Storage Targets"
+        )

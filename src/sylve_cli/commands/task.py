@@ -36,7 +36,9 @@ def task_list(
     ctx: typer.Context,
     active_only: Annotated[
         bool,
-        typer.Option("--active/--recent", help="Show only active (queued/running) tasks or recent tasks."),
+        typer.Option(
+            "--active/--recent", help="Show only active (queued/running) tasks or recent tasks."
+        ),
     ] = False,
     guest_type: Annotated[
         str | None,

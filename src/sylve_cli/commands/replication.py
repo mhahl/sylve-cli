@@ -31,8 +31,18 @@ replication_app = typer.Typer(
     rich_markup_mode=None,
 )
 
-policy_app = typer.Typer(name="policy", help="Manage cluster replication policies.", no_args_is_help=True, rich_markup_mode=None)
-event_app = typer.Typer(name="event", help="Query replication events and live progress.", no_args_is_help=True, rich_markup_mode=None)
+policy_app = typer.Typer(
+    name="policy",
+    help="Manage cluster replication policies.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+event_app = typer.Typer(
+    name="event",
+    help="Query replication events and live progress.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
 
 replication_app.add_typer(policy_app, name="policy")
 replication_app.add_typer(event_app, name="event")
@@ -111,7 +121,9 @@ def policy_show(
     if isinstance(policies, list):
         for p in policies:
             if isinstance(p, dict) and int(p.get("id") or 0) == policy_id:
-                print_dict(p, fmt=fmt, selected_columns=columns, title=f"Replication Policy #{policy_id}")
+                print_dict(
+                    p, fmt=fmt, selected_columns=columns, title=f"Replication Policy #{policy_id}"
+                )
                 return
     raise ResourceNotFoundError(f"Replication policy #{policy_id} not found.")
 
@@ -131,7 +143,9 @@ def policy_create(
         ),
     ],
     cron: Annotated[str, typer.Option("--cron", help="Cron schedule expression.")] = "*/15 * * * *",
-    failover_mode: Annotated[str, typer.Option("--failover-mode", help="Failover mode (manual or auto).")] = "manual",
+    failover_mode: Annotated[
+        str, typer.Option("--failover-mode", help="Failover mode (manual or auto).")
+    ] = "manual",
     enabled: Annotated[bool, typer.Option("--enabled/--disabled", help="Enable policy.")] = True,
 ) -> None:
     """Create a cluster replication policy for a VM or jail."""
@@ -159,7 +173,9 @@ def policy_create(
                 "enabled": enabled,
             },
         )
-    console.print(f"[green]Created replication policy '{name}' for {guest_type} {guest_id}.[/green]")
+    console.print(
+        f"[green]Created replication policy '{name}' for {guest_type} {guest_id}.[/green]"
+    )
 
 
 @policy_app.command("run")
@@ -180,7 +196,9 @@ def policy_failover(
     policy_id: Annotated[int, typer.Argument(help="Replication policy ID to fail over.")],
     target_node: Annotated[
         str | None,
-        typer.Option("--target", "-t", help="Target node hostname or UUID (auto-selected if omitted)."),
+        typer.Option(
+            "--target", "-t", help="Target node hostname or UUID (auto-selected if omitted)."
+        ),
     ] = None,
     mode: Annotated[
         str,
@@ -188,11 +206,16 @@ def policy_failover(
     ] = "safe",
     move_pinned_source: Annotated[
         bool,
-        typer.Option("--move-pinned-source/--keep-pinned-source", help="Update pinned source node to new owner."),
+        typer.Option(
+            "--move-pinned-source/--keep-pinned-source",
+            help="Update pinned source node to new owner.",
+        ),
     ] = True,
     confirm_data_loss: Annotated[
         bool,
-        typer.Option("--confirm-data-loss", help="Acknowledge potential data loss for forced failover."),
+        typer.Option(
+            "--confirm-data-loss", help="Acknowledge potential data loss for forced failover."
+        ),
     ] = False,
 ) -> None:
     """Queue a safe or forced HA failover for a replication policy."""
@@ -230,7 +253,9 @@ def policy_delete(
 @event_app.command("list")
 def event_list(
     ctx: typer.Context,
-    policy_id: Annotated[int | None, typer.Option("--policy-id", help="Filter by policy ID.")] = None,
+    policy_id: Annotated[
+        int | None, typer.Option("--policy-id", help="Filter by policy ID.")
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-l", help="Maximum events to return.")] = 50,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -239,10 +264,13 @@ def event_list(
     """List recent replication events."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
-        events = client.get(
-            "/cluster/replication/events",
-            params={"policyId": policy_id, "limit": limit},
-        ) or []
+        events = (
+            client.get(
+                "/cluster/replication/events",
+                params={"policyId": policy_id, "limit": limit},
+            )
+            or []
+        )
     spec = [
         ColumnSpec("ID", "id", justify="right"),
         ColumnSpec("Policy ID", "policyId", justify="right"),
