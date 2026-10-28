@@ -1,119 +1,96 @@
-# sylve notifications
+# SYLVE-NOTIFICATIONS(1)
 
-Manage notification transports, rules, and active notifications.
+## NAME
 
-These are generic API commands. The request body is the Sylve API shape.
+`sylve-notifications` — manage notification transports, rules, and active notifications
 
-## Synopsis
+## SYNOPSIS
 
-    sylve notifications COMMAND [ARGS]...
+```sh
+sylve notifications COMMAND [ARGS ...]
+```
 
-## Commands
+## DESCRIPTION
 
-| Area | Commands |
-|---|---|
-| Active notifications | `list`, `count`, `dismiss-all`, `dismiss ID` |
-| Rules | `rules`, `rules-update`, `rule-create`, `rule-update ID`, `rule-delete ID`, `rules-bulk-delete`, `rules-bulk-update`, `rule-test` |
-| Transports | `transports`, `transport-create`, `transport-update ID`, `transport-delete ID`, `transport-test ID` |
+`sylve notifications` inspects and dismisses active notifications, and creates,
+updates, tests, and deletes notification rules and delivery transports via
+generic Sylve API bindings.
 
-## Options
+## SUBCOMMANDS
 
-All commands accept:
+| Subcommand | Path Arguments | Description |
+|---|---|---|
+| `list` | none | List active notifications |
+| `count` | none | Show active notification count |
+| `dismiss` | `ID` | Dismiss notification `ID` |
+| `dismiss-all` | none | Dismiss all active notifications |
+| `rules` | none | List notification rules |
+| `rules-update` | none | Replace or update notification rules |
+| `rule-create` | none | Create a notification rule |
+| `rule-update` | `ID` | Update rule `ID` |
+| `rule-delete` | `ID` | Delete rule `ID` |
+| `rules-bulk-delete` | none | Delete multiple rules |
+| `rules-bulk-update` | none | Update multiple rules |
+| `rule-test` | `ID` | Send a test notification for rule `ID` |
+| `transports` | none | List notification transports |
+| `transport-create` | none | Create a notification transport |
+| `transport-update` | `ID` | Update transport `ID` |
+| `transport-delete` | `ID` | Delete transport `ID` |
+| `transport-test` | `ID` | Test delivery on transport `ID` |
+
+## OPTIONS
+
+All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
 - `-p, --param KEY=VALUE`
-  Query parameter. Repeatable.
+  Query parameter (repeatable).
 - `-y, --yes`
-  Skip the destructive-request confirmation.
+  Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-Path arguments:
+## EXIT STATUS
 
-| Command | Arguments |
-|---|---|
-| `dismiss` | `id` |
-| `rule-update`, `rule-delete` | `id` |
-| `transport-update`, `transport-delete`, `transport-test` | `id` |
-| all other commands | none |
+- `0` — Success.
+- `1` — API error or aborted confirmation.
+- `2` — Command-line usage error.
 
-## Examples
+## EXAMPLES
 
-### Minimal
+Check active notification count and list recent alerts:
 
-    sylve notifications count -f json
+```sh
+sylve notifications count -f json
+sylve notifications list --param limit=10 --node node1.example.test --format json -c id,title,severity
+```
 
-Output (illustrative):
+Dismiss one or all notifications:
 
-    {
-      "count": 3
-    }
+```sh
+sylve notifications dismiss 1
+sylve notifications dismiss-all
+```
 
-### With every relevant option
+Create, update, test, and delete rules and transports:
 
-    sylve notifications list --param limit=10 --node node1.example.test --format json -c id,title,severity
+```sh
+sylve notifications rule-create \
+  --data '{"name":"node-offline","event":"node.offline","transportId":1,"enabled":true}'
+sylve notifications rule-update 2 --data '{"enabled":false}' -f json
+sylve notifications rule-test 2
 
-Output (illustrative):
+sylve notifications transport-create \
+  --data '{"name":"mail","type":"email","config":{"to":"admin@example.test"}}'
+sylve notifications transport-test 1
+sylve notifications transport-delete 1 --yes
+```
 
-    [
-      {
-        "id": 1,
-        "title": "Node drain complete",
-        "severity": "info"
-      }
-    ]
+## SEE ALSO
 
-`--param` filters the list. `-f json` changes the output format.
-
-### Dismiss
-
-    sylve notifications dismiss 1
-
-    sylve notifications dismiss-all
-
-Output (illustrative):
-
-    OK
-
-### Rules and transports
-
-    sylve notifications rule-create \
-      --data '{"name":"node-offline","event":"node.offline","transportId":1,"enabled":true}'
-
-    sylve notifications rule-update 2 --data '{"enabled":false}' -f json
-
-    sylve notifications rule-test 2
-
-    sylve notifications transport-create \
-      --data '{"name":"mail","type":"email","config":{"to":"admin@example.test"}}'
-
-    sylve notifications transport-test 1
-
-    sylve notifications transport-delete 1 --yes
-
-Output (illustrative):
-
-    {
-      "id": 2,
-      "enabled": false
-    }
-    OK
-
-`--data` carries the body. `--param` adds query parameters. `-y` skips the
-delete confirmation.
-
-## Inputs
-
-- The active context and token.
-- `--data` inline JSON/YAML or `@file`.
-- IDs from `notifications list`, `rules`, and `transports`.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- Mutating commands print the API result, or `OK` when the response is empty.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-system(1)](system.md),
+[sylve-options(7)](../global-options.md)

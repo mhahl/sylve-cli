@@ -1,105 +1,95 @@
-# sylve auth
+# SYLVE-AUTH(1)
 
-Inspect login configuration, create SSE tokens, and use passkeys.
+## NAME
 
-These are generic API commands. The request body is the Sylve API shape.
+`sylve-auth` — inspect login configuration, create SSE tokens, and perform WebAuthn passkey flows
 
-## Synopsis
+## SYNOPSIS
 
-    sylve auth COMMAND [ARGS]...
+```sh
+sylve auth COMMAND [ARGS ...]
+```
 
-## Commands
+## DESCRIPTION
 
-| Command | Purpose |
-|---|---|
-| `login-config` | Show login configuration |
-| `sse-token` | Create an SSE token |
-| `passkey-login-begin` | Begin passkey login |
-| `passkey-login-finish` | Finish passkey login |
-| `passkey-register-begin` | Begin passkey registration |
-| `passkey-register-finish` | Finish passkey registration |
+`sylve auth` queries server login capabilities, issues short-lived server-sent
+event (`SSE`) tokens, and executes WebAuthn passkey login and registration
+handshakes via generic Sylve API bindings.
 
 `login-config`, `passkey-login-begin`, and `passkey-login-finish` are public
-endpoints. The CLI does not send a bearer token for them.
+endpoints; the CLI does not send a bearer token when calling them.
 
-## Options
+## SUBCOMMANDS
 
-All commands accept:
+| Subcommand | Description |
+|---|---|
+| `login-config` | Show enabled authentication realms and passkey support |
+| `sse-token` | Create a short-lived token for SSE streams |
+| `passkey-login-begin` | Begin a WebAuthn passkey login challenge |
+| `passkey-login-finish` | Complete a WebAuthn passkey login challenge |
+| `passkey-register-begin` | Begin a WebAuthn passkey registration ceremony |
+| `passkey-register-finish` | Complete a WebAuthn passkey registration ceremony |
+
+## OPTIONS
+
+All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
 - `-p, --param KEY=VALUE`
-  Query parameter. Repeatable.
+  Query parameter (repeatable).
 - `-y, --yes`
-  Skip the destructive-request confirmation.
+  Accepted by the shared generic handler (no `auth` subcommand is destructive).
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-No command has path arguments. `-y/--yes` is accepted by the shared generic
-handler, but no `auth` command is destructive, so it changes nothing.
+## EXIT STATUS
 
-## Examples
+- `0` — Success.
+- `1` — API error.
+- `2` — Command-line usage error.
 
-### Minimal
+## EXAMPLES
 
-    sylve auth login-config -f json
+Query enabled login methods:
 
-Output (illustrative):
+```sh
+sylve auth login-config -f json
+```
 
-    {
-      "sylve": true,
-      "pam": false,
-      "passkeys": true
-    }
+```json
+{
+  "sylve": true,
+  "pam": false,
+  "passkeys": true
+}
+```
 
-### With every relevant option
+Issue an SSE token:
 
-    sylve auth sse-token \
-      --data '{"name":"monitoring","expiresIn":3600}' \
-      --param dryRun=0 \
-      --node node1.example.test \
-      --format json
+```sh
+sylve auth sse-token \
+  --data '{"name":"monitoring","expiresIn":3600}' \
+  --param dryRun=0 \
+  --node node1.example.test \
+  --format json
+```
 
-Output (illustrative):
+Run passkey login and registration ceremonies:
 
-    {
-      "token": "eyJhbGciOi...",
-      "expiresAt": "2026-10-28T21:00:00Z"
-    }
+```sh
+sylve auth passkey-login-begin --data '{"username":"admin"}' -f json
+sylve auth passkey-login-finish --data @passkey-response.json -f json
 
-`--data` carries the body. `--param` adds query parameters. `-f json` changes
-the output format.
+sylve auth passkey-register-begin -f json
+sylve auth passkey-register-finish --data @passkey-registration.json -f json
+```
 
-### Passkey login
+## SEE ALSO
 
-    sylve auth passkey-login-begin --data '{"username":"admin"}' -f json
-
-    sylve auth passkey-login-finish --data @passkey-response.json -f json
-
-Output (illustrative):
-
-    {
-      "challenge": "...",
-      "allowCredentials": []
-    }
-
-### Passkey registration
-
-    sylve auth passkey-register-begin -f json
-
-    sylve auth passkey-register-finish --data @passkey-registration.json -f json
-
-## Inputs
-
-- The server URL from the active context, `SYLVE_SERVER`, or environment.
-- `--data` inline JSON/YAML or `@file`.
-- `--param` repeated query parameters.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- Login and passkey commands return WebAuthn challenge or credential objects.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-login(1)](login.md),
+[sylve-user(1)](user.md),
+[sylve-options(7)](../global-options.md)

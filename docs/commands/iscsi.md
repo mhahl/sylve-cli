@@ -1,115 +1,106 @@
-# sylve iscsi
+# SYLVE-ISCSI(1)
 
-Manage iSCSI initiators, targets, LUNs, and portals.
+## NAME
 
-These are generic API commands. The request body is the Sylve API shape.
+`sylve-iscsi` — manage iSCSI initiators, targets, LUNs, and portals
 
-## Synopsis
+## SYNOPSIS
 
-    sylve iscsi COMMAND [ARGS]...
+```sh
+sylve iscsi COMMAND [ARGS ...]
+```
 
-## Commands
+## DESCRIPTION
 
-| Area | Commands |
-|---|---|
-| Initiators | `initiators`, `initiator-create`, `initiator-update ID`, `initiator-delete ID`, `initiator-connect ID` |
-| Status | `status`, `sessions` |
-| Targets | `targets`, `target-create`, `target-update TARGETID`, `target-delete TARGETID` |
-| LUNs | `lun-add TARGETID`, `lun-remove TARGETID LUNID` |
-| Portals | `portal-add TARGETID`, `portal-remove TARGETID PORTALID` |
+`sylve iscsi` manages iSCSI initiators, targets, LUNs, portals, and active
+sessions via generic Sylve API bindings. Request payloads are supplied with
+`--data` in JSON or YAML format.
 
-## Options
+## SUBCOMMANDS
 
-All commands accept:
+| Subcommand | Path Arguments | Description |
+|---|---|---|
+| `initiators` | none | List iSCSI initiators |
+| `initiator-create` | none | Create an initiator |
+| `initiator-update` | `ID` | Update initiator `ID` |
+| `initiator-delete` | `ID` | Delete initiator `ID` |
+| `initiator-connect` | `ID` | Connect initiator `ID` |
+| `status` | none | Show iSCSI subsystem status |
+| `sessions` | none | List active iSCSI sessions |
+| `targets` | none | List iSCSI targets |
+| `target-create` | none | Create a target |
+| `target-update` | `TARGET_ID` | Update target `TARGET_ID` |
+| `target-delete` | `TARGET_ID` | Delete target `TARGET_ID` |
+| `lun-add` | `TARGET_ID` | Add a LUN to `TARGET_ID` |
+| `lun-remove` | `TARGET_ID LUN_ID` | Remove LUN `LUN_ID` from `TARGET_ID` |
+| `portal-add` | `TARGET_ID` | Add a portal to `TARGET_ID` |
+| `portal-remove` | `TARGET_ID PORTAL_ID` | Remove portal `PORTAL_ID` from `TARGET_ID` |
+
+## OPTIONS
+
+All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
 - `-p, --param KEY=VALUE`
-  Query parameter. Repeatable.
+  Query parameter (repeatable).
 - `-y, --yes`
-  Skip the destructive-request confirmation.
+  Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-Path arguments:
+## EXIT STATUS
 
-| Command | Arguments |
-|---|---|
-| `initiator-update`, `initiator-delete`, `initiator-connect` | `id` |
-| `target-update`, `target-delete` | `targetId` |
-| `lun-add` | `targetId` |
-| `lun-remove` | `targetId lunId` |
-| `portal-add` | `targetId` |
-| `portal-remove` | `targetId portalId` |
-| all other commands | none |
+- `0` — Success.
+- `1` — API error or aborted confirmation.
+- `2` — Command-line usage error.
 
-## Examples
+## EXAMPLES
 
-### Minimal
+List iSCSI targets as JSON:
 
-    sylve iscsi targets -f json
+```sh
+sylve iscsi targets -f json
+```
 
-Output (illustrative):
+```json
+[
+  {
+    "id": 1,
+    "name": "iqn.2026-10.test.sylve:storage",
+    "enabled": true
+  }
+]
+```
 
-    [
-      {
-        "id": 1,
-        "name": "iqn.2026-10.test.sylve:storage",
-        "enabled": true
-      }
-    ]
+Create a target, attach and remove a LUN and portal:
 
-### With every relevant option
+```sh
+sylve iscsi target-create \
+  --data '{"name":"iqn.2026-10.test.sylve:storage","alias":"storage","enabled":true}' \
+  --param validate=1 \
+  --node node1.example.test \
+  --format json
 
-    sylve iscsi target-create \
-      --data '{"name":"iqn.2026-10.test.sylve:storage","alias":"storage","enabled":true}' \
-      --param validate=1 \
-      --node node1.example.test \
-      --format json
+sylve iscsi lun-add 2 --data '{"path":"/dev/zvol/zroot/iscsi/disk0","lunId":0}'
+sylve iscsi portal-add 2 --data '{"address":"10.0.0.11","port":3260}'
+sylve iscsi lun-remove 2 0
+sylve iscsi portal-remove 2 1 --yes
+```
 
-Output (illustrative):
+Create and connect an initiator and check subsystem status:
 
-    {
-      "id": 2,
-      "name": "iqn.2026-10.test.sylve:storage"
-    }
+```sh
+sylve iscsi initiator-create --data '{"name":"iqn.2026-10.test.client:web-01"}'
+sylve iscsi initiator-connect 1
+sylve iscsi status -f json
+```
 
-### LUN and portal
+## SEE ALSO
 
-    sylve iscsi lun-add 2 --data '{"path":"/dev/zvol/zroot/iscsi/disk0","lunId":0}'
-
-    sylve iscsi portal-add 2 --data '{"address":"10.0.0.11","port":3260}'
-
-    sylve iscsi lun-remove 2 0
-
-    sylve iscsi portal-remove 2 1 --yes
-
-Output (illustrative):
-
-    OK
-
-`--data` carries the body. `-y` skips the delete confirmation. `--param`
-adds query parameters.
-
-### Initiator
-
-    sylve iscsi initiator-create --data '{"name":"iqn.2026-10.test.client:web-01"}'
-
-    sylve iscsi initiator-connect 1
-
-    sylve iscsi status -f json
-
-## Inputs
-
-- The active context and token.
-- `--data` inline JSON/YAML or `@file`.
-- Target, LUN, and portal IDs from the list commands.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- Mutating commands print the API result, or `OK` when the response is empty.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-samba(1)](samba.md),
+[sylve-zfs(1)](zfs.md),
+[sylve-options(7)](../global-options.md)

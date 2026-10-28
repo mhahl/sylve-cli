@@ -1,103 +1,85 @@
-# sylve group
+# SYLVE-GROUP(1)
 
-Manage authentication groups and membership.
+## NAME
 
-These are generic API commands. The request body is the Sylve API shape.
+`sylve-group` — manage authentication groups and group membership
 
-## Synopsis
+## SYNOPSIS
 
-    sylve group COMMAND [ARGS]...
+```sh
+sylve group COMMAND [ARGS ...]
+```
 
-## Commands
+## DESCRIPTION
 
-| Command | Purpose |
-|---|---|
-| `list` | List groups |
-| `create` | Create a group |
-| `delete GROUPID` | Delete a group |
-| `members GROUPID` | Replace group members |
+`sylve group` creates, lists, updates membership for, and deletes authentication
+groups via generic Sylve API bindings. Note that `group members` replaces the
+entire member list rather than appending to it.
 
-## Options
+## SUBCOMMANDS
 
-All commands accept:
+| Subcommand | Path Arguments | Description |
+|---|---|---|
+| `list` | none | List authentication groups |
+| `create` | none | Create an authentication group |
+| `delete` | `GROUP_ID` | Delete group `GROUP_ID` |
+| `members` | `GROUP_ID` | Replace the member list of `GROUP_ID` |
+
+## OPTIONS
+
+All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
 - `-p, --param KEY=VALUE`
-  Query parameter. Repeatable.
+  Query parameter (repeatable).
 - `-y, --yes`
-  Skip the destructive-request confirmation.
+  Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-Path arguments:
+## EXIT STATUS
 
-| Command | Arguments |
-|---|---|
-| `delete`, `members` | `groupId` |
-| `list`, `create` | none |
+- `0` — Success.
+- `1` — API error or aborted confirmation.
+- `2` — Command-line usage error.
 
-`members` replaces the full member list. It does not append.
+## EXAMPLES
 
-## Examples
+List groups as JSON:
 
-### Minimal
+```sh
+sylve group list -f json
+```
 
-    sylve group list -f json
+```json
+[
+  {
+    "id": 1,
+    "name": "admins",
+    "members": [1, 2]
+  }
+]
+```
 
-Output (illustrative):
+Create a group, replace its member list, and delete it:
 
-    [
-      {
-        "id": 1,
-        "name": "admins",
-        "members": [1, 2]
-      }
-    ]
+```sh
+sylve group create \
+  --data '{"name":"operators","description":"VM and jail operators","permissions":["vm:write","jail:write"]}' \
+  --param validate=1 \
+  --node node1.example.test \
+  --format json
 
-### With every relevant option
+sylve group members 2 --data '{"memberIds":[1,3]}' -f json
+sylve group delete 2 --yes
+```
 
-    sylve group create \
-      --data '{"name":"operators","description":"VM and jail operators","permissions":["vm:write","jail:write"]}' \
-      --param validate=1 \
-      --node node1.example.test \
-      --format json
+## SEE ALSO
 
-Output (illustrative):
-
-    {
-      "id": 2,
-      "name": "operators"
-    }
-
-### Replace members and delete
-
-    sylve group members 2 --data '{"memberIds":[1,3]}' -f json
-
-    sylve group delete 2 --yes
-
-Output (illustrative):
-
-    {
-      "id": 2,
-      "members": [1, 3]
-    }
-    OK
-
-`--data` carries the replacement member list. `--param` adds query
-parameters. `-y` skips the delete confirmation.
-
-## Inputs
-
-- The active context and token.
-- `--data` inline JSON/YAML or `@file`.
-- Group IDs from `group list`.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- Mutating commands print the API result, or `OK` when the response is empty.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-user(1)](user.md),
+[sylve-auth(1)](auth.md),
+[sylve-options(7)](../global-options.md)

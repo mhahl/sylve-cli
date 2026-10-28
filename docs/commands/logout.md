@@ -1,50 +1,71 @@
-# sylve logout
+# SYLVE-LOGOUT(1)
 
-Revoke the active session token and clear it from the saved context.
+## NAME
 
-## Synopsis
+`sylve-logout` — revoke the active session token and clear it from the saved context
 
-    sylve logout
+## SYNOPSIS
 
-## Options
+```sh
+sylve [GLOBAL_OPTIONS] logout
+```
 
-This command has no options. Use the global options before the command:
+## DESCRIPTION
 
-    sylve --context prod --config /path/to/config.yaml logout
+`sylve logout` calls the Sylve server logout endpoint to revoke the active
+bearer token, clears `token` and `expires_at` from the active context in the
+configuration file (rewriting it with mode `0600`), and prints the logged-out
+context name and server URL.
 
-## Examples
+The active session is read from the configuration file, `--context`, or
+`SYLVE_SERVER` and `SYLVE_TOKEN`.
 
-### Minimal
+## OPTIONS
 
-    sylve logout
+`logout` takes no subcommand-specific options. Global options (`--context`,
+`--config`, `-k`) must be placed before `logout`:
 
-Output (illustrative):
+```sh
+sylve --context prod --config /path/to/config.yaml logout
+```
 
-    Logged out of context admin@sylve.example.test (https://sylve.example.test).
+## FILES
 
-The token is removed from the context and the config file is rewritten with
-mode `0600`.
+- `~/.config/sylve/config.yaml`
+  Default configuration file updated with mode `0600`.
 
-### With every relevant option
+## EXIT STATUS
 
-    sylve --context prod --config /home/admin/.config/sylve/prod.yaml logout
+- `0` — Token revoked and cleared.
+- `1` — Server rejected the request or could not be reached.
+- `2` — Command-line usage error.
 
-Output (illustrative):
+## EXAMPLES
 
-    Logged out of context prod (https://sylve.example.test).
+Log out of the current context:
 
-`--context prod` selected a saved context. `--config` selected a non-default
-config file. These are global options, so they go before `logout`.
+```sh
+sylve logout
+```
 
-## Inputs
+```text
+Logged out of context admin@sylve.example.test (https://sylve.example.test).
+```
 
-- The active context and token from the config file, `SYLVE_SERVER` and
-  `SYLVE_TOKEN`, or `--context`.
+Log out of a named context in an alternate configuration file:
 
-## Outputs
+```sh
+sylve --context prod --config /home/admin/.config/sylve/prod.yaml logout
+```
 
-- Calls the server logout endpoint.
-- Clears `token` and `expires_at` in the saved context.
-- Prints the context name and server URL.
-- Exit `0` on success. Exit `1` if the server rejects the request or cannot be
-  reached.
+```text
+Logged out of context prod (https://sylve.example.test).
+```
+
+## SEE ALSO
+
+[sylve(1)](../../README.md),
+[sylve-login(1)](login.md),
+[sylve-whoami(1)](whoami.md),
+[sylve-config(1)](config.md),
+[sylve-options(7)](../global-options.md)

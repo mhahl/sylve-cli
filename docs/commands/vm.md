@@ -1,267 +1,209 @@
-# sylve vm
+# SYLVE-VM(1)
 
-Manage Bhyve virtual machines, snapshots, and templates.
+## NAME
 
-`server` is a hidden alias for this command group:
+`sylve-vm` — manage Bhyve virtual machines, snapshots, and templates
 
-    sylve server list
+## SYNOPSIS
 
-is equivalent to:
+```sh
+sylve vm COMMAND [ARGS ...]
+sylve server COMMAND [ARGS ...]
+```
 
-    sylve vm list
+## DESCRIPTION
 
-## Synopsis
+`sylve vm` (and its hidden alias `sylve server`) creates, inspects, controls,
+migrates, snapshots, and templates Bhyve virtual machines on Sylve cluster
+nodes.
 
-    sylve vm COMMAND [ARGS]...
+`vm create` supports three provisioning modes:
 
-## Commands
+1. **Scratch creation** from command-line hardware, storage, network, VNC, and
+   boot flags.
+2. **Template deployment** via `--template ID|NAME`, optionally cloning multiple
+   guests with `--count` and `--start-rid`.
+3. **Configuration file creation** via `--file FILE` (YAML or JSON).
 
-| Command | Purpose |
+On a terminal, `vm create` prints a confirmation plan before sending the API
+request unless `-y` / `--yes` or `--dry-run` is given.
+
+## SUBCOMMANDS
+
+| Subcommand | Description |
 |---|---|
-| `create` | Create a VM from flags, a YAML/JSON file, or a template |
-| `list` | List VMs across nodes |
-| `show VM` | Full VM details |
-| `start`, `stop`, `shutdown`, `reboot` | Power actions on one or more VMs |
-| `migrate VM` | Preflight and migrate to another node |
-| `delete VM` | Delete a VM and optional attached storage |
-| `logs VM` | Console logs |
-| `guest-agent VM` | QEMU Guest Agent OS and network data |
+| `create [NAME]` | Create a VM from flags, a YAML/JSON file, or a template |
+| `list` | List VMs across cluster nodes |
+| `show VM` | Show full details for a VM by RID or name |
+| `start`, `stop`, `shutdown`, `reboot` | Perform power actions on one or more VMs |
+| `migrate VM` | Validate preflight and migrate a VM to another node |
+| `delete VM` | Delete a VM and optionally its volumes, raw disks, and MACs |
+| `logs VM` | Display VM console logs |
+| `guest-agent VM` | Query QEMU Guest Agent OS and network information |
 | `rename VM NEW_NAME` | Rename a VM |
-| `snapshot list/create/rollback/delete` | ZFS snapshots |
-| `template list/capture/delete` | VM templates |
-| `template-show`, `description`, `domain`, `stats`, `stats-step` | Generic API commands |
-| `hardware-cpu`, `hardware-ram`, `hardware-pci`, `hardware-vnc` | Generic hardware updates |
-| `network-attach`, `network-detach`, `network-update` | Generic network updates |
-| `storage-attach`, `storage-from-image`, `storage-update`, `storage-delete` | Generic storage updates |
-| `options-boot-order`, `options-boot-rom`, `options-clock` | Generic boot and clock updates |
-| `options-cloud-init`, `options-extra-bhyve`, `options-ignore-umsrs` | Generic cloud-init and bhyve updates |
-| `options-qemu-guest-agent`, `options-serial-console`, `options-shutdown-wait-time` | Generic guest-agent and shutdown updates |
-| `options-tpm`, `options-wol` | Generic TPM and Wake-on-LAN updates |
-| `registration-purge` | Purge an orphaned registration |
+| `snapshot list/create/rollback/delete` | Manage VM ZFS snapshots |
+| `template list/capture/delete` | Manage VM templates |
+| `template-show`, `description`, `domain`, `stats`, `stats-step` | Generic read/update API commands |
+| `hardware-cpu`, `hardware-ram`, `hardware-pci`, `hardware-vnc` | Generic hardware update commands |
+| `network-attach`, `network-detach`, `network-update` | Generic NIC management commands |
+| `storage-attach`, `storage-from-image`, `storage-update`, `storage-delete` | Generic storage management commands |
+| `options-boot-order`, `options-boot-rom`, `options-clock`, `options-cloud-init`, `options-extra-bhyve`, `options-ignore-umsrs`, `options-qemu-guest-agent`, `options-serial-console`, `options-shutdown-wait-time`, `options-tpm`, `options-wol` | Generic VM option update commands |
+| `registration-purge` | Purge an orphaned VM registration |
 
-## Options
+## OPTIONS
 
 ### `vm create`
 
-- `NAME`
-  VM name. Omit to use `--name`, the config file, or the template default.
-- `--name NAME`
-  VM name. Overrides the positional argument.
+- `NAME` / `--name NAME`
+  VM name. `--name` overrides the positional argument. Omit to use the config
+  file or template default.
 - `-n, --node NODE`
   Target node.
 - `--rid RID`
-  VM RID, 1-9999. Default: next free guest ID.
+  VM RID (`1`–`9999`, default: next free guest ID).
 - `--template ID|NAME`
   Create from a VM template.
 - `--file FILE`
-  YAML or JSON create configuration.
+  Read create configuration from a YAML or JSON file. Supported top-level keys:
+  `name`, `node`, `rid`, `template`, `description`, `cpu`, `sockets`,
+  `threads`, `memory`, `storage_type`, `pool`, `disk_size`,
+  `storage_emulation`, `iso`, `switch`, `switch_emulation`, `mac_object`,
+  `vnc`, `cloud_init`, `boot`, `options`.
 - `--description, -d TEXT`
-  VM description, up to 1024 characters.
-- `--cpu N`
-  CPU cores. Default: `1`.
-- `--sockets N`
-  CPU sockets. Default: `1`.
-- `--threads N`
-  CPU threads per core. Default: `1`.
+  VM description (up to 1024 characters).
+- `--cpu N`, `--sockets N`, `--threads N`
+  CPU cores, sockets, and threads per core (default: `1` each).
 - `--memory SIZE`
-  Memory, for example `2G` or `512M`. Default: `1G`. Minimum 128 MiB.
+  RAM allocation, e.g. `2G` or `512M` (default: `1G`, minimum: `128M`).
 - `--storage-type TYPE`
-  `zvol`, `raw`, `image`, `filesystem`, or `none`. Default: `zvol`.
+  `zvol`, `raw`, `image`, `filesystem`, or `none` (default: `zvol`).
 - `--pool POOL`
   ZFS pool for the primary disk or template clone.
 - `--disk-size SIZE`
-  Primary disk size, for example `20G`. Default: `1G`. Minimum 128 MiB.
+  Primary disk size, e.g. `20G` (default: `1G`, minimum: `128M`).
 - `--storage-emulation TYPE`
-  `virtio-blk`, `virtio-9p`, `ahci-hd`, `ahci-cd`, or `nvme`.
-  Default: `virtio-blk`.
+  `virtio-blk`, `virtio-9p`, `ahci-hd`, `ahci-cd`, or `nvme` (default: `virtio-blk`).
 - `--iso ID|NAME`
-  Download UUID or filename.
+  Download UUID or filename to attach as optical/boot media.
 - `--switch NAME`
-  Network switch name, or `none`. Default: no switch.
+  Network switch name, or `none` (default: no switch).
 - `--switch-emulation TYPE`
-  NIC emulation, for example `virtio-net`. Default: `virtio-net` when a
-  switch is set.
+  NIC emulation model (default: `virtio-net` when a switch is attached).
 - `--mac-object NAME|ID`
-  Existing MAC object.
+  Existing MAC address object.
 - `--cloud-init / --no-cloud-init`
-  Enable or disable cloud-init. Default: off. Supplying user-data or meta-data
-  enables it.
-- `--user-data FILE`
-  Cloud-init user-data. Requires `--iso` and a primary disk.
-- `--meta-data FILE`
-  Cloud-init meta-data. Required with cloud-init.
-- `--network-config FILE`
-  Cloud-init network-config.
+  Enable or disable cloud-init (default: off; implied by `--user-data` or
+  `--meta-data`).
+- `--user-data FILE`, `--meta-data FILE`, `--network-config FILE`
+  Cloud-init YAML files. Cloud-init requires both user-data and meta-data, a
+  cloud-init-capable `--iso`, and a primary disk.
 - `--vnc / --no-vnc`
-  Enable or disable VNC. Default: enabled.
+  Enable or disable VNC (default: `--vnc`).
 - `--vnc-bind ADDRESS`
-  VNC bind address. Default: `127.0.0.1`.
+  VNC bind address (default: `127.0.0.1`).
 - `--vnc-port PORT`
-  VNC port. Default: next free port in 5900-5999.
+  VNC port (default: next free port in `5900`–`5999`).
 - `--vnc-password PASSWORD`
-  VNC password. Default: generated 12-character password. Commas are rejected.
+  VNC password (default: generated 12-character password; commas are rejected).
 - `--vnc-resolution WxH`
-  VNC resolution. Default: `640x480`.
+  VNC resolution (default: `640x480`).
 - `--vnc-wait / --no-vnc-wait`
-  Wait for VNC before starting. Default: `--no-vnc-wait`.
-- `--serial / --no-serial`
-  Serial console. Default: off.
-- `--tpm / --no-tpm`
-  TPM emulation. Default: off.
-- `--qemu-guest-agent / --no-qemu-guest-agent`
-  QEMU Guest Agent. Default: off.
-- `--ignore-umsr / --no-ignore-umsr`
-  Ignore unknown MSRs. Default: off.
-- `--apic / --no-apic`
-  APIC. Default: on.
-- `--acpi / --no-acpi`
-  ACPI. Default: on.
+  Wait for a VNC connection before booting (default: `--no-vnc-wait`).
+- `--serial / --no-serial`, `--tpm / --no-tpm`, `--qemu-guest-agent / --no-qemu-guest-agent`, `--ignore-umsr / --no-ignore-umsr`
+  Enable or disable serial console, TPM emulation, QEMU Guest Agent, and
+  unknown MSR ignoring (all default to off).
+- `--apic / --no-apic`, `--acpi / --no-acpi`
+  Enable or disable APIC and ACPI (both default to on).
 - `--boot-rom ROM`
-  `uefi`, `uboot`, or `none`. Default: `uefi`.
+  Boot ROM: `uefi`, `uboot`, or `none` (default: `uefi`).
 - `--time-offset OFFSET`
-  `utc` or `localtime`. Default: `utc`.
-- `--start-at-boot / --no-start-at-boot`
-  Autostart. Default: off.
-- `--start-order N`
-  Autostart order. Default: `0`.
+  RTC offset: `utc` or `localtime` (default: `utc`).
+- `--start-at-boot / --no-start-at-boot`, `--start-order N`
+  Autostart at host boot (default: off) and boot order (`0`).
 - `--pci-device DEVICE`
-  PCI passthrough device name or ID. Repeatable.
+  PCI passthrough device name or ID (repeatable).
 - `--extra-bhyve-option OPTION`
-  Extra bhyve option. Repeatable.
-- `--start-rid RID`
-  Template mode: first RID for multiple VMs.
-- `--count N`
-  Template mode: number of VMs, 1-200.
-- `--name-prefix PREFIX`
-  Template mode: name prefix.
-- `--storage-pool SOURCE_ID=POOL`
-  Template storage mapping. Repeatable.
-- `--rewrite-cloud-init-identity / --no-rewrite-cloud-init-identity`
-  Template mode: rewrite cloud-init identity.
-- `--cloud-init-prefix PREFIX`
-  Template mode: cloud-init identity prefix.
+  Additional `bhyve(8)` flag (repeatable).
+- `--start-rid RID`, `--count N`, `--name-prefix PREFIX`, `--storage-pool SOURCE_ID=POOL`, `--rewrite-cloud-init-identity / --no-rewrite-cloud-init-identity`, `--cloud-init-prefix PREFIX`
+  Template deployment options (`--count` accepts `1`–`200`; `--storage-pool` is
+  repeatable).
 - `--start`
-  Start the VM or VMs after creation. Default: off.
+  Start the VM(s) immediately after creation.
 - `-w, --wait / --no-wait`
-  Wait for template and start tasks. Default: `--no-wait`.
+  Wait for template and start tasks (default: `--no-wait`).
 - `--dry-run`
-  Print the API request without creating anything.
+  Print the normalized API payload without creating anything.
 - `-y, --yes`
-  Skip confirmation.
+  Skip interactive confirmation.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format for dry-run and results. Default: `table`.
+  Output format (default: `table`).
 
-### `vm list`
+### `vm list` and `vm show`
 
-- `-n, --node NODE`
-  Limit to one node.
-- `--long, -l`
-  Fetch full CPU, RAM, VNC, autostart, and description data.
-- `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
-- `-c, --column NAME`
-  Select columns.
-- `--sort-column NAME`
-  Sort rows.
-
-### `vm show`
-
-- `VM` (required)
-  RID or name.
-- `-n, --node NODE`
-  Target node.
-- `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
-- `-c, --column NAME`
-  Select fields.
+- `list`: `-n, --node NODE`, `--long, -l` (fetches CPU, RAM, VNC, autostart,
+  and description), `-f, --format`, `-c, --column`, `--sort-column NAME`.
+- `show VM`: `VM` (RID or name), `-n, --node NODE`, `-f, --format`, `-c, --column`.
 
 ### `vm start`, `stop`, `shutdown`, `reboot`
 
 - `VMS...` (required)
-  One or more RIDs or names.
+  One or more VM RIDs or names.
 - `-n, --node NODE`
   Target node.
 - `-w, --wait / --no-wait`
-  Wait for the task. Default: `--no-wait`.
+  Wait for the lifecycle task (default: `--no-wait`).
 
 ### `vm migrate`
 
 - `VM` (required)
-  RID or name.
+  VM RID or name.
 - `--target, -t NODE` (required)
-  Destination hostname or UUID.
+  Destination node hostname or UUID.
 - `--validate-only`, `--dry-run`
-  Run preflight only.
+  Run migration preflight only.
 - `-n, --node NODE`
   Source node.
 - `-w, --wait / --no-wait`
-  Wait for migration. Default: `--wait`.
+  Wait for migration completion (default: `--wait`).
 
 ### `vm delete`
 
 - `VM` (required)
-  RID or name.
+  VM RID or name.
 - `--delete-volumes / --keep-volumes`
-  Delete attached ZFS volumes. Default: `--delete-volumes`.
+  Delete attached ZFS volumes (default: `--delete-volumes`).
 - `--delete-raw-disks / --keep-raw-disks`
-  Delete RAW disk images. Default: `--delete-raw-disks`.
+  Delete RAW disk images (default: `--delete-raw-disks`).
 - `--delete-macs / --keep-macs`
-  Delete associated MAC objects. Default: `--delete-macs`.
+  Delete associated MAC objects (default: `--delete-macs`).
 - `--force`
   Best-effort removal.
-- `-y, --yes`
-  Skip confirmation.
-- `-n, --node NODE`
-  Target node.
+- `-y, --yes`, `-n, --node NODE`
+  Skip confirmation; target node.
 
 ### `vm logs`, `vm guest-agent`, `vm rename`
 
-- `VM` (required)
-  RID or name.
-- `NEW_NAME`
-  New name, for `rename` only.
-- `-n, --node NODE`
-  Target node.
-- `-f, --format` and `-c, --column`
-  `guest-agent` only.
+- `VM` (required): RID or name.
+- `NEW_NAME` (required for `rename`): new VM name.
+- `-n, --node NODE`: target node.
+- `-f, --format`, `-c, --column`: output options (`guest-agent` only).
 
-### `vm snapshot list`
+### `vm snapshot` and `vm template`
 
-- `VM` (required), `-n/--node`,
-  `-f/--format`, `-c/--column`, `--long`.
+- `snapshot list VM`: `-n/--node`, `-f/--format`, `-c/--column`, `--long`.
+- `snapshot create VM`: `--name, -m NAME` (required), `--description, -d TEXT`, `-n/--node`.
+- `snapshot rollback VM SNAPSHOT_ID`: `-y/--yes`, `-n/--node`.
+- `snapshot delete VM SNAPSHOT_ID`: `-n/--node`.
+- `template list`: `-n/--node`, `-f/--format`, `-c/--column`.
+- `template capture VM`: `--name NAME` (required), `-n/--node`, `-w/--wait` (default: `--wait`).
+- `template delete TEMPLATE_ID`: `-n/--node`.
 
-### `vm snapshot create`
+### Generic Subcommands
 
-- `VM` (required), `--name, -m NAME` (required),
-  `--description, -d TEXT` (default empty), `-n/--node`.
+All generic VM subcommands accept `--data/-d`, `--param/-p`, `-y/--yes`,
+`-n/--node`, and `-f/--format`:
 
-### `vm snapshot rollback`
-
-- `VM` (required), `SNAPSHOT_ID` (required), `-y/--yes`, `-n/--node`.
-
-### `vm snapshot delete`
-
-- `VM` (required), `SNAPSHOT_ID` (required), `-n/--node`.
-
-### `vm template list`
-
-- `-n/--node`, `-f/--format`, `-c/--column`.
-
-### `vm template capture`
-
-- `VM` (required), `--name NAME` (required), `-n/--node`,
-  `-w/--wait` (default `--wait`).
-
-### `vm template delete`
-
-- `TEMPLATE_ID` (required), `-n/--node`.
-
-### Generic commands
-
-All generic VM commands accept `--data/-d`, `--param/-p`, `-y/--yes`,
-`-n/--node`, and `-f/--format`. Path arguments:
-
-| Command | Arguments |
+| Subcommand | Path Arguments |
 |---|---|
 | `template-show` | `templateId` |
 | `description`, `domain`, `stats` | `rid` |
@@ -272,211 +214,101 @@ All generic VM commands accept `--data/-d`, `--param/-p`, `-y/--yes`,
 | `storage-update`, `storage-delete` | `rid storageId` |
 | `options-*`, `registration-purge` | `rid` |
 
-## Examples
+## EXIT STATUS
 
-### Minimal
+- `0` — Success.
+- `1` — API error, failed task, or aborted confirmation.
+- `2` — Command-line usage error.
 
-    sylve vm list
+## EXAMPLES
 
-Output (illustrative):
+List virtual machines:
 
-    Virtual Machines
-    +-----+---------+---------+---------------------+----------+
-    | RID | Name    | State   | Node                | VNC Port |
-    +-----+---------+---------+---------------------+----------+
-    | 101 | web-01  | RUNNING | node1.example.test  | 5900     |
-    | 102 | db-01   | SHUTOFF | node2.example.test  | -        |
-    +-----+---------+---------+---------------------+----------+
+```sh
+sylve vm list
+```
 
-### With every relevant option
+```text
+Virtual Machines
++-----+---------+---------+---------------------+----------+
+| RID | Name    | State   | Node                | VNC Port |
++-----+---------+---------+---------------------+----------+
+| 101 | web-01  | RUNNING | node1.example.test  | 5900     |
+| 102 | db-01   | SHUTOFF | node2.example.test  | -        |
++-----+---------+---------+---------------------+----------+
+```
 
-This scratch example uses every non-conflicting hardware, storage, network,
-VNC, boot, and runtime flag. Template and scratch options are mutually
-exclusive; the template, cloud-init, config-file, and dry-run examples follow.
+Create and start a VM from scratch with full hardware, storage, network, VNC,
+and boot flags:
 
-    sylve vm create web-01 \
-      --node node1.example.test \
-      --rid 120 \
-      --description "Web frontend" \
-      --sockets 1 --cpu 4 --threads 2 \
-      --memory 4G \
-      --storage-type zvol --pool zroot --disk-size 40G --storage-emulation virtio-blk \
-      --iso debian-13-netinst.iso \
-      --switch vm-public --switch-emulation virtio-net --mac-object web-01-mac \
-      --vnc --vnc-bind 127.0.0.1 --vnc-port 5920 --vnc-password s3cret \
-      --vnc-resolution 1024x768 --no-vnc-wait \
-      --serial --tpm --qemu-guest-agent --ignore-umsr --apic --acpi \
-      --boot-rom uefi --time-offset utc \
-      --start-at-boot --start-order 10 \
-      --pci-device 5 --extra-bhyve-option=-A \
-      --start --wait --yes
+```sh
+sylve vm create web-01 \
+  --node node1.example.test \
+  --rid 120 \
+  --description "Web frontend" \
+  --sockets 1 --cpu 4 --threads 2 \
+  --memory 4G \
+  --storage-type zvol --pool zroot --disk-size 40G --storage-emulation virtio-blk \
+  --iso debian-13-netinst.iso \
+  --switch vm-public --switch-emulation virtio-net --mac-object web-01-mac \
+  --vnc --vnc-bind 127.0.0.1 --vnc-port 5920 --vnc-password s3cret \
+  --vnc-resolution 1024x768 --no-vnc-wait \
+  --serial --tpm --qemu-guest-agent --ignore-umsr --apic --acpi \
+  --boot-rom uefi --time-offset utc \
+  --start-at-boot --start-order 10 \
+  --pci-device 5 --extra-bhyve-option=-A \
+  --start --wait --yes
+```
 
-Output (illustrative):
+```text
+Created and started VM web-01 (120) on node1.example.test.
+VNC password: s3cret
+```
 
-    Created and started VM web-01 (120) on node1.example.test.
-    VNC password: s3cret
+Deploy three VMs from a template:
 
-`--cpu 4` sets cores; `--sockets` and `--threads` set the other CPU
-dimensions. `--pci-device` and `--extra-bhyve-option` are repeatable.
-`--wait` is accepted with `--start`; the start task is then awaited.
+```sh
+sylve vm create --template debian-13 \
+  --node node1.example.test \
+  --start-rid 200 \
+  --count 3 \
+  --name-prefix web \
+  --pool zroot \
+  --storage-pool 0=zroot \
+  --rewrite-cloud-init-identity \
+  --cloud-init-prefix web \
+  --start --wait --yes
+# Created VM(s) from template 'debian-13' on node1.example.test.
+```
 
-### Create with every template option
+Provision with cloud-init or preview a YAML config file with `--dry-run`:
 
-    sylve vm create --template debian-13 \
-      --node node1.example.test \
-      --start-rid 200 \
-      --count 3 \
-      --name-prefix web \
-      --pool zroot \
-      --storage-pool 0=zroot \
-      --rewrite-cloud-init-identity \
-      --cloud-init-prefix web \
-      --start --wait --yes
+```sh
+sylve vm create web-02 --iso debian-13-cloudinit.iso --pool zroot \
+  --cloud-init --user-data user-data.yaml --meta-data meta-data.yaml \
+  --network-config network-config.yaml --start --wait
 
-Output (illustrative):
+sylve vm create --name web-01 --file web.yaml --dry-run -f json
+```
 
-    Created VM(s) from template 'debian-13' on node1.example.test.
+Power actions, live migration, snapshots, templates, and hardware updates:
 
-Template mode ignores scratch hardware, network, and VNC options. `--count 3`
-creates three VMs with RIDs 200-202 and names prefixed `web`. `--pool` and
-`--storage-pool` map template storage to target pools.
+```sh
+sylve vm start 101 102 --wait
+sylve vm migrate 101 --target node2.example.test --dry-run
+sylve vm migrate 101 --target node2.example.test --wait
+sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"
+sylve vm snapshot rollback 101 1 --yes
+sylve vm template capture 101 --name debian-web --wait
+sylve vm hardware-cpu 101 --data '{"sockets":1,"cores":4,"threads":2}' -f json
+sylve vm delete 101 --keep-volumes --keep-raw-disks --keep-macs --yes
+```
 
-### Cloud-init
+## SEE ALSO
 
-    sylve vm create web-02 --iso debian-13-cloudinit.iso --pool zroot \
-      --cloud-init --user-data user-data.yaml --meta-data meta-data.yaml \
-      --network-config network-config.yaml --start --wait
-
-Output (illustrative):
-
-    Created and started VM web-02 (121) on node1.example.test.
-
-`--cloud-init` is implied when user-data or meta-data is supplied. Both
-user-data and meta-data are required, and the ISO must be cloud-init capable.
-
-### Dry run and config file
-
-    sylve vm create --name web-01 --file web.yaml --dry-run -f json
-
-Output (illustrative):
-
-    {
-      "name": "web-01",
-      "rid": 120,
-      "cpuSockets": 1,
-      "cpuCores": 4,
-      "cpuThreads": 2,
-      "ram": 4294967296,
-      "storageType": "zvol",
-      "storagePool": "zroot",
-      "storageSize": 42949672960,
-      "storageEmulationType": "virtio-blk",
-      "vncEnabled": true,
-      "vncBind": "127.0.0.1",
-      "vncPort": 5920,
-      "vncPassword": "s3cret",
-      "vncResolution": "1024x768",
-      "vncWait": false
-    }
-
-`--dry-run` prints the normalized request and sends nothing. `--format yaml`
-and `--format value` change the request output; `--format value` prints compact
-JSON.
-
-### Show, actions, migration, delete
-
-    sylve vm show 101 -f json
-
-Output (illustrative):
-
-    {
-      "rid": 101,
-      "name": "web-01",
-      "state_name": "RUNNING",
-      "node": "node1.example.test"
-    }
-
-    sylve vm start 101 102 --wait
-
-Output (illustrative):
-
-    VM 101 (node1.example.test): start completed.
-    VM 102 (node2.example.test): start completed.
-
-    sylve vm migrate 101 --target node2.example.test --dry-run
-
-    sylve vm migrate 101 --target node2.example.test --wait
-
-    sylve vm delete 101 --keep-volumes --keep-raw-disks --keep-macs --yes
-
-Output (illustrative):
-
-    VM 101 Migration Preflight -> node2.example.test
-    ...
-    VM 101 successfully migrated from node1.example.test to node2.example.test.
-    Deleted VM 101 (node1.example.test).
-
-### Snapshots and templates
-
-    sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"
-
-Output:
-
-    Created snapshot 'pre-upgrade' for VM 101.
-
-    sylve vm snapshot list 101 --long
-
-Output (illustrative):
-
-    VM 101 Snapshots (node1.example.test)
-    +----+-------------+---------------------+---------------------+------------+
-    | ID | Name        | Snapshot            | Description         | Created At |
-    +----+-------------+---------------------+---------------------+------------+
-    | 1  | pre-upgrade | zroot/vm/101@pre... | before 0.4          | 2026-10... |
-    +----+-------------+---------------------+---------------------+------------+
-
-    sylve vm snapshot rollback 101 1 --yes
-
-Output:
-
-    Rolled back VM 101 to snapshot #1.
-
-    sylve vm template capture 101 --name debian-web --wait
-
-Output:
-
-    Captured VM 101 as template 'debian-web'.
-
-### Generic command with every option
-
-    sylve vm hardware-cpu 101 --data '{"sockets":1,"cores":4,"threads":2}' --param dryRun=0 --node node1.example.test -f json
-
-Output (illustrative):
-
-    {
-      "rid": 101,
-      "cpuSockets": 1,
-      "cpuCores": 4,
-      "cpuThreads": 2
-    }
-
-## Inputs
-
-- The active context and token.
-- `--file` accepts YAML or JSON. Common top-level keys: `name`, `node`, `rid`,
-  `template`, `description`, `cpu`, `sockets`, `threads`, `memory`,
-  `storage_type`, `pool`, `disk_size`, `storage_emulation`, `iso`, `switch`,
-  `switch_emulation`, `mac_object`, `vnc`, `cloud_init`, `boot`, `options`.
-- Cloud-init files must be valid YAML.
-- Generic commands accept `--data` inline JSON/YAML or `@file`, plus repeatable
-  `--param KEY=VALUE`.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- `create` prints a confirmation plan on a terminal, then the created VM or
-  task. JSON/YAML output includes `rid`, `name`, `node`, optional `taskId`,
-  and the VNC password when one was generated.
-- `--dry-run` prints the request body.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-jail(1)](jail.md),
+[sylve-cloud-init(1)](cloud-init.md),
+[sylve-download(1)](download.md),
+[sylve-task(1)](task.md),
+[sylve-options(7)](../global-options.md)

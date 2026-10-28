@@ -138,23 +138,6 @@ Destructive commands prompt for confirmation on a terminal. Use
 or
 .B \-\-yes
 to skip the prompt.
-.SH EXAMPLES
-.nf
-sylve login https://sylve.example.test
-sylve node list
-sylve vm list -f json
-sylve vm show 101
-sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
-sylve vm create --template debian-13 --rid 120 --start --wait
-sylve jail list -f table
-sylve system disk-list
-sylve system cert-list
-sylve download list --long
-.fi
-.SH FILES
-.TP
-.I ~/.config/sylve/config.yaml
-CLI contexts and session tokens.
 .SH ENVIRONMENT
 .TP
 .B SYLVE_CONFIG
@@ -174,6 +157,36 @@ Default target node.
 .TP
 .B SYLVE_INSECURE
 Set to 1, true, or yes to skip TLS verification.
+.TP
+.B XDG_CONFIG_HOME
+Base directory for the default configuration file path.
+.SH FILES
+.TP
+.I ~/.config/sylve/config.yaml
+CLI contexts and session tokens.
+.SH "EXIT STATUS"
+.TP
+.B 0
+Success.
+.TP
+.B 1
+API error, formatter error, failed confirmation, or command failure.
+.TP
+.B 2
+Usage error, unknown option, or missing argument.
+.SH EXAMPLES
+.nf
+sylve login https://sylve.example.test
+sylve node list
+sylve vm list -f json
+sylve vm show 101
+sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
+sylve vm create --template debian-13 --rid 120 --start --wait
+sylve jail list -f table
+sylve system disk-list
+sylve system cert-list
+sylve download list --long
+.fi
 .SH "SEE ALSO"
 .BR sylve-config (5)
 .SH NOTES

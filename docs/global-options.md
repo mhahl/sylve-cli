@@ -1,102 +1,113 @@
-# Global and common options
+# SYLVE-OPTIONS(7)
 
-Global options go before the command:
+## NAME
 
-```sh
-sylve --context prod --node node2 vm list
-```
+`sylve-options` — global options, output formatting, environment variables, configuration file, and exit status
 
-Most commands also define common output options after the command:
+## SYNOPSIS
 
 ```sh
-sylve vm list --format json --column RID,Name,State
+sylve [GLOBAL_OPTIONS] COMMAND [SUBCOMMAND] [COMMAND_OPTIONS] [ARGS ...]
 ```
 
-## Global options
+## DESCRIPTION
+
+`sylve` accepts two sets of common options:
+
+1. **Global options**, placed before the top-level `COMMAND`:
+   ```sh
+   sylve --context prod --node node2 vm list
+   ```
+2. **Command and output options**, placed after the subcommand:
+   ```sh
+   sylve vm list --format json --column RID,Name,State
+   ```
+
+## GLOBAL OPTIONS
 
 - `--config FILE`
-  Configuration file. Default: `$SYLVE_CONFIG`, else
-  `$XDG_CONFIG_HOME/sylve/config.yaml`, else `~/.config/sylve/config.yaml`.
-
+  Configuration file path. Defaults to `$SYLVE_CONFIG`, then
+  `$XDG_CONFIG_HOME/sylve/config.yaml`, then `~/.config/sylve/config.yaml`.
 - `--context NAME`
-  Named context to use. Overrides the saved current context. Env:
-  `SYLVE_CONTEXT`.
-
+  Named login context to use. Overrides `current_context` in the configuration
+  file. Environment: `SYLVE_CONTEXT`.
 - `-n, --node NODE`
-  Target cluster node hostname or UUID. Commands that also define `--node` use
-  their own value. Env: `SYLVE_NODE`.
-
+  Target cluster node hostname or UUID. Subcommands that also define `--node`
+  use their own value when supplied. Environment: `SYLVE_NODE`.
 - `-k, --insecure`
-  Skip TLS certificate verification. Env: `SYLVE_INSECURE`.
-
+  Skip TLS certificate verification. Environment: `SYLVE_INSECURE`.
 - `--timeout SECONDS`
-  HTTP request timeout. Default: `30.0`.
-
+  HTTP request timeout in seconds (default: `30.0`).
 - `--max-width COLUMNS`
-  Maximum table width. Default: terminal width. Must be at least 1.
-
+  Maximum rendered table width in columns (default: terminal width; minimum: `1`).
 - `--no-truncate`
   Wrap long table cells instead of truncating them.
-
 - `-V, --version`
-  Print the version and exit.
-
+  Print the CLI version and exit.
 - `-h, --help`
-  Show help and exit.
+  Show command help and exit.
 
-## Output options
+## OUTPUT AND COMMON OPTIONS
 
-These appear on commands that print data.
+Commands that print records or mutate resources share the following flags where
+applicable:
 
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-  | Format | Output |
+  | Format | Description |
   |---|---|
-  | `table` | Rich ASCII table |
+  | `table` | ASCII/Unicode table rendered with Rich |
   | `json` | Indented JSON |
-  | `yaml` | YAML |
-  | `value` | Space-separated values, one row per line |
-  | `csv` | CSV with headers |
+  | `yaml` | YAML document |
+  | `value` | Space-separated values without headers, one row per line |
+  | `csv` | Comma-separated values with a header row |
 
 - `-c, --column NAME`
-  Select and order columns. Repeat the flag or use commas. Accepts a column
-  header or field key, case-insensitive.
-
+  Select and order output columns. May be repeated or given as a
+  comma-separated list. Matches column headers or raw field keys
+  case-insensitively:
   ```sh
   sylve vm list -c RID,Name,State
   sylve vm list -c RID -c Name
   ```
-
 - `--sort-column NAME`
-  Sort rows by a column header or field key.
-
+  Sort table rows by column header or field key.
 - `--long`
-  Add lower-priority columns. The added columns differ per command.
-
-- `-n, --node NODE`
-  Limit a list command to one node, or select the node for a single-object
+  Include lower-priority columns in table output. The extra columns vary by
   command.
-
+- `-n, --node NODE`
+  Restrict a list command to one cluster node, or select the target node for a
+  single-resource command.
 - `-w, --wait / --no-wait`
-  Wait for an asynchronous task. Defaults vary by command.
-
+  Wait for an asynchronous task to finish before returning. Default behaviour
+  varies by command.
 - `-y, --yes`
-  Skip a confirmation prompt. Prompts appear only on a terminal.
+  Skip interactive confirmation prompts on a terminal.
 
-## Environment
+## GENERIC API OPTIONS
 
-| Variable | Effect |
+Commands that wrap Sylve API endpoints directly accept:
+
+- `-d, --data BODY`
+  Inline JSON or YAML request body, or `@FILE` to read the body from disk.
+- `-p, --param KEY=VALUE`
+  Query string parameter. Repeatable; values are parsed as YAML scalars.
+
+## ENVIRONMENT
+
+| Variable | Description |
 |---|---|
 | `SYLVE_CONFIG` | Configuration file path |
 | `SYLVE_CONTEXT` | Active context name |
 | `SYLVE_SERVER` | Server URL override |
 | `SYLVE_TOKEN` | Bearer token override |
-| `SYLVE_NODE` | Default target node |
-| `SYLVE_INSECURE` | `1`, `true`, or `yes` skips TLS verification |
-| `XDG_CONFIG_HOME` | Base directory for the default config path |
+| `SYLVE_NODE` | Default target node hostname or UUID |
+| `SYLVE_INSECURE` | `1`, `true`, or `yes` disables TLS certificate verification |
+| `XDG_CONFIG_HOME` | Base directory for the default configuration file |
 
-`SYLVE_SERVER` and `SYLVE_TOKEN` allow use without a saved context:
+Setting `SYLVE_SERVER` and `SYLVE_TOKEN` allows stateless operation without a
+saved configuration file:
 
 ```sh
 export SYLVE_SERVER=https://sylve.example.test
@@ -104,9 +115,9 @@ export SYLVE_TOKEN=eyJhbGciOi...
 sylve node list
 ```
 
-## Configuration file
+## FILES
 
-The file is YAML and is written with mode `0600`.
+`~/.config/sylve/config.yaml` is stored as YAML with permissions `0600`:
 
 ```yaml
 current_context: admin@sylve.example.test
@@ -124,10 +135,17 @@ contexts:
     default_node: node1.example.test
 ```
 
-## Exit codes
+## EXIT STATUS
 
 | Code | Meaning |
 |---|---|
 | `0` | Success |
-| `1` | API error, formatter error, failed confirmation, or command failure |
-| `2` | Usage error, unknown option, or missing argument |
+| `1` | API error, formatter error, aborted confirmation, or task failure |
+| `2` | Usage error, unknown option, or missing required argument |
+
+## SEE ALSO
+
+[sylve(1)](../README.md),
+[sylve-config(1)](commands/config.md),
+[sylve-login(1)](commands/login.md),
+[sylve-config(5)](man/man5/sylve-config.5)

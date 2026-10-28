@@ -1,131 +1,92 @@
-# sylve user
+# SYLVE-USER(1)
 
-Manage local, PAM, and imported users, plus passkeys.
+## NAME
 
-These are generic API commands. The request body is the Sylve API shape.
+`sylve-user` — manage local, PAM, and imported users, plus passkeys
 
-## Synopsis
+## SYNOPSIS
 
-    sylve user COMMAND [ARGS]...
+```sh
+sylve user COMMAND [ARGS ...]
+```
 
-## Commands
+## DESCRIPTION
 
-| Command | Purpose |
-|---|---|
-| `list` | List users |
-| `create` | Create a local user |
-| `capabilities` | Show user-management capabilities |
-| `import` | Import a Unix user |
-| `importable` | List importable Unix users |
-| `pam-create` | Create a PAM user |
-| `next-uid` | Show the next Unix UID |
-| `update USERID` | Update a user |
-| `delete USERID` | Delete a user |
-| `passkeys USERID` | List user passkeys |
-| `passkey-delete USERID CREDENTIALID` | Delete a passkey |
+`sylve user` manages local Sylve accounts, PAM accounts, imported host Unix
+accounts, and user WebAuthn passkeys via generic Sylve API bindings.
 
-## Options
+## SUBCOMMANDS
 
-All commands accept:
+| Subcommand | Path Arguments | Description |
+|---|---|---|
+| `list` | none | List users |
+| `create` | none | Create a local user |
+| `capabilities` | none | Show user-management capabilities |
+| `import` | none | Import an existing host Unix user |
+| `importable` | none | List importable host Unix users |
+| `pam-create` | none | Register a PAM user |
+| `next-uid` | none | Show the next available Unix UID |
+| `update` | `USER_ID` | Update user `USER_ID` |
+| `delete` | `USER_ID` | Delete user `USER_ID` |
+| `passkeys` | `USER_ID` | List passkeys for user `USER_ID` |
+| `passkey-delete` | `USER_ID CREDENTIAL_ID` | Delete passkey `CREDENTIAL_ID` for `USER_ID` |
+
+## OPTIONS
+
+All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
 - `-p, --param KEY=VALUE`
-  Query parameter. Repeatable.
+  Query parameter (repeatable).
 - `-y, --yes`
-  Skip the destructive-request confirmation.
+  Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-Path arguments:
+## EXIT STATUS
 
-| Command | Arguments |
-|---|---|
-| `update`, `delete`, `passkeys` | `userId` |
-| `passkey-delete` | `userId credentialId` |
-| all other commands | none |
+- `0` — Success.
+- `1` — API error or aborted confirmation.
+- `2` — Command-line usage error.
 
-## Examples
+## EXAMPLES
 
-### Minimal
+List users and create a local account:
 
-    sylve user list -f json
+```sh
+sylve user list -f json
+sylve user create \
+  --data '{"username":"ops","password":"secret","authType":"sylve","uid":1001,"groups":[1]}' \
+  --param sendWelcome=0 \
+  --node node1.example.test \
+  --format json
+```
 
-Output (illustrative):
+Import a Unix user, create a PAM account, and query the next UID:
 
-    [
-      {
-        "id": 1,
-        "username": "admin",
-        "authType": "sylve",
-        "uid": 1000
-      }
-    ]
+```sh
+sylve user importable -f json
+sylve user import --data '{"username":"mark","uid":1000}'
+sylve user pam-create --data '{"username":"ops-pam"}'
+sylve user next-uid
+```
 
-### With every relevant option
+Update a user, manage passkeys, and delete an account:
 
-    sylve user create \
-      --data '{"username":"ops","password":"secret","authType":"sylve","uid":1001,"groups":[1]}' \
-      --param sendWelcome=0 \
-      --node node1.example.test \
-      --format json
+```sh
+sylve user update 2 --data '{"fullName":"Operations"}' -f json
+sylve user passkeys 2
+sylve user passkey-delete 2 cred-abc
+sylve user delete 2 --yes
+```
 
-Output (illustrative):
+## SEE ALSO
 
-    {
-      "id": 2,
-      "username": "ops",
-      "uid": 1001
-    }
-
-### Import and PAM
-
-    sylve user importable -f json
-
-    sylve user import --data '{"username":"mark","uid":1000}'
-
-    sylve user pam-create --data '{"username":"ops-pam"}'
-
-    sylve user next-uid
-
-Output (illustrative):
-
-    {
-      "uid": 1002
-    }
-
-### Update, passkeys, delete
-
-    sylve user update 2 --data '{"fullName":"Operations"}' -f json
-
-    sylve user passkeys 2
-
-    sylve user passkey-delete 2 cred-abc
-
-    sylve user delete 2 --yes
-
-Output (illustrative):
-
-    {
-      "id": 2,
-      "fullName": "Operations"
-    }
-    OK
-
-`--data` carries the body. `--param` adds query parameters. `-y` skips the
-delete confirmation.
-
-## Inputs
-
-- The active context and token.
-- `--data` inline JSON/YAML or `@file`.
-- User and credential IDs from the list commands.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- Mutating commands print the API result, or `OK` when the response is empty.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-group(1)](group.md),
+[sylve-auth(1)](auth.md),
+[sylve-login(1)](login.md),
+[sylve-options(7)](../global-options.md)

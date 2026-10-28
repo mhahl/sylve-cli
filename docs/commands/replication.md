@@ -1,208 +1,149 @@
-# sylve replication
+# SYLVE-REPLICATION(1)
 
-Manage HA replication policies, manual runs, failovers, and replication events.
+## NAME
 
-## Synopsis
+`sylve-replication` — manage HA replication policies, manual runs, failovers, and events
 
-    sylve replication COMMAND [ARGS]...
+## SYNOPSIS
 
-## Commands
+```sh
+sylve replication GROUP COMMAND [ARGS ...]
+```
 
-| Command | Purpose |
+## DESCRIPTION
+
+`sylve replication` manages high-availability (HA) ZFS replication policies for
+VMs and jails across cluster nodes, triggers manual replication runs or safe/forced
+failovers, and monitors replication events.
+
+## SUBCOMMANDS
+
+| Subcommand | Description |
 |---|---|
-| `policy list` | Policies and HA state |
-| `policy show ID` | Full policy details |
-| `policy create` | Create a policy |
-| `policy run ID` | Queue an immediate replication run |
-| `policy failover ID` | Queue a safe or forced failover |
-| `policy delete ID` | Delete a policy |
-| `policy update ID` | Generic update |
-| `event list` | Recent events |
-| `event show ID` | Event details or live progress |
+| `policy list` | List replication policies and HA state |
+| `policy show POLICY_ID` | Show full details for a policy |
+| `policy create` | Create a replication policy |
+| `policy run POLICY_ID` | Queue an immediate replication run |
+| `policy failover POLICY_ID` | Queue a safe or forced failover |
+| `policy delete POLICY_ID` | Delete a replication policy |
+| `policy update POLICY_ID` | Update a policy (generic API command) |
+| `event list` | List recent replication events |
+| `event show EVENT_ID` | Show event details or follow live progress |
 
-## Options
+## OPTIONS
 
-### `policy list`
+### `policy list` and `policy show`
 
-- `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
-- `-c, --column NAME`
-  Select columns.
-- `--sort-column NAME`
-  Sort rows.
-- `--long`
-  Add `Targets`, `Cron`, and `HA Eligible`.
-
-### `policy show`
-
-- `POLICY_ID` (required), `-f/--format`, `-c/--column`.
+- `list`: `-f, --format`, `-c, --column`, `--sort-column NAME`, `--long`
+  (adds `Targets`, `Cron`, and `HA Eligible`).
+- `show POLICY_ID`: `-f, --format`, `-c, --column`.
 
 ### `policy create`
 
 - `--name NAME` (required)
   Policy name.
-- `--guest-type TYPE` (required)
-  `vm` or `jail`.
+- `--guest-type {vm,jail}` (required)
+  Guest type.
 - `--guest-id ID` (required)
   VM RID or jail CTID.
-- `--target, -t NODE[:WEIGHT]` (required)
-  Target node hostname or UUID. Repeatable. Optional weight after `:`.
-  Default weight: `100`.
+- `--target, -t NODE[:WEIGHT]` (required, repeatable)
+  Target node hostname or UUID, with an optional integer weight (default:
+  `100`).
 - `--cron EXPR`
-  Cron schedule. Default: `*/15 * * * *`.
-- `--failover-mode MODE`
-  `manual` or `auto`. Default: `manual`.
+  Cron schedule (default: `*/15 * * * *`).
+- `--failover-mode {manual,auto}`
+  Failover mode (default: `manual`).
 - `--enabled / --disabled`
-  Enable the policy. Default: `--enabled`.
+  Enable or disable the policy on creation (default: `--enabled`).
 
-### `policy run`
+### `policy run`, `policy failover`, `policy delete`, `policy update`
 
-- `POLICY_ID` (required).
-
-### `policy failover`
-
-- `POLICY_ID` (required).
-- `--target, -t NODE`
-  Target node. Default: auto-selected.
-- `--mode MODE`
-  `safe` or `force`. Default: `safe`.
-- `--move-pinned-source / --keep-pinned-source`
-  Update the pinned source node. Default: `--move-pinned-source`.
-- `--confirm-data-loss`
-  Acknowledge possible data loss for forced failover.
-
-### `policy delete`
-
-- `POLICY_ID` (required), `-y/--yes`.
-
-### `policy update`
-
-- `POLICY_ID` (required).
-- `-d, --data BODY`, `-p, --param KEY=VALUE`, `-y/--yes`,
+- `run POLICY_ID`: queue an immediate run.
+- `failover POLICY_ID`:
+  - `--target, -t NODE`: destination node (default: auto-selected).
+  - `--mode {safe,force}`: failover mode (default: `safe`).
+  - `--move-pinned-source / --keep-pinned-source`: update the pinned source
+    node (default: `--move-pinned-source`).
+  - `--confirm-data-loss`: required acknowledgement when `--mode force` is set.
+- `delete POLICY_ID`: `-y, --yes`.
+- `update POLICY_ID`: `-d, --data BODY`, `-p, --param KEY=VALUE`, `-y, --yes`,
   `-n, --node NODE`, `-f, --format`.
 
-### `event list`
+### `event list` and `event show`
 
-- `--policy-id ID`
-  Filter by policy.
-- `--limit, -l N`
-  Maximum events. Default: `50`.
-- `-f/--format`, `-c/--column`, `--long`.
+- `list`: `--policy-id ID`, `--limit, -l N` (default: `50`), `-f/--format`,
+  `-c/--column`, `--long`.
+- `show EVENT_ID`: `-w, --wait / --no-wait` (follow live progress; default:
+  `--no-wait`), `-f/--format`, `-c/--column`.
 
-### `event show`
+## EXIT STATUS
 
-- `EVENT_ID` (required).
-- `-w, --wait / --no-wait`
-  Follow live progress. Default: `--no-wait`.
-- `-f/--format`, `-c/--column`.
+- `0` — Success.
+- `1` — API error, failed event while waiting, or aborted confirmation.
+- `2` — Command-line usage error.
 
-## Examples
+## EXAMPLES
 
-### Minimal
+List replication policies:
 
-    sylve replication policy list
+```sh
+sylve replication policy list
+```
 
-Output (illustrative):
+```text
+Replication Policies
++----+---------+------------+----------+---------------------+-------------+---------+
+| ID | Name    | Guest Type | Guest ID | Active Node         | Last Status | Enabled |
++----+---------+------------+----------+---------------------+-------------+---------+
+| 1  | web-ha  | vm         | 101      | node1.example.test  | SUCCESS     | true    |
++----+---------+------------+----------+---------------------+-------------+---------+
+```
 
-    Replication Policies
-    +----+---------+------------+----------+---------------------+-------------+---------+
-    | ID | Name    | Guest Type | Guest ID | Active Node         | Last Status | Enabled |
-    +----+---------+------------+----------+---------------------+-------------+---------+
-    | 1  | web-ha  | vm         | 101      | node1.example.test  | SUCCESS     | true    |
-    +----+---------+------------+----------+---------------------+-------------+---------+
+Create a weighted multi-target automatic failover policy:
 
-### With every relevant option
+```sh
+sylve replication policy create \
+  --name web-ha \
+  --guest-type vm \
+  --guest-id 101 \
+  --target node2.example.test:150 \
+  --target node3.example.test:100 \
+  --cron '*/10 * * * *' \
+  --failover-mode auto \
+  --enabled
+# Created replication policy 'web-ha' for vm 101.
+```
 
-    sylve replication policy create \
-      --name web-ha \
-      --guest-type vm \
-      --guest-id 101 \
-      --target node2.example.test:150 \
-      --target node3.example.test:100 \
-      --cron '*/10 * * * *' \
-      --failover-mode auto \
-      --enabled
+Trigger an immediate run or a forced failover:
 
-Output:
+```sh
+sylve replication policy run 1
+sylve replication policy failover 1 \
+  --target node2.example.test \
+  --mode force \
+  --keep-pinned-source \
+  --confirm-data-loss
+```
 
-    Created replication policy 'web-ha' for vm 101.
+Inspect and follow replication events:
 
-`node2:150` set a weight of 150; `node3` used the default weight of 100.
-`--failover-mode auto` allows automatic failover.
+```sh
+sylve replication event list --policy-id 1 --limit 10 --long
+sylve replication event show 9 --wait
+```
 
-### Run and fail over with every option
+Disable or delete a policy:
 
-    sylve replication policy run 1
+```sh
+sylve replication policy update 1 --data '{"enabled":false}' -f json
+sylve replication policy delete 1 --yes
+```
 
-Output:
+## SEE ALSO
 
-    Queued immediate run for replication policy #1.
-
-    sylve replication policy failover 1 \
-      --target node2.example.test \
-      --mode force \
-      --keep-pinned-source \
-      --confirm-data-loss
-
-Output:
-
-    Queued force failover for replication policy #1.
-
-`--keep-pinned-source` left the pinned source unchanged. `--confirm-data-loss`
-is required to acknowledge a forced failover.
-
-### Events
-
-    sylve replication event list --policy-id 1 --limit 10 --long
-
-Output (illustrative):
-
-    Replication Events
-    +----+-----------+------------+-------+---------+---------------------+---------------------+---------+
-    | ID | Policy ID | Event Type | Guest | Guest ID| Source Node         | Target Node         | Status  |
-    +----+-----------+------------+-------+---------+---------------------+---------------------+---------+
-    | 9  | 1         | failover   | vm    | 101     | node1.example.test  | node2.example.test  | SUCCESS |
-    +----+-----------+------------+-------+---------+---------------------+---------------------+---------+
-
-    sylve replication event show 9 --wait
-
-Output (illustrative):
-
-    Replication Event #9
-    +-------+---------------------+
-    | Field | Value               |
-    +-------+---------------------+
-    | id    | 9                   |
-    | status| SUCCESS             |
-    +-------+---------------------+
-
-### Generic update
-
-    sylve replication policy update 1 --data '{"enabled":false}' --param dryRun=0 --node node1.example.test -f json
-
-Output (illustrative):
-
-    {
-      "id": 1,
-      "enabled": false
-    }
-
-    sylve replication policy delete 1 --yes
-
-Output:
-
-    Deleted replication policy #1.
-
-## Inputs
-
-- The active context and token.
-- `--target` accepts a node hostname or UUID; `policy create` also accepts
-  `NODE:WEIGHT`.
-- Generic update accepts `--data` inline JSON/YAML or `@file`, plus `--param`.
-
-## Outputs
-
-- Policy and event tables.
-- Mutating commands print a confirmation line or the API result.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-backup(1)](backup.md),
+[sylve-zfs(1)](zfs.md),
+[sylve-vm(1)](vm.md),
+[sylve-jail(1)](jail.md),
+[sylve-options(7)](../global-options.md)

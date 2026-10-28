@@ -1,86 +1,107 @@
-# sylve whoami
+# SYLVE-WHOAMI(1)
 
-Show the current user, context, server, and token status.
+## NAME
 
-## Synopsis
+`sylve-whoami` — display the active user, context, server, and token status
 
-    sylve whoami [OPTIONS]
+## SYNOPSIS
 
-## Options
+```sh
+sylve whoami [-f FORMAT] [-c COLUMN]
+```
+
+## DESCRIPTION
+
+`sylve whoami` inspects the active context and bearer token (from the
+configuration file or `SYLVE_SERVER` and `SYLVE_TOKEN`), decodes the JWT
+payload locally without performing a cryptographic signature check, and prints
+session metadata.
+
+The `token_status` field reports `VALID (...)`, `EXPIRED`, or
+`VALID (unknown remaining)` when no expiration claim is available. When
+`--format value` is used without `--column`, only `username` is printed.
+
+## OPTIONS
 
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
-
+  Output format (default: `table`).
 - `-c, --column NAME`
-  Select fields. Repeat or use commas. Field names: `context`, `server`,
-  `username`, `user_id`, `auth_type`, `hostname`, `node_id`, `default_node`,
-  `verify_ssl`, `expires_at`, `token_status`.
+  Select and order fields. Repeatable or comma-separated. Available fields:
+  `context`, `server`, `username`, `user_id`, `auth_type`, `hostname`,
+  `node_id`, `default_node`, `verify_ssl`, `expires_at`, `token_status`.
 
-## Examples
+## EXIT STATUS
 
-### Minimal
+- `0` — Session details printed.
+- `1` — No context or token is configured, or an invalid column was requested.
+- `2` — Command-line usage error.
 
-    sylve --no-truncate whoami
+## EXAMPLES
 
-Output (exact shape; the remaining time changes):
+Display the full session table without cell truncation:
 
-                    Current Session
-    +--------------+------------------------------+
-    | Field        | Value                        |
-    +--------------+------------------------------+
-    | context      | admin@sylve.example.test     |
-    | server       | https://sylve.example.test   |
-    | username     | admin                        |
-    | user_id      | 1                            |
-    | auth_type    | sylve                        |
-    | hostname     | node1.example.test           |
-    | node_id      | node-1                       |
-    | default_node | node1.example.test           |
-    | verify_ssl   | true                         |
-    | expires_at   | 2026-11-01T00:00:00Z         |
-    | token_status | VALID (3d 13h 57m remaining) |
-    +--------------+------------------------------+
+```sh
+sylve --no-truncate whoami
+```
 
-### With every relevant option
+```text
+                Current Session
++--------------+------------------------------+
+| Field        | Value                        |
++--------------+------------------------------+
+| context      | admin@sylve.example.test     |
+| server       | https://sylve.example.test   |
+| username     | admin                        |
+| user_id      | 1                            |
+| auth_type    | sylve                        |
+| hostname     | node1.example.test           |
+| node_id      | node-1                       |
+| default_node | node1.example.test           |
+| verify_ssl   | true                         |
+| expires_at   | 2026-11-01T00:00:00Z         |
+| token_status | VALID (3d 13h 57m remaining) |
++--------------+------------------------------+
+```
 
-    sylve whoami -f json -c username,server,token_status
+Select specific fields as JSON:
 
-Output:
+```sh
+sylve whoami -f json -c username,server,token_status
+```
 
-    {
-      "username": "admin",
-      "server": "https://sylve.example.test",
-      "token_status": "VALID (3d 13h 58m remaining)"
-    }
+```json
+{
+  "username": "admin",
+  "server": "https://sylve.example.test",
+  "token_status": "VALID (3d 13h 58m remaining)"
+}
+```
 
-### CSV and value formats
+Print CSV or a bare username for shell scripting:
 
-    sylve whoami --format csv --column username,server,token_status
+```sh
+sylve whoami --format csv --column username,server,token_status
+```
 
-Output:
+```text
+Field,Value
+username,admin
+server,https://sylve.example.test
+token_status,VALID (3d 13h 58m remaining)
+```
 
-    Field,Value
-    username,admin
-    server,https://sylve.example.test
-    token_status,VALID (3d 13h 58m remaining)
+```sh
+sylve whoami -f value
+```
 
-`--format value` prints only the username:
+```text
+admin
+```
 
-    sylve whoami -f value
+## SEE ALSO
 
-Output:
-
-    admin
-
-## Inputs
-
-- The active context and token from the config file, or `SYLVE_SERVER` and
-  `SYLVE_TOKEN`.
-- The JWT payload is decoded locally. No signature check is performed.
-
-## Outputs
-
-- Prints the selected session fields.
-- `token_status` is `VALID (...)`, `EXPIRED`, or `VALID (unknown remaining)`
-  when no expiry is available.
-- Exit `0` on success. Exit `1` when no context is configured.
+[sylve(1)](../../README.md),
+[sylve-login(1)](login.md),
+[sylve-logout(1)](logout.md),
+[sylve-config(1)](config.md),
+[sylve-options(7)](../global-options.md)

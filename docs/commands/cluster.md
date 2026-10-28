@@ -1,33 +1,42 @@
-# sylve cluster
+# SYLVE-CLUSTER(1)
 
-Show cluster status, manage Raft membership, and edit cluster notes.
+## NAME
 
-## Synopsis
+`sylve-cluster` — inspect cluster state, manage Raft membership, and edit cluster notes
 
-    sylve cluster COMMAND [ARGS]...
+## SYNOPSIS
 
-## Commands
+```sh
+sylve cluster COMMAND [ARGS ...]
+```
 
-| Command | Purpose |
+## DESCRIPTION
+
+`sylve cluster` queries cluster health and cluster-wide guest resources,
+bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
+
+## SUBCOMMANDS
+
+| Subcommand | Description |
 |---|---|
-| `show`, `status` | Cluster status, leader, Raft members, node health |
-| `resources` | All VMs, jails, and templates across the cluster |
+| `show`, `status` | Display cluster status, Raft leader, members, and node health |
+| `resources` | List all VMs, jails, and templates across the cluster |
 | `resync` | Audit Raft members and resynchronize followers |
-| `create --ip IP` | Initialize a cluster |
-| `join-key` | Reveal the cluster join key |
-| `join` | Join this node to a cluster |
+| `create --ip IP` | Initialize a new cluster on this node |
+| `join-key` | Display the cluster join key |
+| `join` | Join this node to an existing cluster |
 | `leave` | Remove this node from the cluster |
 | `note list` | List cluster notes |
 | `note create` | Create a cluster note |
-| `note delete` | Delete a cluster note |
-| `note update`, `note bulk-delete`, `accept-join` | Generic API commands |
+| `note delete NOTE_ID` | Delete a cluster note |
+| `note update ID`, `note bulk-delete`, `accept-join` | Generic API commands |
 
-## Options
+## OPTIONS
 
 ### `cluster show` / `cluster status`
 
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 - `-c, --column NAME`
   Select fields.
 - `--long`
@@ -36,18 +45,18 @@ Show cluster status, manage Raft membership, and edit cluster notes.
 ### `cluster resources`
 
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 - `-c, --column NAME`
   Select columns: `id`, `name`, `type`, `state`, `node`, `node_uuid`.
 - `--sort-column NAME`
-  Sort rows.
+  Sort rows by column.
 - `--long`
   Add the `Node UUID` column.
 
 ### `cluster resync`
 
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
 ### `cluster create`
 
@@ -57,7 +66,7 @@ Show cluster status, manage Raft membership, and edit cluster notes.
 ### `cluster join-key`
 
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
 ### `cluster join`
 
@@ -73,16 +82,17 @@ Show cluster status, manage Raft membership, and edit cluster notes.
 ### `cluster leave`
 
 - `--retain-guests / --no-retain-guests`
-  Keep local VM and jail registrations. Default: `--retain-guests`.
+  Keep local VM and jail registrations (default: `--retain-guests`). Ignored
+  when `--force` is set.
 - `--force`
-  Force a local cluster reset without contacting Raft.
+  Force a local cluster state reset without contacting Raft.
 - `-y, --yes`
-  Skip confirmation.
+  Skip confirmation prompt.
 
 ### `cluster note list`
 
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 - `-c, --column NAME`
   Select columns: `id`, `title`, `content`, `updatedAt`.
 - `--long`
@@ -91,7 +101,7 @@ Show cluster status, manage Raft membership, and edit cluster notes.
 ### `cluster note create`
 
 - `--title, -t TEXT` (required)
-  Note title, 3-128 characters.
+  Note title (3–128 characters).
 - `--content, -m TEXT` (required)
   Note body.
 
@@ -100,137 +110,122 @@ Show cluster status, manage Raft membership, and edit cluster notes.
 - `NOTE_ID` (required)
   Cluster note ID.
 
-### Generic commands
+### Generic Subcommands
 
-`cluster accept-join`, `cluster note update`, and `cluster note bulk-delete`
-accept `--data/-d`, `--param/-p`, `-y/--yes`, `-n/--node`, and
-`-f/--format`. Path arguments:
+`accept-join`, `note update ID`, and `note bulk-delete` accept `--data/-d`,
+`--param/-p`, `-y/--yes`, `-n/--node`, and `-f/--format`.
 
-| Command | Arguments |
+| Subcommand | Path Arguments |
 |---|---|
 | `accept-join` | none |
 | `note update` | `id` |
 | `note bulk-delete` | none |
 
-See [Global and common options](../global-options.md).
+## EXIT STATUS
 
-## Examples
+- `0` — Success.
+- `1` — API failure or aborted confirmation.
+- `2` — Command-line usage error.
 
-### Minimal
+## EXAMPLES
 
-    sylve cluster status
+Inspect cluster status:
 
-Output (illustrative):
+```sh
+sylve cluster status
+```
 
-    Cluster Status
-    +-----------------+-----------------------------+
-    | Field           | Value                       |
-    +-----------------+-----------------------------+
-    | enabled         | true                        |
-    | node_id         | node-1                      |
-    | leader_id       | node-1                      |
-    | leader_address  | 10.0.0.11                   |
-    | raft_ip         | 10.0.0.11                   |
-    | raft_port       | 8182                        |
-    | partial         | false                       |
-    | nodes_online    | 3/3                         |
-    | total_guests    | 12                          |
-    +-----------------+-----------------------------+
+```text
+Cluster Status
++-----------------+-----------------------------+
+| Field           | Value                       |
++-----------------+-----------------------------+
+| enabled         | true                        |
+| node_id         | node-1                      |
+| leader_id       | node-1                      |
+| leader_address  | 10.0.0.11                   |
+| raft_ip         | 10.0.0.11                   |
+| raft_port       | 8182                        |
+| partial         | false                       |
+| nodes_online    | 3/3                         |
+| total_guests    | 12                          |
++-----------------+-----------------------------+
+```
 
-### With every relevant option
+List cluster-wide resources sorted by name as JSON:
 
-    sylve cluster resources --long --sort-column name --format json -c 'Name,Type,State,Node,Node UUID'
+```sh
+sylve cluster resources --long --sort-column name --format json -c 'Name,Type,State,Node,Node UUID'
+```
 
-Output (illustrative):
+```json
+[
+  {
+    "name": "db-01",
+    "type": "vm",
+    "state": "RUNNING",
+    "node": "node1.example.test",
+    "node_uuid": "1f0f..."
+  }
+]
+```
 
-    [
-      {
-        "name": "db-01",
-        "type": "vm",
-        "state": "RUNNING",
-        "node": "node1.example.test",
-        "node_uuid": "1f0f..."
-      }
-    ]
+Initialize a cluster and join a second node:
 
-### Create and join
+```sh
+sylve cluster create --ip 10.0.0.11
+sylve cluster join-key
+sylve cluster join \
+  --leader-ip 10.0.0.11 \
+  --node-ip 10.0.0.12 \
+  --node-id 2b7c... \
+  --cluster-key 'join-key-from-leader'
+```
 
-    sylve cluster create --ip 10.0.0.11
+```text
+Cluster created with bootstrap IP 10.0.0.11.
+Node joined cluster via leader 10.0.0.11.
+```
 
-    sylve cluster join-key
+Force a node to leave the cluster without interactive confirmation:
 
-    sylve cluster join \
-      --leader-ip 10.0.0.11 \
-      --node-ip 10.0.0.12 \
-      --node-id 2b7c... \
-      --cluster-key 'join-key-from-leader'
+```sh
+sylve cluster leave --no-retain-guests --force --yes
+# Node has left the cluster.
+```
 
-Output (illustrative):
+Create, list, and delete a cluster note:
 
-    Cluster created with bootstrap IP 10.0.0.11.
-    Node joined cluster via leader 10.0.0.11.
+```sh
+sylve cluster note create --title "Maintenance" --content "node2 drains at 22:00"
+# Created cluster note 'Maintenance'.
 
-### Leave with every option
+sylve cluster note list --long -f table
+```
 
-    sylve cluster leave --no-retain-guests --force --yes
+```text
+Cluster Notes
++----+-------------+--------------------------+---------------------+
+| ID | Title       | Content                  | Updated At          |
++----+-------------+--------------------------+---------------------+
+| 1  | Maintenance | node2 drains at 22:00    | 2026-10-28T20:00:00Z|
++----+-------------+--------------------------+---------------------+
+```
 
-Output:
+```sh
+sylve cluster note delete 1
+# Deleted cluster note #1.
+```
 
-    Node has left the cluster.
+Execute generic cluster API endpoints:
 
-`--no-retain-guests` would be ignored with `--force`; the force path resets
-local cluster state.
+```sh
+sylve cluster accept-join --data '{"nodeId":"2b7c...","nodeIp":"10.0.0.12"}' --param dryRun=0 --node node1.example.test -f json
+sylve cluster note bulk-delete --data '{"ids":[1,2]}' --yes
+```
 
-### Notes
+## SEE ALSO
 
-    sylve cluster note create --title "Maintenance" --content "node2 drains at 22:00"
-
-Output:
-
-    Created cluster note 'Maintenance'.
-
-    sylve cluster note list --long -f table
-
-Output (illustrative):
-
-    Cluster Notes
-    +----+-------------+--------------------------+---------------------+
-    | ID | Title       | Content                  | Updated At          |
-    +----+-------------+--------------------------+---------------------+
-    | 1  | Maintenance | node2 drains at 22:00    | 2026-10-28T20:00:00Z|
-    +----+-------------+--------------------------+---------------------+
-
-    sylve cluster note delete 1
-
-Output:
-
-    Deleted cluster note #1.
-
-### Generic command with every option
-
-    sylve cluster accept-join --data '{"nodeId":"2b7c...","nodeIp":"10.0.0.12"}' --param dryRun=0 --node node1.example.test -f json
-
-Output (illustrative):
-
-    {
-      "status": "accepted"
-    }
-
-    sylve cluster note bulk-delete --data '{"ids":[1,2]}' --yes
-
-Output (illustrative):
-
-    OK
-
-## Inputs
-
-- The active context and token.
-- Cluster and Raft state from the Sylve API.
-- `--data` accepts inline JSON/YAML or `@file`.
-
-## Outputs
-
-- Status and resource tables, or JSON/YAML/value/CSV.
-- Mutating commands print a single confirmation line.
-- Exit `0` on success. Exit `1` on API failure or aborted confirmation. Exit
-  `2` on usage error.
+[sylve(1)](../../README.md),
+[sylve-node(1)](node.md),
+[sylve-options(7)](../global-options.md)

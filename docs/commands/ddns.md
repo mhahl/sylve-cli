@@ -1,105 +1,88 @@
-# sylve ddns
+# SYLVE-DDNS(1)
 
-Manage dynamic DNS entries.
+## NAME
 
-These are generic API commands. The request body is the Sylve API shape.
+`sylve-ddns` — manage dynamic DNS entries
 
-## Synopsis
+## SYNOPSIS
 
-    sylve ddns COMMAND [ARGS]...
+```sh
+sylve ddns COMMAND [ARGS ...]
+```
 
-## Commands
+## DESCRIPTION
 
-| Command | Purpose |
-|---|---|
-| `list` | List entries |
-| `create` | Create an entry |
-| `update ID` | Update an entry |
-| `delete ID` | Delete an entry |
-| `sync ID` | Synchronize an entry now |
+`sylve ddns` creates, updates, synchronizes, and deletes dynamic DNS entries via
+generic Sylve API bindings. Request payloads are supplied with `--data` in JSON
+or YAML format.
 
-## Options
+## SUBCOMMANDS
 
-All commands accept:
+| Subcommand | Path Arguments | Description |
+|---|---|---|
+| `list` | none | List dynamic DNS entries |
+| `create` | none | Create a dynamic DNS entry |
+| `update` | `ID` | Update entry `ID` |
+| `delete` | `ID` | Delete entry `ID` |
+| `sync` | `ID` | Trigger an immediate sync for entry `ID` |
+
+## OPTIONS
+
+All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
 - `-p, --param KEY=VALUE`
-  Query parameter. Repeatable.
+  Query parameter (repeatable).
 - `-y, --yes`
-  Skip the destructive-request confirmation.
+  Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-Path arguments:
+## EXIT STATUS
 
-| Command | Arguments |
-|---|---|
-| `update`, `delete`, `sync` | `id` |
-| `list`, `create` | none |
+- `0` — Success.
+- `1` — API error or aborted confirmation.
+- `2` — Command-line usage error.
 
-## Examples
+## EXAMPLES
 
-### Minimal
+List dynamic DNS entries as JSON:
 
-    sylve ddns list -f json
+```sh
+sylve ddns list -f json
+```
 
-Output (illustrative):
+```json
+[
+  {
+    "id": 1,
+    "name": "home.example.test",
+    "provider": "cloudflare",
+    "enabled": true
+  }
+]
+```
 
-    [
-      {
-        "id": 1,
-        "name": "home.example.test",
-        "provider": "cloudflare",
-        "enabled": true
-      }
-    ]
+Create, update, synchronize, and delete an entry:
 
-### With every relevant option
+```sh
+sylve ddns create \
+  --data '{"name":"home.example.test","provider":"cloudflare","zone":"example.test","recordType":"A","proxied":false}' \
+  --param validate=1 \
+  --node node1.example.test \
+  --format json
 
-    sylve ddns create \
-      --data '{"name":"home.example.test","provider":"cloudflare","zone":"example.test","recordType":"A","proxied":false}' \
-      --param validate=1 \
-      --node node1.example.test \
-      --format json
+sylve ddns update 2 --data '{"enabled":false}' -f json
+sylve ddns sync 2
+sylve ddns delete 2 --yes
+```
 
-Output (illustrative):
+## SEE ALSO
 
-    {
-      "id": 2,
-      "name": "home.example.test"
-    }
-
-### Update, sync, delete
-
-    sylve ddns update 2 --data '{"enabled":false}' -f json
-
-    sylve ddns sync 2
-
-    sylve ddns delete 2 --yes
-
-Output (illustrative):
-
-    {
-      "id": 2,
-      "enabled": false
-    }
-    OK
-
-`--data` carries the body. `--param` adds query parameters. `-y` skips the
-delete confirmation.
-
-## Inputs
-
-- The active context and token.
-- `--data` inline JSON/YAML or `@file`.
-- Entry IDs from `ddns list`.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- Mutating commands print the API result, or `OK` when the response is empty.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-mdns(1)](mdns.md),
+[sylve-network(1)](network.md),
+[sylve-options(7)](../global-options.md)

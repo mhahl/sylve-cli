@@ -1,116 +1,99 @@
-# sylve samba
+# SYLVE-SAMBA(1)
 
-Manage Samba global configuration and shares.
+## NAME
 
-These are generic API commands. The request body is the Sylve API shape.
+`sylve-samba` — manage Samba global configuration, shares, and audit logs
 
-## Synopsis
+## SYNOPSIS
 
-    sylve samba COMMAND [ARGS]...
+```sh
+sylve samba COMMAND [ARGS ...]
+```
 
-## Commands
+## DESCRIPTION
 
-| Command | Purpose |
-|---|---|
-| `config` | Show global configuration |
-| `config-set` | Update global configuration |
-| `shares` | List shares |
-| `share-create` | Create a share |
-| `share-update ID` | Update a share |
-| `share-delete ID` | Delete a share |
-| `share-enable ID` | Enable or disable a share |
-| `audit-logs` | Show audit logs |
+`sylve samba` configures the host Samba server and SMB file shares via generic
+Sylve API bindings. Request payloads are supplied with `--data` in JSON or YAML
+format.
 
-## Options
+## SUBCOMMANDS
 
-All commands accept:
+| Subcommand | Path Arguments | Description |
+|---|---|---|
+| `config` | none | Show global Samba configuration |
+| `config-set` | none | Update global Samba configuration |
+| `shares` | none | List configured SMB shares |
+| `share-create` | none | Create a share |
+| `share-update` | `ID` | Update share `ID` |
+| `share-delete` | `ID` | Delete share `ID` |
+| `share-enable` | `ID` | Enable or disable share `ID` |
+| `audit-logs` | none | Display Samba audit logs |
+
+## OPTIONS
+
+All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
 - `-p, --param KEY=VALUE`
-  Query parameter. Repeatable.
+  Query parameter (repeatable).
 - `-y, --yes`
-  Skip the destructive-request confirmation.
+  Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-Path arguments:
+## EXIT STATUS
 
-| Command | Arguments |
-|---|---|
-| `share-update`, `share-delete`, `share-enable` | `id` |
-| all other commands | none |
+- `0` — Success.
+- `1` — API error or aborted confirmation.
+- `2` — Command-line usage error.
 
-## Examples
+## EXAMPLES
 
-### Minimal
+List shares as JSON:
 
-    sylve samba shares -f json
+```sh
+sylve samba shares -f json
+```
 
-Output (illustrative):
+```json
+[
+  {
+    "id": 1,
+    "name": "media",
+    "path": "/zroot/media",
+    "enabled": true
+  }
+]
+```
 
-    [
-      {
-        "id": 1,
-        "name": "media",
-        "path": "/zroot/media",
-        "enabled": true
-      }
-    ]
+Create, update, disable, and delete a share:
 
-### With every relevant option
+```sh
+sylve samba share-create \
+  --data '{"name":"media","path":"/zroot/media","readOnly":false,"guestOk":true}' \
+  --param validate=1 \
+  --node node1.example.test \
+  --format json
 
-    sylve samba share-create \
-      --data '{"name":"media","path":"/zroot/media","readOnly":false,"guestOk":true}' \
-      --param validate=1 \
-      --node node1.example.test \
-      --format json
+sylve samba share-update 2 --data '{"readOnly":true}' -f json
+sylve samba share-enable 2 --data '{"enabled":false}' -f json
+sylve samba share-delete 2 --yes
+```
 
-Output (illustrative):
+Inspect and update global Samba settings and read audit logs:
 
-    {
-      "id": 2,
-      "name": "media"
-    }
+```sh
+sylve samba config -f json
+sylve samba config-set --data '{"workgroup":"WORKGROUP","serverString":"Sylve"}' -f json
+sylve samba audit-logs --param limit=20
+```
 
-### Update, enable, delete
+## SEE ALSO
 
-    sylve samba share-update 2 --data '{"readOnly":true}' -f json
-
-    sylve samba share-enable 2 --data '{"enabled":false}' -f json
-
-    sylve samba share-delete 2 --yes
-
-Output (illustrative):
-
-    {
-      "id": 2,
-      "enabled": false
-    }
-    OK
-
-`--param` adds query parameters. `--data` carries the body. `-y` skips the
-confirmation for the delete.
-
-### Global configuration
-
-    sylve samba config -f json
-
-    sylve samba config-set --data '{"workgroup":"WORKGROUP","serverString":"Sylve"}' -f json
-
-    sylve samba audit-logs --param limit=20
-
-## Inputs
-
-- The active context and token.
-- `--data` inline JSON/YAML or `@file`.
-- Path IDs from `samba shares`.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- Mutating commands print the API result, or `OK` when the response is empty.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-iscsi(1)](iscsi.md),
+[sylve-zfs(1)](zfs.md),
+[sylve-options(7)](../global-options.md)

@@ -1,45 +1,64 @@
-# Contributing
+# SYLVE-CONTRIBUTING(7)
 
-`sylve-cli` is an independent tool. It is not affiliated with or endorsed by
-the Sylve project.
+## NAME
 
-## Report a bug
+`sylve-contributing` — bug reporting, patch submission, and contribution conventions for `sylve-cli`
+
+## DESCRIPTION
+
+`sylve-cli` is an independent command-line client and is not affiliated with or
+endorsed by the Sylve project. Contributions are accepted under the BSD
+2-Clause licence.
+
+## REPORTING BUGS
 
 Open an issue at <https://github.com/mhahl/sylve-cli/issues> and include:
 
-- `sylve --version`
-- The command you ran, with secrets removed
+- Output of `sylve --version`
+- Exact command line executed, with secrets removed
 - Expected output and actual output
-- Whether the target is a single node or a cluster
+- Whether the target is a standalone node or a cluster
 
-Do not paste bearer tokens. `sylve config view` redacts them by default.
+Do not include bearer tokens in bug reports. `sylve config view` redacts tokens
+by default; never paste output from `sylve config view --show-token`.
 
-## Propose a change
+## SUBMITTING PATCHES
 
-1. Open an issue for behaviour changes or new commands.
-2. Fork the repository and create a branch.
-3. Make the change and add or update tests.
-4. Run `make lint`, `make type`, and `make test`.
-5. Open a pull request. Reference the issue.
+1. Open an issue before introducing behaviour changes or new commands.
+2. Fork the repository and create a topic branch.
+3. Implement the change and add or update tests in `tests/`.
+4. Update command manuals in `docs/` and `docs/man/src/*.in` (then run
+   `make man`) when user-visible behaviour changes.
+5. Verify that `make lint`, `make type`, and `make test` pass.
+6. Open a pull request referencing the issue.
 
-## What a good pull request looks like
+### Patch Standards
 
-- One concern per pull request.
-- Tests for new behaviour and bug fixes.
-- Documentation updated when user-visible behaviour changes.
-- No drive-by refactors, formatting churn, or unrelated dependency changes.
-- Existing error handling and validation preserved.
-- Live tests updated when the Sylve API contract changes.
+- **Single concern**: keep each pull request focused on one logical change.
+- **Test coverage**: include unit tests for new behaviour and regressions;
+  update live tests when the Sylve API contract changes.
+- **No churn**: avoid unrelated refactors, formatting changes, or dependency
+  additions.
+- **Safety**: preserve existing validation, error handling, and confirmation
+  prompts.
 
-## AI usage policy
+## AI USAGE POLICY
 
 - AI tools may be used to draft code, tests, or documentation.
-- Any AI-generated change must be reviewed and understood by a human before
-  merge.
-- The author is responsible for correctness, licensing, and security.
+- Every AI-assisted change must be reviewed, verified, and understood by a
+  human before submission.
+- The submitting author remains responsible for correctness, licensing, and
+  security.
 - Disclose substantial AI assistance in the pull request description.
 
-## Licence
+## LICENCE
 
-Contributions are accepted under the BSD 2-Clause licence in
+All contributions are licensed under the BSD 2-Clause licence in
 [LICENSE](LICENSE).
+
+## SEE ALSO
+
+[sylve(1)](README.md),
+[sylve-devel(7)](docs/developer-guide.md),
+[sylve-testing(7)](TESTING.md),
+[sylve-licences(7)](THIRD-PARTY-LICENCES.md)

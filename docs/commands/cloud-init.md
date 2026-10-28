@@ -1,78 +1,73 @@
-# sylve cloud-init
+# SYLVE-CLOUD-INIT(1)
 
-Manage reusable cloud-init templates.
+## NAME
 
-These are generic API commands. The request body is the Sylve API shape.
+`sylve-cloud-init` — manage reusable cloud-init templates
 
-## Synopsis
+## SYNOPSIS
 
-    sylve cloud-init COMMAND [ARGS]...
+```sh
+sylve cloud-init COMMAND [ARGS ...]
+```
 
-## Commands
+## DESCRIPTION
 
-| Command | Purpose |
-|---|---|
-| `templates` | List templates |
-| `template-create` | Create a template |
-| `template-update TEMPLATEID` | Update a template |
-| `template-delete TEMPLATEID` | Delete a template |
+`sylve cloud-init` lists, creates, updates, and deletes reusable cloud-init
+templates via generic Sylve API bindings. Request payloads are supplied with
+`--data` in JSON or YAML format.
 
-## Options
+## SUBCOMMANDS
 
-All commands accept:
+| Subcommand | Path Arguments | Description |
+|---|---|---|
+| `templates` | none | List cloud-init templates |
+| `template-create` | none | Create a cloud-init template |
+| `template-update` | `TEMPLATE_ID` | Update template `TEMPLATE_ID` |
+| `template-delete` | `TEMPLATE_ID` | Delete template `TEMPLATE_ID` |
+
+## OPTIONS
+
+All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
 - `-p, --param KEY=VALUE`
-  Query parameter. Repeatable.
+  Query parameter (repeatable).
 - `-y, --yes`
-  Skip the destructive-request confirmation.
+  Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
-  Output format. Default: `table`.
+  Output format (default: `table`).
 
-Path arguments:
+## EXIT STATUS
 
-| Command | Arguments |
-|---|---|
-| `template-update`, `template-delete` | `templateId` |
-| `templates`, `template-create` | none |
+- `0` — Success.
+- `1` — API error or aborted confirmation.
+- `2` — Command-line usage error.
 
-## Examples
+## EXAMPLES
 
-### Minimal
+List cloud-init templates as JSON:
 
-    sylve cloud-init templates -f json
+```sh
+sylve cloud-init templates -f json
+```
 
-Output (illustrative):
+```json
+[
+  {
+    "id": 1,
+    "name": "debian-base",
+    "description": "Debian 13 cloud-init defaults"
+  }
+]
+```
 
-    [
-      {
-        "id": 1,
-        "name": "debian-base",
-        "description": "Debian 13 cloud-init defaults"
-      }
-    ]
-
-### With every relevant option
-
-    sylve cloud-init template-create \
-      --data @template.yaml \
-      --param validate=1 \
-      --node node1.example.test \
-      --format json
-
-Output (illustrative):
-
-    {
-      "id": 2,
-      "name": "debian-base"
-    }
-
-`template.yaml` is the API request body:
+Create a template from `template.yaml`, update its description, and delete it:
 
 ```yaml
+# template.yaml
 name: debian-base
 description: Debian 13 cloud-init defaults
 userData: |
@@ -88,32 +83,20 @@ networkConfig: |
       dhcp4: true
 ```
 
-### Update and delete
+```sh
+sylve cloud-init template-create \
+  --data @template.yaml \
+  --param validate=1 \
+  --node node1.example.test \
+  --format json
 
-    sylve cloud-init template-update 2 --data '{"description":"Updated"}' -f json
+sylve cloud-init template-update 2 --data '{"description":"Updated"}' -f json
+sylve cloud-init template-delete 2 --yes
+```
 
-    sylve cloud-init template-delete 2 --yes
+## SEE ALSO
 
-Output (illustrative):
-
-    {
-      "id": 2,
-      "description": "Updated"
-    }
-    OK
-
-`--data` carries the body. `--param` adds query parameters. `-y` skips the
-delete confirmation.
-
-## Inputs
-
-- The active context and token.
-- `--data` inline JSON/YAML or `@file`.
-- Template IDs from `cloud-init templates`.
-
-## Outputs
-
-- Tables, JSON, YAML, value, or CSV.
-- Mutating commands print the API result, or `OK` when the response is empty.
-- Exit `0` on success. Exit `1` on API error or aborted confirmation. Exit `2`
-  on usage error.
+[sylve(1)](../../README.md),
+[sylve-vm(1)](vm.md),
+[sylve-download(1)](download.md),
+[sylve-options(7)](../global-options.md)
