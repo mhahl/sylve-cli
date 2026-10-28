@@ -132,6 +132,41 @@ def cli_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
                     ],
                 },
             )
+        if path == "/api/auth/sse-tokens":
+            return httpx.Response(
+                200,
+                json={"status": "success", "data": {"token": "sse-tok", "expiresIn": 600}},
+            )
+        if path == "/api/events/stream":
+            assert request.url.params.get("sse_token") == "sse-tok"
+            return httpx.Response(
+                200,
+                content=b'event: ping\ndata: {"ok":true}\n\n',
+                headers={"Content-Type": "text/event-stream"},
+            )
+        if path == "/api/network/firewall/logs/live":
+            cur = int(request.url.params.get("cursor") or 0)
+            return httpx.Response(
+                200,
+                json={
+                    "status": "success",
+                    "data": {
+                        "items": [
+                            {
+                                "cursor": cur + 1,
+                                "timestamp": "2026-10-29T00:00:00Z",
+                                "action": request.url.params.get("action") or "block",
+                                "direction": "in",
+                                "interface": "em0",
+                                "ruleId": 7,
+                                "rawLine": "block in on em0",
+                            }
+                        ],
+                        "nextCursor": cur + 1,
+                        "sourceStatus": "ok",
+                    },
+                },
+            )
         if path == "/api/vm/999":
             return httpx.Response(
                 404,
@@ -272,3 +307,86 @@ def test_note_show_commands(cli_env: Path) -> None:
 
     host_missing = runner.invoke(app, ["system", "notes-show", "9", "-f", "json"])
     assert host_missing.exit_code == 1
+
+
+def test_sse_events_and_firewall_logs_cursor(cli_env: Path) -> None:
+    events = runner.invoke(app, ["system", "events", "--lines", "2", "--no-reconnect"])
+    assert events.exit_code == 0
+    assert "event: ping" in events.stdout
+
+    fw = runner.invoke(
+        app,
+        [
+            "network",
+            "firewall",
+            "logs",
+            "--cursor",
+            "5",
+            "--action",
+            "pass",
+            "--rule-type",
+            "traffic",
+            "-f",
+            "json",
+        ],
+    )
+    assert fw.exit_code == 0
+    items = json.loads(fw.stdout)
+    assert items[0]["cursor"] == 6
+    assert items[0]["action"] == "pass"
+
+
+def test_console_ws_auth_and_protocol() -> None:
+    import hashlib
+
+    from sylve_cli.console_ws import (
+        build_resize_frame,
+        build_ws_auth_hex,
+        decode_server_frame,
+        encode_client_frame,
+        format_console_http_error,
+        scan_detach_escape,
+    )
+
+    hex_auth = build_ws_auth_hex("jwt-token", "node1.lan")
+    decoded = json.loads(bytes.fromhex(hex_auth).decode("utf-8"))
+    assert decoded == {
+        "hash": hashlib.sha256(b"jwt-token").hexdigest(),
+        "hostname": "node1.lan",
+    }
+
+    err_409 = format_console_http_error(
+        409,
+        b'{"status":"error","message":"vm_serial_console_disabled","error":"disabled"}',
+        "/vm/101/console",
+    )
+    assert "options-serial-console" in str(err_409)
+
+    err_401 = format_console_http_error(401, b"", "/info/terminal")
+    assert "sylve login" in str(err_401)
+
+    fwd, at_bol, detach = scan_detach_escape(b"hello\r~.", True)
+    assert fwd == b"hello\r"
+    assert not at_bol
+    assert detach is True
+
+    fwd2, at_bol2, detach2 = scan_detach_escape(b"~~abc\n", True)
+    assert fwd2 == b"~abc\n"
+    assert at_bol2 is True
+    assert detach2 is False
+
+    # Server frame round-trip (unmasked binary frame from server)
+    class _FakeSock:
+        def __init__(self, data: bytes) -> None:
+            self._buf = bytearray(data)
+
+        def recv(self, n: int) -> bytes:
+            out = bytes(self._buf[:n])
+            del self._buf[:n]
+            return out
+
+    sock = _FakeSock(b"\x82\x05hello")
+    frame = decode_server_frame(sock, bytearray())
+    assert frame == (2, b"hello")
+    assert len(encode_client_frame(b"\x00ls\n")) == 2 + 4 + 4
+    assert len(build_resize_frame(80, 24)) > 10

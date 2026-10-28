@@ -39,6 +39,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 | `migrate VM` | Validate preflight and migrate a VM to another node |
 | `delete VM` | Delete a VM and optionally its volumes, raw disks, and MACs |
 | `logs VM` | Display VM console logs |
+| `console VM` | Attach to a running VM's interactive serial console |
 | `guest-agent VM` | Query QEMU Guest Agent OS and network information |
 | `rename VM NEW_NAME` | Rename a VM |
 | `snapshot list/create/rollback/delete` | Manage VM ZFS snapshots |
@@ -181,10 +182,14 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `-y, --yes`, `-n, --node NODE`
   Skip confirmation; target node.
 
-### `vm logs`, `vm guest-agent`, `vm rename`
+### `vm logs`, `vm console`, `vm guest-agent`, `vm rename`
 
 - `VM` (required): RID or name.
 - `NEW_NAME` (required for `rename`): new VM name.
+- `--baudrate, -b N` (`console` only): serial baud rate (default: `115200`).
+- `--takeover / --observe` (`console` only): request input control or attach
+  read-only (default: `--takeover`). Type `Enter` then `~.` to detach. VNC
+  graphical consoles remain browser-only.
 - `-n, --node NODE`: target node.
 - `-f, --format`, `-c, --column`: output options (`guest-agent` only).
 
@@ -295,6 +300,7 @@ Power actions, live migration, snapshots, templates, and hardware updates:
 
 ```sh
 sylve vm start 101 102 --wait
+sylve vm console 101 --baudrate 115200
 sylve vm migrate 101 --target node2.example.test --dry-run
 sylve vm migrate 101 --target node2.example.test --wait
 sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"

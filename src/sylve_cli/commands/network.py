@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import sys
+import time
 from typing import Annotated, Any
 
 import typer
+import yaml
 
 from sylve_cli.formatter import (
     ColumnSpec,
@@ -380,8 +384,9 @@ def switch_sync(
     """Re-apply and reconcile stored switch network configuration on a node."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
+        target = client.resolve_node_hostname(node) or client.context.hostname or "connected node"
         client.post("/network/switch/sync", node=node)
-    console.print("[green]Switch configuration synchronized.[/green]")
+    console.print(f"[green]Synchronized switch configuration on {target}.[/green]")
 
 
 # ------------------------------------------------------------------
@@ -614,31 +619,53 @@ def firewall_nat_list(
 @firewall_app.command("logs")
 def firewall_logs(
     ctx: typer.Context,
-    limit: Annotated[int, typer.Option("--limit", "-l", help="Max log entries.")] = 50,
+    limit: Annotated[
+        int, typer.Option("--limit", "-l", help="Maximum log entries per poll (1-2000).")
+    ] = 50,
+    cursor: Annotated[
+        int | None,
+        typer.Option(
+            "--cursor",
+            help="Return hits after this cursor (0 starts at the current live stream position).",
+        ),
+    ] = None,
+    follow: Annotated[
+        bool,
+        typer.Option("--follow", "-F", help="Poll continuously for new firewall hits."),
+    ] = False,
+    interval: Annotated[
+        float,
+        typer.Option("--interval", help="Polling interval in seconds when --follow is set."),
+    ] = 1.5,
+    rule_type: Annotated[
+        str | None,
+        typer.Option("--rule-type", help="Filter by rule type ('traffic' or 'nat')."),
+    ] = None,
+    rule_id: Annotated[
+        int | None,
+        typer.Option("--rule-id", help="Filter by rule ID."),
+    ] = None,
     action: Annotated[
-        str | None, typer.Option("--action", help="Filter by action (pass/block).")
+        str | None,
+        typer.Option("--action", help="Filter by PF action (pass, block, scrub, nat, binat, rdr)."),
+    ] = None,
+    direction: Annotated[
+        str | None,
+        typer.Option("--direction", help="Filter by packet direction ('in' or 'out')."),
     ] = None,
     interface: Annotated[
         str | None, typer.Option("--interface", "-i", help="Filter by interface.")
+    ] = None,
+    query: Annotated[
+        str | None,
+        typer.Option("--query", "-q", help="Search rule name, ID, and raw log text."),
     ] = None,
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
 ) -> None:
-    """Fetch live firewall rule hit logs."""
+    """Fetch or follow live firewall rule hit logs."""
     state: CLIState = ctx.obj
-    with state.get_client(node_override=node) as client:
-        data = client.get(
-            "/network/firewall/logs/live",
-            params={"limit": limit, "action": action, "interface": interface},
-            node=node,
-        )
-    raw_items: list[Any] = (
-        data["items"]
-        if isinstance(data, dict) and isinstance(data.get("items"), list)
-        else (data if isinstance(data, list) else [])
-    )
-    items = [item for item in raw_items if isinstance(item, dict)]
     spec = [
         ColumnSpec("Time", "timestamp"),
         ColumnSpec("Action", "action"),
@@ -649,7 +676,81 @@ def firewall_logs(
         ColumnSpec("Destination", "dst"),
         ColumnSpec("Rule ID", "ruleId", justify="right"),
     ]
-    print_list(items, spec, fmt=fmt, selected_columns=columns, title="Firewall Live Logs")
+
+    def _extract(data: Any) -> tuple[list[dict[str, Any]], int | None]:
+        raw_items: list[Any] = (
+            data["items"]
+            if isinstance(data, dict) and isinstance(data.get("items"), list)
+            else (data if isinstance(data, list) else [])
+        )
+        rows = [item for item in raw_items if isinstance(item, dict)]
+        next_cur: int | None = None
+        if isinstance(data, dict) and data.get("nextCursor") is not None:
+            next_cur = int(data["nextCursor"])
+        elif rows and rows[-1].get("cursor") is not None:
+            next_cur = int(rows[-1]["cursor"])
+        return rows, next_cur
+
+    base_params: dict[str, Any] = {
+        "limit": limit,
+        "ruleType": rule_type,
+        "ruleId": rule_id,
+        "action": action,
+        "direction": direction,
+        "interface": interface,
+        "query": query,
+    }
+
+    with state.get_client(node_override=node) as client:
+        if not follow:
+            params = dict(base_params)
+            if cursor is not None:
+                params["cursor"] = cursor
+            data = client.get("/network/firewall/logs/live", params=params, node=node)
+            items, _ = _extract(data)
+            print_list(items, spec, fmt=fmt, selected_columns=columns, title="Firewall Live Logs")
+            return
+
+        cur = 0 if cursor is None else cursor
+        try:
+            while True:
+                params = dict(base_params, cursor=cur)
+                data = client.get("/network/firewall/logs/live", params=params, node=node)
+                items, next_cur = _extract(data)
+                if next_cur is not None:
+                    cur = next_cur
+                if items:
+                    if fmt == OutputFormat.json:
+                        for row in items:
+                            sys.stdout.write(json.dumps(row, default=str) + "\n")
+                        sys.stdout.flush()
+                    elif fmt == OutputFormat.yaml:
+                        sys.stdout.write(yaml.safe_dump(items, sort_keys=False))
+                        sys.stdout.flush()
+                    elif fmt in (OutputFormat.value, OutputFormat.csv):
+                        print_list(items, spec, fmt=fmt, selected_columns=columns)
+                    else:
+                        for row in items:
+                            raw = row.get("rawLine")
+                            if raw:
+                                console.print(str(raw), markup=False)
+                            else:
+                                line = " ".join(
+                                    str(row.get(k) or "-")
+                                    for k in (
+                                        "timestamp",
+                                        "action",
+                                        "direction",
+                                        "interface",
+                                        "ruleType",
+                                        "ruleName",
+                                        "ruleId",
+                                    )
+                                )
+                                console.print(line, markup=False)
+                time.sleep(max(0.2, interval))
+        except KeyboardInterrupt:
+            return
 
 
 # ------------------------------------------------------------------

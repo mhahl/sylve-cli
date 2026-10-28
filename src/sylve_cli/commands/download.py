@@ -147,7 +147,9 @@ def download_create(
     ] = "uncategorized",
     storage_pool: Annotated[
         str | None,
-        typer.Option("--pool", "-p", help="ZFS storage pool name (uses Default if omitted)."),
+        typer.Option(
+            "--pool", "-p", help="ZFS storage pool name (uses the server default if omitted)."
+        ),
     ] = None,
     auto_extract: Annotated[
         bool,

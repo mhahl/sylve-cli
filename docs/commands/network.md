@@ -67,8 +67,12 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
   `-f/--format`, `-c/--column`.
 - `firewall traffic-list`, `firewall nat-list`: `-n/--node`, `-f/--format`,
   `-c/--column`, `--long`.
-- `firewall logs`: `--limit, -l N` (default: `50`), `--action {pass,block}`,
-  `--interface, -i INTERFACE`, `-n/--node`, `-f/--format`, `-c/--column`.
+- `firewall logs`: `--limit, -l N` (default: `50`), `--cursor N` (`0` starts at
+  the live stream position), `--follow, -F` (poll continuously),
+  `--interval SECONDS` (default: `1.5`), `--rule-type {traffic,nat}`,
+  `--rule-id ID`, `--action {pass,block,scrub,nat,binat,rdr}`,
+  `--direction {in,out}`, `--interface, -i INTERFACE`, `--query, -q TEXT`,
+  `-n/--node`, `-f/--format`, `-c/--column`.
 - `object list`: `-n/--node`, `-f/--format`, `-c/--column`.
 - `object create`: `--name NAME` (required), `--type, -t TYPE` (required, e.g.
   `Host`, `Network`, `Port`, `Mac`), `--value, -v VALUE` (required, repeatable),
@@ -141,6 +145,7 @@ Inspect DHCP configuration and blocked PF firewall log entries:
 ```sh
 sylve network dhcp config --node node1.example.test -f json
 sylve network firewall logs --limit 20 --action block --interface em0
+sylve network firewall logs --follow --rule-type traffic --direction in
 ```
 
 Create a reusable host object and a static route:

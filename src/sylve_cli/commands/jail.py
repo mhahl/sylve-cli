@@ -7,6 +7,7 @@ from typing import Annotated, Any
 import typer
 
 from sylve_cli.client import SylveClient, SylveError
+from sylve_cli.console_ws import attach_console
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
@@ -150,7 +151,10 @@ def jail_show(
         ctid, host, summary = client.resolve_jail(jail, node=node)
         data = client.get(f"/jail/{ctid}", node=host or None)
         if not isinstance(data, dict):
-            raise SylveError(f"Unexpected response for Jail {ctid}.")
+            raise SylveError(
+                f"Unexpected response showing Jail {ctid}. "
+                "Re-run with -f json to inspect the response, or report it with your server version."
+            )
         data["state"] = summary.get("state") or data.get("state") or "UNKNOWN"
         data["node"] = host or client.context.hostname or "local"
 
@@ -302,6 +306,26 @@ def jail_logs(
         console.print(str(data.get("logs") or ""))
     else:
         console.print(str(data or ""))
+
+
+@jail_app.command("console")
+def jail_console(
+    ctx: typer.Context,
+    jail: Annotated[str, typer.Argument(help="Jail CTID or name.")],
+    node: NodeOption = None,
+) -> None:
+    """Attach to a running jail's interactive console over WebSocket."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        ctid, host, summary = client.resolve_jail(jail, node=node)
+        name = summary.get("name") or ctid
+        attach_console(
+            client,
+            f"/jail/{ctid}/console",
+            node=host or node,
+            takeover=False,
+            banner=f"Attached to Jail {name} ({ctid}) console",
+        )
 
 
 @jail_app.command("guest-info")

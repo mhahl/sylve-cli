@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -37,6 +38,7 @@ from sylve_cli.commands.replication import policy_app
 from sylve_cli.commands.task import task_app
 from sylve_cli.commands.vm import vm_app
 from sylve_cli.commands.zfs import dataset_app, periodic_app, pool_app, zfs_app
+from sylve_cli.console_ws import attach_console
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
@@ -208,7 +210,7 @@ def _execute_generic(
     target_path = _path_for(path, args)
     destructive = method == "DELETE" or "delete" in path.lower()
     if destructive and not yes and sys.stdin.isatty():
-        typer.confirm(f"Run destructive request {method} {target_path}?", abort=True)
+        typer.confirm(f"Send {method} {target_path}?", abort=True)
     with state.get_client(node_override=node) as client:
         result = client.request(
             method,
@@ -1477,14 +1479,75 @@ _add(
 @system_app.command("events")
 def system_events(
     ctx: typer.Context,
-    param: Annotated[list[str] | None, typer.Option("--param", "-p")] = None,
+    lines: Annotated[
+        int | None,
+        typer.Option(
+            "--lines",
+            "-l",
+            min=1,
+            help="Stop after printing N non-empty event lines.",
+        ),
+    ] = None,
+    reconnect: Annotated[
+        bool,
+        typer.Option(
+            "--reconnect/--no-reconnect",
+            help="Re-mint sse_token and reconnect if the event stream drops.",
+        ),
+    ] = True,
+    param: Annotated[
+        list[str] | None,
+        typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+    ] = None,
     node: NodeOption = None,
 ) -> None:
-    """Stream server-sent events."""
+    """Stream server-sent events using a short-lived sse_token capability."""
+    state: CLIState = ctx.obj
+    parsed_params = _parse_params(param) or {}
+    explicit_token = parsed_params.get("sse_token")
+    printed = 0
+    with state.get_client(node_override=node) as client:
+        while True:
+            req_params = dict(parsed_params)
+            if not explicit_token:
+                req_params.pop("sse_token", None)
+            try:
+                for line in client.stream_lines("/events/stream", params=req_params, node=node):
+                    console.print(line, markup=False)
+                    if line.strip():
+                        printed += 1
+                        if lines is not None and printed >= lines:
+                            return
+                if not reconnect or lines is not None:
+                    return
+                time.sleep(1.5)
+            except KeyboardInterrupt:
+                return
+
+
+@system_app.command("terminal")
+def system_terminal(
+    ctx: typer.Context,
+    kill_on_exit: Annotated[
+        bool,
+        typer.Option(
+            "--kill-on-exit/--keep-alive",
+            help="Send a kill control frame to close the host shell on detach.",
+        ),
+    ] = True,
+    node: NodeOption = None,
+) -> None:
+    """Attach to an interactive host shell on the target node over WebSocket."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        for line in client.stream_lines("/events/stream", params=_parse_params(param), node=node):
-            console.print(line, markup=False)
+        attach_console(
+            client,
+            "/info/terminal",
+            node=node,
+            takeover=False,
+            kill_on_exit=kill_on_exit,
+            banner="Attached to host terminal",
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@ import typer
 
 from sylve_cli.client import SylveClient, SylveError
 from sylve_cli.commands.vm_create import register_vm_create_commands
+from sylve_cli.console_ws import attach_console
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
@@ -373,6 +374,38 @@ def vm_logs(
         console.print(str(data.get("logs") or ""))
     else:
         console.print(str(data or ""))
+
+
+@vm_app.command("console")
+def vm_console(
+    ctx: typer.Context,
+    vm: Annotated[str, typer.Argument(help="VM RID or name.")],
+    baudrate: Annotated[
+        int,
+        typer.Option("--baudrate", "-b", help="Serial baud rate."),
+    ] = 115200,
+    takeover: Annotated[
+        bool,
+        typer.Option(
+            "--takeover/--observe",
+            help="Request input control of the serial console, or attach read-only.",
+        ),
+    ] = True,
+    node: NodeOption = None,
+) -> None:
+    """Attach to a running VM's interactive serial console over WebSocket."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        rid, host, summary = client.resolve_vm(vm, node=node)
+        name = summary.get("name") or rid
+        attach_console(
+            client,
+            f"/vm/{rid}/console",
+            node=host or node,
+            extra_params={"baudrate": baudrate},
+            takeover=takeover,
+            banner=f"Attached to VM {name} ({rid}) serial console",
+        )
 
 
 @vm_app.command("guest-agent")

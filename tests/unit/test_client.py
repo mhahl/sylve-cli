@@ -163,9 +163,17 @@ def test_resolve_vm_not_found() -> None:
 
 
 def test_download_file_and_stream_lines(tmp_path) -> None:
+    seen_sse_token: list[str | None] = []
+
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/api/file":
             return httpx.Response(200, content=b"payload")
+        if request.url.path == "/api/auth/sse-tokens":
+            return httpx.Response(
+                200,
+                json={"status": "success", "data": {"token": "sse-tok-123", "expiresIn": 600}},
+            )
+        seen_sse_token.append(request.url.params.get("sse_token"))
         return httpx.Response(
             200,
             content=b"event: update\ndata: {}\n",
@@ -176,6 +184,7 @@ def test_download_file_and_stream_lines(tmp_path) -> None:
         target = client.download_file("/file", tmp_path / "out.bin")
         assert target.read_bytes() == b"payload"
         assert list(client.stream_lines("/events/stream")) == ["event: update", "data: {}"]
+        assert seen_sse_token == ["sse-tok-123"]
 
 
 def test_login_updates_context() -> None:

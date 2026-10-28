@@ -579,8 +579,8 @@ def node_drain(
             )
             if pinned_jobs and fmt == OutputFormat.table:
                 err_console.print(
-                    f"[yellow]Notice:[/yellow] {len(pinned_jobs)} backup job(s) have runnerNodeId "
-                    f"assigned to {source_host}: {', '.join(str(j.get('name')) for j in pinned_jobs)}"
+                    f"[yellow]Notice:[/yellow] {len(pinned_jobs)} backup job(s) are pinned to run on "
+                    f"{source_host}: {', '.join(str(j.get('name')) for j in pinned_jobs)}"
                 )
             return
 
@@ -607,7 +607,7 @@ def node_drain(
                 selected_columns=columns,
                 title=f"Drain Plan for {source_host}",
             )
-            console.print(f"[green]Nothing to execute on node '{source_host}'.[/green]")
+            console.print(f"[green]Node '{source_host}' has no guests to drain.[/green]")
             return
 
         if fmt == OutputFormat.table:
@@ -620,8 +620,9 @@ def node_drain(
             )
 
         if not yes:
+            noun = "guest" if len(actionable) == 1 else "guests"
             typer.confirm(
-                f"Proceed with draining {len(actionable)} workload(s) from node '{source_host}'?",
+                f"Drain {len(actionable)} {noun} from node '{source_host}'?",
                 abort=True,
             )
 
@@ -729,7 +730,7 @@ def node_reboot(
     with state.get_client(node_override=node) as client:
         target = client.resolve_node_hostname(node) or client.context.hostname or "current node"
         if not yes:
-            typer.confirm(f"Are you sure you want to reboot node '{target}'?", abort=True)
+            typer.confirm(f"Reboot node '{target}'?", abort=True)
         client.post("/basic/system/reboot", node=target)
     console.print(f"[yellow]Reboot initiated for node '{target}'.[/yellow]")
 

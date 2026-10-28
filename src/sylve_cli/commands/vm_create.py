@@ -154,7 +154,7 @@ _TEMPLATE_ALIASES = {
 
 def _parse_size(value: Any, field: str) -> int:
     if isinstance(value, bool):
-        raise SylveError(f"Invalid {field}: {value!r}.")
+        raise SylveError(f"Invalid {field}: {value!r}. Use a size like 2G or 512M.")
     if isinstance(value, (int, float)):
         size = int(value)
     else:
@@ -473,7 +473,10 @@ def _next_guest_id(client: SylveClient) -> int:
 
     next_id = 100 if max_id < 100 else max_id + 1
     if next_id > 9999:
-        raise SylveError("No free guest IDs remain in the 1-9999 range.")
+        raise SylveError(
+            "No free guest IDs remain in the 1-9999 range. "
+            "Pass --rid explicitly or delete an unused guest."
+        )
     return next_id
 
 
@@ -660,7 +663,9 @@ def _validate_vnc_bind(value: str) -> None:
     try:
         ipaddress.ip_address(value)
     except ValueError as exc:
-        raise SylveError(f"Invalid VNC bind address '{value}'.") from exc
+        raise SylveError(
+            f"Invalid VNC bind address '{value}'. Use an IP like 127.0.0.1 or 0.0.0.0."
+        ) from exc
 
 
 def _friendly_create_error(exc: SylveAPIError) -> str:
@@ -767,7 +772,7 @@ def _normalize_scratch_payload(
 ) -> dict[str, Any]:
     name = str(payload.get("name") or "").strip()
     if not name:
-        raise SylveError("VM name is required.")
+        raise SylveError("VM name is required. Pass it as NAME or --name.")
     if not _VM_NAME_RE.fullmatch(name):
         raise SylveError("VM names may contain only letters, numbers, '-' and '_'.")
     payload["name"] = name
@@ -801,12 +806,12 @@ def _normalize_scratch_payload(
 
     time_offset = str(payload.get("timeOffset") or "utc").strip().lower()
     if time_offset not in _TIME_OFFSETS:
-        raise SylveError("timeOffset must be 'utc' or 'localtime'.")
+        raise SylveError("--time-offset must be 'utc' or 'localtime'.")
     payload["timeOffset"] = time_offset
 
     boot_rom = str(payload.get("bootRom") or "uefi").strip().lower()
     if boot_rom not in _BOOT_ROMS:
-        raise SylveError("bootRom must be 'uefi', 'uboot', or 'none'.")
+        raise SylveError("--boot-rom must be 'uefi', 'uboot', or 'none'.")
     payload["bootRom"] = boot_rom
 
     storage_type = str(payload.get("storageType") or "zvol").strip().lower()

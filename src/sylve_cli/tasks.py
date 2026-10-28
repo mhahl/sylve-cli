@@ -8,7 +8,7 @@ from typing import Any
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
 from sylve_cli.client import SylveClient, SylveError
-from sylve_cli.formatter import err_console
+from sylve_cli.formatter import err_console, format_bytes
 
 TERMINAL_TASK_STATUSES = {
     "success",
@@ -145,10 +145,17 @@ def wait_for_replication_event(
                 ev = event_value if isinstance(event_value, dict) else data
                 pct = float(data.get("progressPercent") or 0.0)
                 status = str(ev.get("status") or "").strip().lower()
+                moved = data.get("movedBytes")
+                total = data.get("totalBytes")
+                transfer = (
+                    f" ({format_bytes(moved)} / {format_bytes(total)})"
+                    if moved is not None and total
+                    else ""
+                )
                 progress.update(
                     ptask,
                     completed=min(100.0, max(0.0, pct)),
-                    description=f"Replication event #{event_id} [{status}]",
+                    description=f"Replication event #{event_id} [{status}]{transfer}",
                 )
                 if status in TERMINAL_TASK_STATUSES:
                     if status in FAILURE_TASK_STATUSES:
@@ -205,10 +212,19 @@ def wait_for_backup_event(
                 pct = float(data.get("progressPercent") or 0.0)
                 phase = str(data.get("phase") or ev.get("status") or "")
                 status = str(ev.get("status") or "").strip().lower()
+                moved = data.get("movedBytes")
+                total = data.get("totalBytes")
+                dataset = str(data.get("progressDataset") or "").strip()
+                transfer = (
+                    f" ({format_bytes(moved)} / {format_bytes(total)})"
+                    if moved is not None and total
+                    else ""
+                )
+                ds_label = f" {dataset}" if dataset else ""
                 progress.update(
                     ptask,
                     completed=min(100.0, max(0.0, pct)),
-                    description=f"Backup event #{event_id} [{phase}]",
+                    description=f"Backup event #{event_id} [{phase}]{ds_label}{transfer}",
                 )
                 if status in TERMINAL_TASK_STATUSES:
                     if status in FAILURE_TASK_STATUSES:

@@ -88,7 +88,7 @@ NodeOption = Annotated[
     typer.Option(
         "-n",
         "--node",
-        help="Target cluster node hostname or UUID (defaults to all nodes for list, or auto-resolved node).",
+        help="Target cluster node hostname or UUID. List commands query all nodes unless given; other commands use the connected node.",
     ),
 ]
 

@@ -32,14 +32,14 @@ Most subcommands are generic API bindings whose request payloads are passed via
 | Tunables | `tunables`, `tunable-set` |
 | Files | `file-list`, `file-create`, `file-copy-move`, `file-delete`, `file-rename`, `file-upload-revert`, `file-upload`, `file-download` |
 | Certificates | `cert-list`, `cert-create`, `cert-domain-check`, `cert-update ID`, `cert-delete ID`, `cert-activate ID`, `cert-activate-cancel ID`, `cert-renew ID`, `cert-retry ID`, `cert-archive ID` |
-| Health & events | `health-basic`, `health-http`, `events` |
+| Health, events & terminal | `health-basic`, `health-http`, `events`, `terminal` |
 
 ## OPTIONS
 
 ### Generic Subcommands
 
 All subcommands except `file-upload`, `file-download`, `cert-archive`,
-`events`, and `notes-show` accept:
+`events`, `terminal`, and `notes-show` accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
@@ -52,7 +52,7 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
 
-### `file-upload`, `file-download`, `cert-archive`, and `events`
+### `file-upload`, `file-download`, `cert-archive`, `events`, `terminal`, and `notes-show`
 
 - `file-upload`: `--file FILE` (required), `-p, --param KEY=VALUE` (e.g.
   `path=/destination`), `-n, --node NODE`, `-f, --format`.
@@ -60,8 +60,13 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
   `id=/absolute/path`), `-n, --node NODE`.
 - `cert-archive ID`: `ID` (required), `--output, -o PATH` (required),
   `-p, --param KEY=VALUE`, `-n, --node NODE`.
-- `events`: `-p, --param KEY=VALUE`, `-n, --node NODE`. Streams raw server-sent
-  events (`SSE`) to standard output until interrupted.
+- `events`: `--lines, -l N` (stop after `N` non-empty lines),
+  `--reconnect / --no-reconnect` (default: `--reconnect`),
+  `-p, --param KEY=VALUE`, `-n, --node NODE`. Mints a short-lived `sse_token`
+  automatically via `POST /auth/sse-tokens` and streams `/events/stream`.
+- `terminal`: `--kill-on-exit / --keep-alive` (default: `--kill-on-exit`),
+  `-n, --node NODE`. Opens an interactive host shell over WebSocket; type
+  `Enter` then `~.` to detach.
 - `notes-show ID`: `ID` (required), `-n, --node NODE`, `-f, --format`,
   `-c, --column`. Displays one host note without truncation.
 
@@ -115,7 +120,8 @@ events:
 sylve system file-upload --file ./config.json --param path=/root --node node1.example.test -f json
 sylve system file-download --param id=/root/config.json --output ./config.json --node node1.example.test
 sylve system cert-archive 7 --output ./cert-7.zip
-sylve system events --param topic=vm
+sylve system events --lines 20
+sylve system terminal --node node1.example.test
 ```
 
 ## SEE ALSO

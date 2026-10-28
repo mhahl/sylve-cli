@@ -26,6 +26,7 @@ and jail templates.
 | `migrate JAIL` | Validate preflight and migrate a jail to another node |
 | `delete JAIL` | Delete a jail and optionally its root dataset and MACs |
 | `logs JAIL` | Display jail console logs |
+| `console JAIL` | Attach to a running jail's interactive console |
 | `guest-info JAIL` | Display live OS and network data |
 | `rename JAIL NEW_NAME` | Rename a jail |
 | `snapshot list/create/rollback/delete` | Manage ZFS jail snapshots |
@@ -80,12 +81,13 @@ and jail templates.
 - `-y, --yes`, `-n, --node NODE`
   Skip confirmation; target node.
 
-### `jail logs`, `jail guest-info`, `jail rename`
+### `jail logs`, `jail console`, `jail guest-info`, `jail rename`
 
 - `JAIL` (required): CTID or name.
 - `NEW_NAME` (required for `rename`): new jail name.
 - `-n, --node NODE`: target node.
 - `-f, --format`, `-c, --column`: output options (`guest-info` only).
+- `console` attaches over WebSocket; type `Enter` then `~.` to detach.
 
 ### `jail snapshot`, `jail bootstrap`, and `jail template`
 

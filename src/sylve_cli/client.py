@@ -343,6 +343,13 @@ class SylveClient:
                     handle.write(chunk)
         return target
 
+    def create_sse_token(self) -> str:
+        """Mint a short-lived ``sse_token`` via ``POST /auth/sse-tokens``."""
+        data = self.request("POST", "/auth/sse-tokens", resolve_node=False)
+        if isinstance(data, dict) and data.get("token"):
+            return str(data["token"])
+        raise SylveError("Server did not return an sse_token from /auth/sse-tokens.")
+
     def stream_lines(
         self,
         path: str,
@@ -352,20 +359,8 @@ class SylveClient:
     ) -> Any:
         """Yield server-sent event lines from a streaming endpoint.
 
-        Args:
-            path: API path.
-            params: Optional query parameters.
-            node: Target node hostname or UUID.
-
-        Yields:
-            str: One line from the event stream.
-
-        Raises:
-            SylveError: If the request fails.
-
-        Example:
-            >>> for line in client.stream_lines("/events/stream"):
-            ...     print(line)
+        When streaming ``/events/stream`` without an explicit ``sse_token``,
+        automatically mints a short-lived capability via ``POST /auth/sse-tokens``.
         """
         self._ensure_valid_token()
         headers = {
@@ -376,6 +371,8 @@ class SylveClient:
         if resolved_host:
             headers["X-Current-Hostname"] = resolved_host
         clean_params = {k: v for k, v in (params or {}).items() if v is not None}
+        if path == "/events/stream" and not clean_params.get("sse_token"):
+            clean_params["sse_token"] = self.create_sse_token()
         with self._http.stream(
             "GET", path, params=clean_params or None, headers=headers
         ) as response:

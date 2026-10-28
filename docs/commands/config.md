@@ -105,8 +105,19 @@ sylve config view
 
 ```yaml
 config_file: /home/admin/.config/sylve/config.yaml
-current_context: ''
-contexts: {}
+current_context: admin@sylve.example.test
+contexts:
+  admin@sylve.example.test:
+    server: https://sylve.example.test
+    username: admin
+    auth_type: sylve
+    hostname: node1.example.test
+    node_id: node-1
+    default_node: node1.example.test
+    verify_ssl: true
+    ca_cert: null
+    expires_at: '2026-11-01T00:00:00Z'
+    token: eyJhbGciOi...REDACTED
 ```
 
 List saved contexts as JSON:

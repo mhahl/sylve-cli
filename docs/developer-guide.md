@@ -28,6 +28,7 @@ make test lint type man
 | `src/sylve_cli/client.py` | HTTP client, authentication, node routing, error types |
 | `src/sylve_cli/config.py` | Context management, JWT inspection, config file I/O |
 | `src/sylve_cli/formatter.py` | `table`, `json`, `yaml`, `value`, and `csv` output rendering |
+| `src/sylve_cli/console_ws.py` | Stdlib RFC 6455 WebSocket console attach and hex auth payload |
 | `src/sylve_cli/tasks.py` | Lifecycle, replication, and backup task polling |
 | `src/sylve_cli/commands/auth.py` | `login`, `logout`, `whoami`, `config` |
 | `src/sylve_cli/commands/cluster.py` | `cluster` |
