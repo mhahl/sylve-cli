@@ -13,6 +13,7 @@ from sylve_cli.formatter import (
     console,
     format_bytes,
     format_percent,
+    format_timestamp,
     print_dict,
     print_list,
 )
@@ -455,7 +456,7 @@ def periodic_list(
         ColumnSpec("Prefix", "prefix"),
         ColumnSpec("Cron", "cronExpr"),
         ColumnSpec("Keep Last", "keepLast", justify="right"),
-        ColumnSpec("Last Run", "lastRunAt"),
+        ColumnSpec("Last Run", "lastRunAt", formatter=format_timestamp),
     ]
     if long:
         spec = [
@@ -467,7 +468,7 @@ def periodic_list(
             ColumnSpec("Cron", "cronExpr"),
             ColumnSpec("Recursive", "recursive"),
             ColumnSpec("Keep Last", "keepLast", justify="right"),
-            ColumnSpec("Last Run", "lastRunAt"),
-            ColumnSpec("Next Run", "nextRunAt"),
+            ColumnSpec("Last Run", "lastRunAt", formatter=format_timestamp),
+            ColumnSpec("Next Run", "nextRunAt", formatter=format_timestamp),
         ]
     print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Periodic ZFS Snapshot Jobs")

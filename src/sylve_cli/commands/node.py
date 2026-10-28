@@ -15,6 +15,7 @@ from sylve_cli.formatter import (
     err_console,
     format_bytes,
     format_percent,
+    format_timestamp,
     format_vm_state,
     print_dict,
     print_list,
@@ -804,6 +805,6 @@ def node_audit_logs(
         ColumnSpec("Action", "action"),
         ColumnSpec("Path", "path"),
         ColumnSpec("Status", "status"),
-        ColumnSpec("Created At", "createdAt"),
+        ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
     print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Node Audit Records")

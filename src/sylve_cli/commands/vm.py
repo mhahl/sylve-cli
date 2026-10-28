@@ -14,6 +14,7 @@ from sylve_cli.formatter import (
     OutputFormat,
     console,
     format_bytes,
+    format_timestamp,
     format_vm_state,
     print_dict,
     print_list,
@@ -459,7 +460,7 @@ def vm_snapshot_list(
     spec = [
         ColumnSpec("ID", "id", justify="right"),
         ColumnSpec("Snapshot", "snapshotName"),
-        ColumnSpec("Created At", "createdAt"),
+        ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
     if long:
         spec = [
@@ -467,7 +468,7 @@ def vm_snapshot_list(
             ColumnSpec("Name", "name"),
             ColumnSpec("Snapshot", "snapshotName"),
             ColumnSpec("Description", "description"),
-            ColumnSpec("Created At", "createdAt"),
+            ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
         ]
     print_list(
         snaps if isinstance(snaps, list) else [],
@@ -560,7 +561,7 @@ def vm_template_list(
         ColumnSpec("Name", "name"),
         ColumnSpec("Source VM", "sourceVmName"),
         ColumnSpec("Node", "node"),
-        ColumnSpec("Created At", "createdAt"),
+        ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
     print_list(rows, spec, fmt=fmt, selected_columns=columns, title="VM Templates")
 

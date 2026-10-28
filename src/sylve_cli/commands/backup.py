@@ -11,6 +11,7 @@ from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
     console,
+    format_timestamp,
     print_dict,
     print_list,
 )
@@ -211,7 +212,7 @@ def job_list(
         ColumnSpec("Name", "name"),
         ColumnSpec("Mode", "mode"),
         ColumnSpec("Last Status", "lastStatus"),
-        ColumnSpec("Last Run", "lastRunAt"),
+        ColumnSpec("Last Run", "lastRunAt", formatter=format_timestamp),
         ColumnSpec("Enabled", "enabled"),
     ]
     if long:
@@ -224,7 +225,7 @@ def job_list(
             ColumnSpec("Runner Node", "runnerNodeId"),
             ColumnSpec("Cron", "cronExpr"),
             ColumnSpec("Last Status", "lastStatus"),
-            ColumnSpec("Last Run", "lastRunAt"),
+            ColumnSpec("Last Run", "lastRunAt", formatter=format_timestamp),
             ColumnSpec("Enabled", "enabled"),
         ]
     print_list(
@@ -268,7 +269,7 @@ def job_snapshots(
     spec = [
         ColumnSpec("Snapshot", "shortName"),
         ColumnSpec("Used", "used", justify="right"),
-        ColumnSpec("Created At", "creation"),
+        ColumnSpec("Created At", "creation", formatter=format_timestamp),
     ]
     if long:
         spec = [
@@ -278,7 +279,7 @@ def job_snapshots(
             ColumnSpec("Used", "used", justify="right"),
             ColumnSpec("Refer", "refer", justify="right"),
             ColumnSpec("Committed", "committed"),
-            ColumnSpec("Created At", "creation"),
+            ColumnSpec("Created At", "creation", formatter=format_timestamp),
         ]
     print_list(
         items, spec, fmt=fmt, selected_columns=columns, title=f"Backup Job #{job_id} Snapshots"
@@ -347,8 +348,8 @@ def backup_event_list(
         ColumnSpec("ID", "id", justify="right"),
         ColumnSpec("Job ID", "jobId", justify="right"),
         ColumnSpec("Status", "status"),
-        ColumnSpec("Started At", "startedAt"),
-        ColumnSpec("Completed At", "completedAt"),
+        ColumnSpec("Started At", "startedAt", formatter=format_timestamp),
+        ColumnSpec("Completed At", "completedAt", formatter=format_timestamp),
     ]
     if long:
         spec = [
@@ -358,8 +359,8 @@ def backup_event_list(
             ColumnSpec("Source Dataset", "sourceDataset"),
             ColumnSpec("Target Endpoint", "targetEndpoint"),
             ColumnSpec("Status", "status"),
-            ColumnSpec("Started At", "startedAt"),
-            ColumnSpec("Completed At", "completedAt"),
+            ColumnSpec("Started At", "startedAt", formatter=format_timestamp),
+            ColumnSpec("Completed At", "completedAt", formatter=format_timestamp),
         ]
     print_list(
         events if isinstance(events, list) else [],

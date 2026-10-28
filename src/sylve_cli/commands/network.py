@@ -14,6 +14,7 @@ from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
     console,
+    format_timestamp,
     print_dict,
     print_list,
 )
@@ -667,7 +668,7 @@ def firewall_logs(
     """Fetch or follow live firewall rule hit logs."""
     state: CLIState = ctx.obj
     spec = [
-        ColumnSpec("Time", "timestamp"),
+        ColumnSpec("Time", "timestamp", formatter=format_timestamp),
         ColumnSpec("Action", "action"),
         ColumnSpec("Dir", "direction"),
         ColumnSpec("Interface", "interface"),

@@ -9,6 +9,7 @@ import re
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
@@ -167,6 +168,30 @@ def format_vm_state(value: Any) -> str:
             return LIBVIRT_DOMAIN_STATES.get(int(stripped), stripped.upper())
         return stripped.upper() if stripped else "UNKNOWN"
     return "UNKNOWN"
+
+
+def format_timestamp(value: Any) -> str:
+    """Render an RFC 3339 timestamp at a fixed width.
+
+    Args:
+        value: Timestamp string, number, or empty value.
+
+    Returns:
+        str: ``2026-10-28 14:13:24 +1100``, the raw value if it is not RFC 3339,
+        or ``-`` for empty.
+
+    Example:
+        >>> format_timestamp("2026-10-28T14:13:24.369790382+11:00")
+        '2026-10-28 14:13:24 +1100'
+    """
+    if value is None or value == "":
+        return "-"
+    text = str(value).strip()
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return text
+    return parsed.strftime("%Y-%m-%d %H:%M:%S %z").rstrip()
 
 
 def format_bytes(num_bytes: Any) -> str:

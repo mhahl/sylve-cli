@@ -13,6 +13,7 @@ from sylve_cli.formatter import (
     OutputFormat,
     console,
     format_bytes,
+    format_timestamp,
     print_dict,
     print_list,
 )
@@ -379,7 +380,7 @@ def jail_snapshot_list(
     spec = [
         ColumnSpec("ID", "id", justify="right"),
         ColumnSpec("Snapshot", "snapshotName"),
-        ColumnSpec("Created At", "createdAt"),
+        ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
     if long:
         spec = [
@@ -388,7 +389,7 @@ def jail_snapshot_list(
             ColumnSpec("Snapshot", "snapshotName"),
             ColumnSpec("Root Dataset", "rootDataset"),
             ColumnSpec("Description", "description"),
-            ColumnSpec("Created At", "createdAt"),
+            ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
         ]
     print_list(
         snaps if isinstance(snaps, list) else [],
@@ -539,6 +540,6 @@ def jail_template_list(
         ColumnSpec("Source Jail", "sourceJailName"),
         ColumnSpec("Pool", "pool"),
         ColumnSpec("Node", "node"),
-        ColumnSpec("Created At", "createdAt"),
+        ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
     print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Jail Templates")

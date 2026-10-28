@@ -12,6 +12,7 @@ from sylve_cli.formatter import (
     OutputFormat,
     console,
     format_percent,
+    format_timestamp,
     format_vm_state,
     print_dict,
     print_list,
@@ -336,7 +337,7 @@ def cluster_note_list(
     spec = [
         ColumnSpec("ID", "id", justify="right"),
         ColumnSpec("Title", "title"),
-        ColumnSpec("Updated At", "updatedAt"),
+        ColumnSpec("Updated At", "updatedAt", formatter=format_timestamp),
     ]
     if long:
         spec.insert(2, ColumnSpec("Content", "content"))

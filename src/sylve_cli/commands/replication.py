@@ -11,6 +11,7 @@ from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
     console,
+    format_timestamp,
     print_dict,
     print_list,
 )
@@ -277,7 +278,7 @@ def event_list(
         ColumnSpec("Event Type", "eventType"),
         ColumnSpec("Guest", "guestType"),
         ColumnSpec("Status", "status"),
-        ColumnSpec("Started At", "startedAt"),
+        ColumnSpec("Started At", "startedAt", formatter=format_timestamp),
     ]
     if long:
         spec = [
@@ -289,8 +290,8 @@ def event_list(
             ColumnSpec("Source Node", "sourceNodeId"),
             ColumnSpec("Target Node", "targetNodeId"),
             ColumnSpec("Status", "status"),
-            ColumnSpec("Started At", "startedAt"),
-            ColumnSpec("Completed At", "completedAt"),
+            ColumnSpec("Started At", "startedAt", formatter=format_timestamp),
+            ColumnSpec("Completed At", "completedAt", formatter=format_timestamp),
         ]
     print_list(
         events if isinstance(events, list) else [],

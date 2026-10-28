@@ -10,6 +10,7 @@ from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
     console,
+    format_timestamp,
     print_dict,
     print_list,
 )
@@ -84,7 +85,7 @@ def task_list(
         ColumnSpec("Guest ID", "guestId", justify="right"),
         ColumnSpec("Action", "action"),
         ColumnSpec("Status", "status"),
-        ColumnSpec("Created At", "createdAt"),
+        ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
     if long:
         spec.extend(
