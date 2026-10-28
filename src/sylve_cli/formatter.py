@@ -648,6 +648,14 @@ def print_dict(
     table.add_column(Text("Value"), overflow="fold")
 
     for key, value in filtered.items():
-        table.add_row(Text(str(key), style="bold"), Text(_format_dict_value(value)))
+        cell = _format_dict_value(value)
+        key_name = str(key).casefold()
+        value_text = (
+            state_text(cell)
+            if key_name in STATE_HEADERS
+            or key_name.endswith(("_state", "_status"))
+            else Text(cell)
+        )
+        table.add_row(Text(str(key), style="bold"), value_text)
 
     _print_table(table)
