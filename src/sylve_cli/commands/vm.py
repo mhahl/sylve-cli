@@ -180,10 +180,14 @@ def vm_show(
     """Display full details of a virtual machine."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        rid, host, _ = client.resolve_vm(vm, node=node)
+        rid, host, summary = client.resolve_vm(vm, node=node)
         data = client.get(f"/vm/{rid}", node=host or None)
         if not isinstance(data, dict):
             raise SylveError(f"Unexpected response for VM {rid}.")
+        if "state" in summary:
+            # The detail endpoint returns the stored row; only the cluster
+            # summary carries the live libvirt state.
+            data["state"] = summary["state"]
         data["state_name"] = format_vm_state(data.get("state"))
         data["node"] = host or client.context.hostname or "local"
         selected = {
@@ -457,6 +461,7 @@ def vm_vnc(
             viewer=viewer,
             print_only=print_only,
             name=str(name),
+            state=summary.get("state"),
         )
 
 

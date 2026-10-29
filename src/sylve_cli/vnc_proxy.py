@@ -178,6 +178,7 @@ def serve_vnc(
     viewer: str | None = None,
     print_only: bool = False,
     name: str | None = None,
+    state: Any = None,
 ) -> None:
     """Expose a VM's VNC console on loopback and open a local viewer."""
     label = f"VM {name or rid}"
@@ -193,7 +194,6 @@ def serve_vnc(
     vnc_port = detail.get("vncPort")
     if not vnc_port:
         raise SylveError(f"{label} has no VNC port assigned. Re-apply its VNC configuration.")
-    state = detail.get("state")
     if state is not None and format_vm_state(state) not in _ACTIVE_STATES:
         raise SylveError(
             f"{label} is not running ({format_vm_state(state)}). "
