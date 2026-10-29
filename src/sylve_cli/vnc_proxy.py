@@ -28,10 +28,13 @@ from sylve_cli.console_ws import (
     encode_client_frame,
     resolve_console_hostname,
 )
-from sylve_cli.formatter import err_console
+from sylve_cli.formatter import err_console, format_vm_state
 
 if TYPE_CHECKING:
     from sylve_cli.client import SylveClient
+
+# Libvirt states where the domain is active, so its VNC console exists.
+_ACTIVE_STATES = frozenset({"RUNNING", "BLOCKED", "PAUSED"})
 
 
 def parse_close_frame(payload: bytes) -> tuple[int, str]:
@@ -190,6 +193,12 @@ def serve_vnc(
     vnc_port = detail.get("vncPort")
     if not vnc_port:
         raise SylveError(f"{label} has no VNC port assigned. Re-apply its VNC configuration.")
+    state = detail.get("state")
+    if state is not None and format_vm_state(state) not in _ACTIVE_STATES:
+        raise SylveError(
+            f"{label} is not running ({format_vm_state(state)}). "
+            f"Start it with 'sylve vm start {rid}' first."
+        )
 
     target_host = resolve_console_hostname(client, node)
     auth_hex = build_ws_auth_hex(client.context.token, target_host)

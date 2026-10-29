@@ -200,7 +200,7 @@ Expose the VM's VNC console on a loopback port and open a local viewer. The CLI
 relays the node's WebSocket VNC stream to plain RFB, so the viewer never talks
 to the node directly. The VNC password is printed once; enter it in the viewer.
 
-- `VM` (required): RID or name. VNC must be enabled for the VM first.
+- `VM` (required): RID or name. The VM must be running and have VNC enabled.
 - `--overtake / --no-overtake`: take over an existing VNC session instead of
   reporting that another client is attached (default: `--no-overtake`).
 - `--viewer CMD`: viewer command template; `{host}`, `{port}`, and `{url}` are
