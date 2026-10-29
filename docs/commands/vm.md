@@ -205,16 +205,16 @@ to the node directly. The VNC password is printed once; enter it in the viewer.
   reporting that another client is attached (default: `--no-overtake`).
 - `--viewer CMD`: viewer command template; `{host}`, `{port}`, and `{url}` are
   substituted. By default the CLI uses the first installed viewer it knows
-  (`xtigervncviewer`, `vncviewer`, `remmina`, `gvncviewer`, `vinagre`, or
-  macOS `open`).
+  (`xtigervncviewer`, `vncviewer`, `krdc`, `remmina`, `gvncviewer`, `vinagre`,
+  or macOS `open`).
 - `--local-port N`: loopback port for the bridge (default: `0`, pick a free
   port).
 - `--print-only`: print the local `vnc://` address without starting a viewer.
 - `-n, --node NODE`: target node.
 
-The bridge serves one viewer connection and exits when the viewer closes. Press
-`Ctrl-C` to stop it early. Over SSH, use `--print-only` and forward the printed
-port with `ssh -L`.
+The bridge keeps running until `Ctrl-C` and reopens the node session for each
+viewer connection, so a viewer that probes or reconnects still works. Over SSH,
+use `--print-only` and forward the printed port with `ssh -L`.
 
 Enable VNC first if the VM was created without it:
 

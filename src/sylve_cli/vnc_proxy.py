@@ -74,6 +74,7 @@ def _viewer_command(address: str, port: int, override: str | None) -> list[str] 
     candidates: list[list[str]] = [
         ["xtigervncviewer", f"{address}::{port}"],
         ["vncviewer", f"{address}::{port}"],
+        ["krdc", f"vnc://{address}:{port}"],
         ["remmina", "-c", f"vnc://{address}:{port}"],
         ["gvncviewer", f"{address}::{port}"],
         ["vinagre", f"{address}::{port}"],
@@ -125,6 +126,8 @@ def _bridge(ws: Any, ws_buffer: bytearray, viewer: Any, label: str, overtake: bo
                     with write_lock:
                         ws.sendall(encode_client_frame(payload, _OP_PONG))
                 elif opcode == _OP_CLOSE:
+                    if closing.is_set():
+                        return
                     raise close_message(*parse_close_frame(payload), label, overtake)
                 elif opcode in (_OP_TEXT, _OP_BINARY, _OP_CONTINUATION):
                     viewer.sendall(payload)
@@ -206,14 +209,6 @@ def serve_vnc(
     if overtake:
         params["overtake"] = "true"
 
-    try:
-        ws, ws_buffer = _open_websocket(client, f"/vnc/{vnc_port}", params, target_host)
-    except ResourceNotFoundError as exc:
-        raise ResourceNotFoundError(
-            f"No VM owns VNC port {vnc_port} on node {target_host}. "
-            "Pass --node with the node that runs the VM."
-        ) from exc
-
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -234,10 +229,22 @@ def serve_vnc(
         if not print_only:
             _launch_viewer(_viewer_command("127.0.0.1", bound_port, viewer), url)
 
-        viewer_sock, _ = listener.accept()
-        with viewer_sock:
-            viewer_sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            _bridge(ws, ws_buffer, viewer_sock, label, overtake)
+        while True:
+            viewer_sock, _ = listener.accept()
+            with viewer_sock:
+                viewer_sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                try:
+                    ws, ws_buffer = _open_websocket(client, f"/vnc/{vnc_port}", params, target_host)
+                except ResourceNotFoundError as exc:
+                    raise ResourceNotFoundError(
+                        f"No VM owns VNC port {vnc_port} on node {target_host}. "
+                        "Pass --node with the node that runs the VM."
+                    ) from exc
+                try:
+                    _bridge(ws, ws_buffer, viewer_sock, label, overtake)
+                finally:
+                    ws.close()
+    except KeyboardInterrupt:
+        pass
     finally:
         listener.close()
-        ws.close()
