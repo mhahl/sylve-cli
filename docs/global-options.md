@@ -94,6 +94,19 @@ Commands that wrap Sylve API endpoints directly accept:
 - `-p, --param KEY=VALUE`
   Query string parameter. Repeatable; values are parsed as YAML scalars.
 
+`@FILE` keeps long bodies out of shell history and lets you review them like
+any other configuration:
+
+```yaml
+# tunable.yaml
+name: vfs.zfs.prefetch_disable
+value: "0"
+```
+
+```sh
+sylve system tunable-set --data @tunable.yaml
+```
+
 ## ENVIRONMENT
 
 | Variable | Description |

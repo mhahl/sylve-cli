@@ -65,11 +65,12 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `--template ID|NAME`
   Create from a VM template.
 - `--file FILE`
-  Read create configuration from a YAML or JSON file. Supported top-level keys:
-  `name`, `node`, `rid`, `template`, `description`, `cpu`, `sockets`,
-  `threads`, `memory`, `storage_type`, `pool`, `disk_size`,
-  `storage_emulation`, `iso`, `switch`, `switch_emulation`, `mac_object`,
-  `vnc`, `cloud_init`, `boot`, `options`.
+  Read the create configuration from a YAML or JSON file. Keys may be flat
+  (`sockets`, `cores`, `threads`, `memory`, `storage_type`, `pool`,
+  `disk_size`, `storage_emulation`, `iso`, `switch`, `switch_emulation`,
+  `mac_object`) or grouped under `cpu`, `storage`, `network`, `vnc`,
+  `cloud_init`, `boot`, and `options`. Command-line flags override file
+  values. Worked examples appear under EXAMPLES.
 - `--description, -d TEXT`
   VM description (up to 1024 characters).
 - `--cpu N`, `--sockets N`, `--threads N`
@@ -294,6 +295,79 @@ sylve vm create web-02 --iso debian-13-cloudinit.iso --pool zroot \
   --network-config network-config.yaml --start --wait
 
 sylve vm create --name web-01 --file web.yaml --dry-run -f json
+```
+
+`--file` separates the machine definition from the command line, so the same
+file can be reviewed in a pull request and reused across nodes. Keys are flat
+or grouped; flags such as `--memory` override the file.
+
+Provision a VM from scratch:
+
+```yaml
+# web.yaml
+name: web-01
+node: node1.example.test
+description: customer web frontend
+
+cpu:
+  sockets: 1
+  cores: 4
+  threads: 1
+memory: 4G
+
+storage:
+  type: zvol
+  pool: zroot
+  size: 40G
+  emulation: virtio-blk
+
+network:
+  switch: vm-switch
+  emulation: virtio-net
+
+vnc:
+  enabled: true
+  resolution: 1024x768
+
+boot:
+  rom: uefi
+
+options:
+  serial: true
+  qemu_guest_agent: true
+```
+
+```sh
+sylve vm create --file web.yaml --dry-run   # print the request without sending it
+sylve vm create --file web.yaml --memory 8G --yes
+```
+
+The same definition as JSON, for generated files:
+
+```json
+{
+  "name": "web-01",
+  "cpu": { "cores": 4 },
+  "memory": "4G",
+  "storage": { "type": "zvol", "pool": "zroot", "size": "40G" },
+  "network": { "switch": "vm-switch" }
+}
+```
+
+Clone a template three times, numbering from RID 200:
+
+```yaml
+# fleet.yaml
+template: debian-13
+count: 3
+startRid: 200
+namePrefix: web
+storagePools:
+  0: zroot        # sourceStorageId: target pool
+```
+
+```sh
+sylve vm create --file fleet.yaml --start --wait --yes
 ```
 
 Power actions, live migration, snapshots, templates, and hardware updates:

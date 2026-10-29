@@ -142,6 +142,28 @@ FreeBSD Jails
 +------+---------+---------+---------+---------------------+-------+--------+
 ```
 
+Create a jail from a definition file:
+
+```yaml
+# jail.yaml
+ctId: 203
+name: dns-03
+type: freebsd
+pool: zroot
+switchName: vm-switch
+resourceLimits: true
+cores: 2
+memory: 2147483648   # bytes (2 GiB); jail create takes the raw API value
+description: secondary resolver
+```
+
+```sh
+sylve jail create --data @jail.yaml --node node1.example.test -f json
+```
+
+`--data` reads inline JSON/YAML or `@FILE`. Sizes are API units here; only
+`vm create --file` parses `2G`-style shorthands.
+
 Create and list a jail snapshot:
 
 ```sh
