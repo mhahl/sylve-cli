@@ -111,6 +111,61 @@ def test_context_expired_and_missing_token() -> None:
     assert missing.format_remaining() == "unknown"
 
 
+def test_token_skew_treats_near_expiry_as_stale() -> None:
+    """A token that is still valid by the clock counts as expired within the skew."""
+    near_expiry = datetime.now(timezone.utc) + timedelta(seconds=10)
+    ctx = ContextConfig(server="https://example.test", token=make_jwt(near_expiry))
+
+    assert ctx.is_token_expired() is False
+    assert ctx.is_token_expired(skew_seconds=30) is True
+
+
+def test_config_expires_at_takes_precedence_over_jwt() -> None:
+    """A configured expires_at must win over decoding exp from the token."""
+    configured = datetime(2027, 1, 1, tzinfo=timezone.utc)
+    jwt_expiry = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    ctx = ContextConfig(
+        server="https://example.test",
+        token=make_jwt(jwt_expiry),
+        expires_at="2027-01-01T00:00:00Z",
+    )
+    assert ctx.get_expiry_datetime() == configured
+
+
+def test_get_active_context_env_overrides_configured() -> None:
+    """Environment credentials must override a configured context, keeping its identity."""
+    config = SylveConfig(
+        current_context="prod",
+        contexts={"prod": ContextConfig(server="https://prod.example.test")},
+    )
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setenv("SYLVE_SERVER", "env.example.test")
+    monkeypatch.setenv("SYLVE_TOKEN", make_jwt(datetime.now(timezone.utc) + timedelta(hours=1)))
+    try:
+        name, context = config.get_active_context("prod")
+    finally:
+        monkeypatch.undo()
+    assert name == "prod"
+    assert context.server == "https://env.example.test"
+    assert context.token.startswith("eyJ")
+
+
+def test_load_config_skips_context_without_server(tmp_path: Path) -> None:
+    """A malformed context entry must be dropped rather than crash the load."""
+    path = tmp_path / "config.yaml"
+    path.write_text(
+        "current_context: prod\n"
+        "contexts:\n"
+        "  prod:\n"
+        "    server: https://prod.example.test\n"
+        "  broken:\n"
+        "    username: nope\n",
+        encoding="utf-8",
+    )
+    loaded = load_config(path)
+    assert list(loaded.contexts) == ["prod"]
+
+
 def test_config_roundtrip_and_permissions(tmp_path: Path) -> None:
     path = tmp_path / "config.yaml"
     config = SylveConfig(

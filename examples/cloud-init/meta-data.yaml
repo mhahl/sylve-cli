@@ -1,0 +1,6 @@
+# Meta-data is picked up only at create time: user-data + meta-data + a
+# cloud-init capable image are what trigger the image flash onto the disk.
+# Set instance-id to something unique to this VM. Changing it later has no
+# effect without recreating the VM.
+instance-id: fedora-cloud
+local-hostname: fedora-cloud

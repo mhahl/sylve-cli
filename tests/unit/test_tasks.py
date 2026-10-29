@@ -8,6 +8,7 @@ import pytest
 
 from sylve_cli.client import SylveError
 from sylve_cli.tasks import (
+    get_lifecycle_task,
     wait_for_backup_event,
     wait_for_lifecycle_task,
     wait_for_replication_event,
@@ -27,6 +28,30 @@ class FakeClient:
         if len(self._responses) > 1:
             return self._responses.pop(0)
         return self._responses[0] if self._responses else {}
+
+
+def test_get_lifecycle_task_falls_back_to_list_endpoints() -> None:
+    """A direct GET returning non-task data must fall back to the list endpoints."""
+    client = FakeClient(
+        [
+            {"status": "success", "data": "html"},  # direct GET: unusable
+            [{"id": 1, "status": "running"}, {"id": 2, "status": "completed"}],  # active
+        ]
+    )
+    task = get_lifecycle_task(client, 2)
+    assert task == {"id": 2, "status": "completed"}
+
+
+def test_get_lifecycle_task_not_found_returns_none() -> None:
+    """When the task is absent from every endpoint the result must be None."""
+    client = FakeClient(
+        [
+            {"status": "success", "data": "html"},
+            [],
+            [],
+        ]
+    )
+    assert get_lifecycle_task(client, 42) is None
 
 
 def test_wait_for_lifecycle_task_success() -> None:

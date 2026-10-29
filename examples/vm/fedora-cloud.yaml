@@ -1,0 +1,47 @@
+# Example VM definition for `sylve vm create --file`.
+#
+# Run from this directory so the relative cloud-init paths resolve:
+#
+#   sylve vm create --file vm/fedora-cloud.yaml --dry-run -f yaml
+#   sylve vm create --file vm/fedora-cloud.yaml --start --wait --yes
+#
+# Replace node, pool, switch, and image name with your own. The image must be
+# a downloaded cloud-init capable image present on the target node.
+name: fedora-cloud
+node: node1.example.test
+description: Fedora Cloud VM on an NVMe-backed zvol, provisioned with cloud-init
+
+cpu:
+  sockets: 1
+  cores: 2
+  threads: 1
+memory: 4G
+
+storage:
+  type: zvol
+  pool: tank
+  size: 50G
+  emulation: nvme
+  iso: Fedora-Cloud-Base-UEFI-UKI-44-1.7.x86_64.qcow2
+
+network:
+  switch: vm-public
+  emulation: virtio
+
+vnc:
+  enabled: true
+  resolution: 1024x768
+
+boot:
+  rom: uefi
+
+options:
+  serial: true
+  qemu_guest_agent: true
+  time_offset: utc
+
+cloud_init:
+  enabled: true
+  user_data: cloud-init/user-data.yaml
+  meta_data: cloud-init/meta-data.yaml
+  network_config: cloud-init/network-config.yaml
