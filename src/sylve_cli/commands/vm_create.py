@@ -857,7 +857,7 @@ def _normalize_scratch_payload(
     else:
         canonical = _resolve_switch(client, host, switch_name)
         payload["switchName"] = canonical
-        emulation = str(payload.get("switchEmulationType") or "virtio-net").strip()
+        emulation = str(payload.get("switchEmulationType") or "virtio").strip()
         if not emulation:
             raise SylveError("A network emulation type is required.")
         payload["switchEmulationType"] = emulation
@@ -1206,7 +1206,7 @@ def register_vm_create_commands(app: typer.Typer) -> None:
         ] = None,
         switch_emulation: Annotated[
             str | None,
-            typer.Option("--switch-emulation", help="NIC emulation, e.g. virtio-net."),
+            typer.Option("--switch-emulation", help="NIC emulation: virtio or e1000."),
         ] = None,
         mac_object: Annotated[
             str | None,

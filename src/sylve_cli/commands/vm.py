@@ -169,6 +169,27 @@ def vm_list(
     )
 
 
+def _guest_ip_addresses(agent: Any) -> list[str]:
+    """Collect non-loopback addresses reported by the QEMU guest agent."""
+    if not isinstance(agent, dict):
+        return []
+    addresses: list[str] = []
+    for iface in agent.get("interfaces") or []:
+        if not isinstance(iface, dict):
+            continue
+        name = str(iface.get("name") or "")
+        if not name or name == "lo":
+            continue
+        for entry in iface.get("ip-addresses") or []:
+            if not isinstance(entry, dict):
+                continue
+            address = str(entry.get("ip-address") or "")
+            if not address or address == "::1" or address.startswith(("127.", "fe80:")):
+                continue
+            addresses.append(f"{name}: {address}")
+    return addresses
+
+
 @vm_app.command("show")
 def vm_show(
     ctx: typer.Context,
@@ -190,6 +211,14 @@ def vm_show(
             data["state"] = summary["state"]
         data["state_name"] = format_vm_state(data.get("state"))
         data["node"] = host or client.context.hostname or "local"
+        if data.get("qemuGuestAgent") and data["state_name"] == "RUNNING":
+            try:
+                agent = client.get(f"/vm/{rid}/guest-agent", node=host or None)
+            except SylveError:
+                agent = None
+            addresses = _guest_ip_addresses(agent)
+            if addresses:
+                data["ipAddresses"] = addresses
         selected = {
             part.strip().casefold() for column in (columns or []) for part in column.split(",")
         }

@@ -91,7 +91,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `--switch NAME`
   Network switch name, or `none` (default: no switch).
 - `--switch-emulation TYPE`
-  NIC emulation model (default: `virtio-net` when a switch is attached).
+  NIC emulation model (default: `virtio` when a switch is attached).
 - `--mac-object NAME|ID`
   Existing MAC address object.
 - `--cloud-init / --no-cloud-init`
@@ -146,6 +146,9 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `list`: `-n, --node NODE`, `--long, -l` (fetches CPU, RAM, VNC, autostart,
   and description), `-f, --format`, `-c, --column`, `--sort-column NAME`.
 - `show VM`: `VM` (RID or name), `-n, --node NODE`, `-f, --format`, `-c, --column`.
+  When the VM is running with the QEMU guest agent enabled and responding,
+  `show` also reports live `ipAddresses` (non-loopback IPv4 and global IPv6).
+  The field is omitted when the agent is disabled or unavailable.
 
 ### `vm start`, `stop`, `shutdown`, `reboot`
 
@@ -284,7 +287,7 @@ sylve vm create web-01 \
   --memory 4G \
   --storage-type zvol --pool zroot --disk-size 40G --storage-emulation virtio-blk \
   --iso debian-13-netinst.iso \
-  --switch vm-public --switch-emulation virtio-net --mac-object web-01-mac \
+  --switch vm-public --switch-emulation virtio --mac-object web-01-mac \
   --vnc --vnc-bind 127.0.0.1 --vnc-port 5920 --vnc-password s3cret \
   --vnc-resolution 1024x768 --no-vnc-wait \
   --serial --tpm --qemu-guest-agent --ignore-umsr --apic --acpi \
@@ -351,7 +354,7 @@ storage:
 
 network:
   switch: vm-switch
-  emulation: virtio-net
+  emulation: virtio
 
 vnc:
   enabled: true
