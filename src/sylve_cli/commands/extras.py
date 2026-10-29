@@ -268,7 +268,13 @@ def _add(
             ] = None,
             file: Annotated[
                 Path,
-                typer.Option("--file", exists=True, dir_okay=False, readable=True),
+                typer.Option(
+                    "--file",
+                    exists=True,
+                    dir_okay=False,
+                    readable=True,
+                    help="Local file to upload.",
+                ),
             ] = ...,  # type: ignore[assignment]
             param: Annotated[
                 list[str] | None,
@@ -296,7 +302,11 @@ def _add(
             ] = None,
             data: Annotated[
                 str | None,
-                typer.Option("--data", "-d", help="JSON/YAML body or @file."),
+                typer.Option(
+                    "--data",
+                    "-d",
+                    help="Raw JSON or YAML request body, or @FILE to read it from disk.",
+                ),
             ] = None,
             param: Annotated[
                 list[str] | None,
@@ -320,7 +330,11 @@ def _add(
             ] = None,
             data: Annotated[
                 str | None,
-                typer.Option("--data", "-d", help="JSON/YAML body or @file."),
+                typer.Option(
+                    "--data",
+                    "-d",
+                    help="Raw JSON or YAML request body, or @FILE to read it from disk.",
+                ),
             ] = None,
             param: Annotated[
                 list[str] | None,

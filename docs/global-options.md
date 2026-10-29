@@ -107,6 +107,11 @@ value: "0"
 sylve system tunable-set --data @tunable.yaml
 ```
 
+`--data` sends the body verbatim. `vm create --file` is different: it reads a
+create configuration that the CLI normalizes first (defaults, aliases,
+`2G`-style sizes). Two names for two behaviours. `-f` always means `--format`,
+never "file".
+
 ## ENVIRONMENT
 
 | Variable | Description |

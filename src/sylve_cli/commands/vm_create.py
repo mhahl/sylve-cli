@@ -1152,7 +1152,10 @@ def register_vm_create_commands(app: typer.Typer) -> None:
                 exists=True,
                 dir_okay=False,
                 readable=True,
-                help="YAML or JSON create configuration.",
+                help=(
+                    "YAML or JSON create configuration. The CLI fills defaults and parses "
+                    "sizes; unlike --data, it is not sent verbatim."
+                ),
             ),
         ] = None,
         description: Annotated[
