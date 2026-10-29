@@ -29,6 +29,7 @@ from sylve_cli.state import (
     WaitOption,
 )
 from sylve_cli.tasks import wait_for_lifecycle_task
+from sylve_cli.vnc_proxy import serve_vnc
 
 vm_app = typer.Typer(
     name="vm",
@@ -406,6 +407,56 @@ def vm_console(
             extra_params={"baudrate": baudrate},
             takeover=takeover,
             banner=f"Attached to VM {name} ({rid}) serial console",
+        )
+
+
+@vm_app.command("vnc")
+def vm_vnc(
+    ctx: typer.Context,
+    vm: Annotated[str, typer.Argument(help="VM RID or name.")],
+    overtake: Annotated[
+        bool,
+        typer.Option(
+            "--overtake/--no-overtake",
+            help="Take over an existing VNC session instead of refusing to connect.",
+        ),
+    ] = False,
+    viewer: Annotated[
+        str | None,
+        typer.Option(
+            "--viewer",
+            help="Viewer command template; {host}, {port} and {url} are substituted.",
+        ),
+    ] = None,
+    local_port: Annotated[
+        int,
+        typer.Option(
+            "--local-port",
+            min=0,
+            max=65535,
+            help="Loopback port for the bridge (0 picks a free port).",
+        ),
+    ] = 0,
+    print_only: Annotated[
+        bool,
+        typer.Option("--print-only", help="Print the local VNC address without opening a viewer."),
+    ] = False,
+    node: NodeOption = None,
+) -> None:
+    """Open a running VM's graphical console in a local VNC viewer."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        rid, host, summary = client.resolve_vm(vm, node=node)
+        name = summary.get("name") or rid
+        serve_vnc(
+            client,
+            rid,
+            node=host or node,
+            overtake=overtake,
+            local_port=local_port,
+            viewer=viewer,
+            print_only=print_only,
+            name=str(name),
         )
 
 

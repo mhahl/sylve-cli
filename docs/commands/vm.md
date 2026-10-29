@@ -40,6 +40,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 | `delete VM` | Delete a VM and optionally its volumes, raw disks, and MACs |
 | `logs VM` | Display VM console logs |
 | `console VM` | Attach to a running VM's interactive serial console |
+| `vnc VM` | Open a VM's graphical console in a local VNC viewer |
 | `guest-agent VM` | Query QEMU Guest Agent OS and network information |
 | `rename VM NEW_NAME` | Rename a VM |
 | `snapshot list/create/rollback/delete` | Manage VM ZFS snapshots |
@@ -189,10 +190,37 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `NEW_NAME` (required for `rename`): new VM name.
 - `--baudrate, -b N` (`console` only): serial baud rate (default: `115200`).
 - `--takeover / --observe` (`console` only): request input control or attach
-  read-only (default: `--takeover`). Press `Enter`, then type `~.` to detach. VNC
-  graphical consoles remain browser-only.
+  read-only (default: `--takeover`). Press `Enter`, then type `~.` to detach.
 - `-n, --node NODE`: target node.
 - `-f, --format`, `-c, --column`: output options (`guest-agent` only).
+
+### `vm vnc`
+
+Expose the VM's VNC console on a loopback port and open a local viewer. The CLI
+relays the node's WebSocket VNC stream to plain RFB, so the viewer never talks
+to the node directly. The VNC password is printed once; enter it in the viewer.
+
+- `VM` (required): RID or name. VNC must be enabled for the VM first.
+- `--overtake / --no-overtake`: take over an existing VNC session instead of
+  reporting that another client is attached (default: `--no-overtake`).
+- `--viewer CMD`: viewer command template; `{host}`, `{port}`, and `{url}` are
+  substituted. By default the CLI uses the first installed viewer it knows
+  (`xtigervncviewer`, `vncviewer`, `remmina`, `gvncviewer`, `vinagre`, or
+  macOS `open`).
+- `--local-port N`: loopback port for the bridge (default: `0`, pick a free
+  port).
+- `--print-only`: print the local `vnc://` address without starting a viewer.
+- `-n, --node NODE`: target node.
+
+The bridge serves one viewer connection and exits when the viewer closes. Press
+`Ctrl-C` to stop it early. Over SSH, use `--print-only` and forward the printed
+port with `ssh -L`.
+
+Enable VNC first if the VM was created without it:
+
+```sh
+sylve vm hardware-vnc 101 --data '{"vncEnabled":true,"vncResolution":"1024x768","vncWait":false}'
+```
 
 ### `vm snapshot` and `vm template`
 
@@ -375,6 +403,7 @@ Power actions, live migration, snapshots, templates, and hardware updates:
 ```sh
 sylve vm start 101 102 --wait
 sylve vm console 101 --baudrate 115200
+sylve vm vnc 101
 sylve vm migrate 101 --target node2.example.test --dry-run
 sylve vm migrate 101 --target node2.example.test --wait
 sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"
