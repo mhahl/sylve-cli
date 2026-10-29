@@ -85,6 +85,30 @@ def _viewer_command(address: str, port: int, override: str | None) -> list[str] 
     return None
 
 
+def _prepare_krdc(port: int) -> None:
+    """Ask KRDC for 32bpp: its default 16bpp is ignored by bhyve's VNC server."""
+    tool = shutil.which("kwriteconfig6") or shutil.which("kwriteconfig5")
+    if tool is None:
+        return
+    subprocess.run(  # noqa: S603 - fixed argument list
+        [
+            tool,
+            "--file",
+            "krdcrc",
+            "--group",
+            "hostpreferences",
+            "--group",
+            f"vnc://127.0.0.1:{port}",
+            "--key",
+            "quality",
+            "1",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+
+
 def _launch_viewer(command: list[str] | None, url: str) -> None:
     if command is None:
         err_console.print(
@@ -227,7 +251,10 @@ def serve_vnc(
         err_console.print("Press Ctrl-C to stop the bridge.", style="dim")
 
         if not print_only:
-            _launch_viewer(_viewer_command("127.0.0.1", bound_port, viewer), url)
+            command = _viewer_command("127.0.0.1", bound_port, viewer)
+            if command and command[0].rsplit("/", 1)[-1] == "krdc":
+                _prepare_krdc(bound_port)
+            _launch_viewer(command, url)
 
         while True:
             viewer_sock, _ = listener.accept()

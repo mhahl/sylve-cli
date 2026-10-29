@@ -219,6 +219,10 @@ The bridge keeps running until `Ctrl-C` and reopens the node session for each
 viewer connection, so a viewer that probes or reconnects still works. Over SSH,
 use `--print-only` and forward the printed port with `ssh -L`.
 
+When the viewer is KRDC, the CLI sets its quality for the loopback address to
+High. The node's VNC server only accepts 32-bit pixels, and KRDC's lower quality
+settings request 16- or 8-bit pixels and show a black screen.
+
 Enable VNC first if the VM was created without it:
 
 ```sh
