@@ -6,6 +6,7 @@ from typing import Annotated, Any
 
 import typer
 
+from sylve_cli.client import SylveError
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
@@ -22,7 +23,7 @@ from sylve_cli.state import (
     NodeOption,
     SortColumnOption,
 )
-from sylve_cli.tasks import wait_for_lifecycle_task
+from sylve_cli.tasks import get_lifecycle_task, wait_for_lifecycle_task
 
 task_app = typer.Typer(
     name="task",
@@ -116,9 +117,10 @@ def task_show(
     """Display full details of a lifecycle task by ID."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        data = client.get(f"/tasks/lifecycle/{task_id}", node=node) or {}
-    if isinstance(data, dict):
-        print_dict(data, fmt=fmt, selected_columns=columns, title=f"Lifecycle Task #{task_id}")
+        data = get_lifecycle_task(client, task_id, node=node)
+    if data is None:
+        raise SylveError(f"Lifecycle task #{task_id} not found.")
+    print_dict(data, fmt=fmt, selected_columns=columns, title=f"Lifecycle Task #{task_id}")
 
 
 @task_app.command("wait")

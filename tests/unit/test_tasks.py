@@ -24,9 +24,9 @@ class FakeClient:
     def get(self, path: str, **_kwargs: Any) -> dict[str, Any]:
         """Return the next canned response."""
         self.calls += 1
-        if self._responses:
+        if len(self._responses) > 1:
             return self._responses.pop(0)
-        return self._responses[-1] if self._responses else {}
+        return self._responses[0] if self._responses else {}
 
 
 def test_wait_for_lifecycle_task_success() -> None:

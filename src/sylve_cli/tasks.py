@@ -23,6 +23,41 @@ TERMINAL_TASK_STATUSES = {
 FAILURE_TASK_STATUSES = {"failed", "error", "cancelled", "canceled", "aborted", "interrupted"}
 
 
+def get_lifecycle_task(
+    client: SylveClient,
+    task_id: int,
+    node: str | None = None,
+) -> dict[str, Any] | None:
+    """Fetch a lifecycle task by ID.
+
+    Older server builds do not serve ``GET /tasks/lifecycle/{id}``; the web
+    UI's catch-all answers with HTML. Fall back to the active/recent lists,
+    which carry the same task records.
+
+    Args:
+        client: Sylve API client.
+        task_id: Lifecycle task ID.
+        node: Node to route the request to.
+
+    Returns:
+        dict[str, Any] | None: The task record, or ``None`` if it is not found.
+    """
+    data = client.get(f"/tasks/lifecycle/{task_id}", node=node)
+    if isinstance(data, dict) and data.get("id") is not None:
+        return data
+
+    for path, params in (
+        ("/tasks/lifecycle/active", None),
+        ("/tasks/lifecycle/recent", {"limit": 100}),
+    ):
+        data = client.get(path, node=node, params=params)
+        if isinstance(data, list):
+            for task in data:
+                if isinstance(task, dict) and str(task.get("id")) == str(task_id):
+                    return task
+    return None
+
+
 def wait_for_lifecycle_task(
     client: SylveClient,
     task_id: int,
@@ -55,15 +90,16 @@ def wait_for_lifecycle_task(
 
     if quiet:
         while time.monotonic() < deadline:
-            data = client.get(f"/tasks/lifecycle/{task_id}", node=node)
-            if isinstance(data, dict):
-                last_task = data
-                status = str(data.get("status") or "").strip().lower()
-                if status in TERMINAL_TASK_STATUSES:
-                    if status in FAILURE_TASK_STATUSES:
-                        err_detail = data.get("error") or data.get("message") or status
-                        raise SylveError(f"Task #{task_id} {status}: {err_detail}")
-                    return data
+            data = get_lifecycle_task(client, task_id, node=node)
+            if data is None:
+                raise SylveError(f"Lifecycle task #{task_id} not found.")
+            last_task = data
+            status = str(data.get("status") or "").strip().lower()
+            if status in TERMINAL_TASK_STATUSES:
+                if status in FAILURE_TASK_STATUSES:
+                    err_detail = data.get("error") or data.get("message") or status
+                    raise SylveError(f"Task #{task_id} {status}: {err_detail}")
+                return data
             time.sleep(poll_interval)
         raise SylveError(f"Timed out waiting for lifecycle task #{task_id} after {int(timeout)}s.")
 
@@ -76,23 +112,24 @@ def wait_for_lifecycle_task(
     ) as progress:
         ptask = progress.add_task(f"Waiting for task #{task_id}...", total=None)
         while time.monotonic() < deadline:
-            data = client.get(f"/tasks/lifecycle/{task_id}", node=node)
-            if isinstance(data, dict):
-                last_task = data
-                status = str(data.get("status") or "").strip().lower()
-                action = str(data.get("action") or "task")
-                gtype = str(data.get("guestType") or "")
-                gid = data.get("guestId") or ""
-                msg = str(data.get("message") or status)
-                progress.update(
-                    ptask,
-                    description=f"Task #{task_id} ({gtype} {gid} {action}): {msg}",
-                )
-                if status in TERMINAL_TASK_STATUSES:
-                    if status in FAILURE_TASK_STATUSES:
-                        err_detail = data.get("error") or data.get("message") or status
-                        raise SylveError(f"Task #{task_id} {status}: {err_detail}")
-                    return data
+            data = get_lifecycle_task(client, task_id, node=node)
+            if data is None:
+                raise SylveError(f"Lifecycle task #{task_id} not found.")
+            last_task = data
+            status = str(data.get("status") or "").strip().lower()
+            action = str(data.get("action") or "task")
+            gtype = str(data.get("guestType") or "")
+            gid = data.get("guestId") or ""
+            msg = str(data.get("message") or status)
+            progress.update(
+                ptask,
+                description=f"Task #{task_id} ({gtype} {gid} {action}): {msg}",
+            )
+            if status in TERMINAL_TASK_STATUSES:
+                if status in FAILURE_TASK_STATUSES:
+                    err_detail = data.get("error") or data.get("message") or status
+                    raise SylveError(f"Task #{task_id} {status}: {err_detail}")
+                return data
             time.sleep(poll_interval)
 
     raise SylveError(
