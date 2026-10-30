@@ -64,6 +64,40 @@ Exclude live tests explicitly when invoking `pytest` directly:
 pytest -m "not live"
 ```
 
+### Live Mutation Tests
+
+An opt-in suite in `tests/live/test_mutate.py` creates throwaway VMs (and their
+snapshots) and deletes them again. It is marked `live_mutate`, so the normal
+`live` run never collects it. Every resource is named `zclitest-*` and is
+deleted in fixture teardown even when a check fails. It also requires an
+explicit node and pool, so it cannot touch production by accident:
+
+```sh
+export SYLVE_LIVE=1
+export SYLVE_LIVE_MUTATE=1
+export SYLVE_NODE=node1.example.test
+export SYLVE_LIVE_POOL=zroot
+make live-mutate
+# or
+pytest -m live_mutate tests/live/test_mutate.py
+```
+
+Jail lifecycle mutation (`tests/live/test_mutate_jails.py`) additionally needs a
+node with an existing pkgbase bootstrap, a pool, a bootstrap name, and a network
+switch:
+
+```sh
+export SYLVE_LIVE_JAIL_NODE=node1.example.test
+export SYLVE_LIVE_JAIL_POOL=zroot
+export SYLVE_LIVE_JAIL_BOOTSTRAP=15-1-Base
+export SYLVE_LIVE_JAIL_SWITCH=example-switch
+```
+
+Both suites create→start→migrate→delete their resources. VM migration uses
+`SYLVE_LIVE_MIGRATE_TARGET` (a node other than `SYLVE_NODE`); jail creation uses
+the `SYLVE_LIVE_JAIL_*` variables. Cleanup searches every online node, so a
+resource that migrated away is still found and deleted.
+
 ### Lint, Type Checking, and Matrix
 
 `make lint` and the `tox` lint environment require `ruff` on `PATH` (for

@@ -162,5 +162,7 @@ make tox        # full test matrix
 [sylve-testing(7)](TESTING.md),
 [sylve-contributing(7)](CONTRIBUTING.md),
 [sylve-licences(7)](THIRD-PARTY-LICENCES.md),
+[CHANGELOG](CHANGELOG.md),
+[spec drift notes](docs/spec-drift.md),
 [sylve(1)](docs/man/man1/sylve.1),
 [sylve-config(5)](docs/man/man5/sylve-config.5)

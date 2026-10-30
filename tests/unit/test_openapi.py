@@ -26,7 +26,8 @@ def test_accepts_matching_response(spec: OpenAPISpec) -> None:
 
 
 def test_rejects_wrong_shape(spec: OpenAPISpec) -> None:
-    with pytest.raises(AssertionError, match="expected array"):
+    """A plain string where structured data is expected means a non-JSON body."""
+    with pytest.raises(AssertionError, match="non-JSON body"):
         spec.validate("GET", "/cluster/nodes", "not-a-list")
 
 

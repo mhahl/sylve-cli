@@ -10,6 +10,7 @@ from typing import Annotated, Any
 import typer
 import yaml
 
+from sylve_cli.client import SylveError
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
@@ -177,6 +178,13 @@ def iface_l3(
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         data = client.get("/network/interface/l3", node=node) or {}
+    if isinstance(data, str):
+        # The SvelteKit web UI answers unknown routes with an HTML 200 shell;
+        # never print that as if it were interface data.
+        raise SylveError(
+            "GET /network/interface/l3 returned an HTML page instead of API data; "
+            "this endpoint is not implemented on the connected server."
+        )
     if (
         isinstance(data, dict)
         and isinstance(data.get("entries"), list)

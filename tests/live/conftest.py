@@ -173,3 +173,54 @@ def run_cli(live_settings: dict[str, str]) -> Any:
         return runner.invoke(app, args, env=env)
 
     return run
+
+
+@pytest.fixture()
+def mutate_target(live_settings: dict[str, str]) -> dict[str, str]:
+    """Return an explicit node/pool for mutating tests, or skip.
+
+    Mutating tests only run when SYLVE_LIVE_MUTATE=1 and a target node plus
+    pool are supplied, so they can never touch production by accident.
+    """
+    if not _truthy("SYLVE_LIVE_MUTATE"):
+        pytest.skip("live mutation disabled; set SYLVE_LIVE_MUTATE=1")
+    node = os.environ.get("SYLVE_NODE", "").strip()
+    pool = os.environ.get("SYLVE_LIVE_POOL", "").strip()
+    if not node or not pool:
+        pytest.skip("live mutation needs SYLVE_NODE and SYLVE_LIVE_POOL")
+    return {"node": node, "pool": pool}
+
+
+@pytest.fixture()
+def migrate_target(live_settings: dict[str, str], mutate_target: dict[str, str]) -> dict[str, str]:
+    """Return a node *other than* the create/run node, for migration tests.
+
+    Requires an explicit SYLVE_LIVE_MIGRATE_TARGET so a migration can never run
+    against an accidentally-chosen node.
+    """
+    target = os.environ.get("SYLVE_LIVE_MIGRATE_TARGET", "").strip()
+    if not target:
+        pytest.skip("live migration needs SYLVE_LIVE_MIGRATE_TARGET")
+    if target == mutate_target["node"]:
+        pytest.skip("SYLVE_LIVE_MIGRATE_TARGET must differ from SYLVE_NODE")
+    return {"node": target}
+
+
+@pytest.fixture()
+def jail_target(mutate_target: dict[str, str]) -> dict[str, str]:
+    """Return node/pool/bootstrap/switch for jail mutation tests, or skip.
+
+    Jails need an existing pkgbase bootstrap on their create node, so this is a
+    separate, explicit opt-in from VM mutation.
+    """
+    node = os.environ.get("SYLVE_LIVE_JAIL_NODE", "").strip()
+    bootstrap = os.environ.get("SYLVE_LIVE_JAIL_BOOTSTRAP", "").strip()
+    switch = os.environ.get("SYLVE_LIVE_JAIL_SWITCH", "").strip()
+    if not (node and bootstrap and switch):
+        pytest.skip("jail mutation needs SYLVE_LIVE_JAIL_NODE, _BOOTSTRAP, _SWITCH")
+    return {
+        "node": node,
+        "pool": os.environ.get("SYLVE_LIVE_JAIL_POOL") or mutate_target["pool"],
+        "bootstrap": bootstrap,
+        "switch": switch,
+    }

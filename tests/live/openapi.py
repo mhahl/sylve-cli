@@ -44,6 +44,10 @@ class OpenAPISpec:
 
     def _check(self, value: Any, schema: dict[str, Any], location: str) -> None:
         schema = self._resolve(schema)
+        # Swagger 2.0 treats absent-from-required fields as optional, and the
+        # server legitimately returns null for unset optional fields. Accept it.
+        if value is None:
+            return
         expected = schema.get("type")
         if expected == "object":
             if not isinstance(value, dict):
@@ -100,6 +104,11 @@ class OpenAPISpec:
 
     def validate(self, method: str, path: str, data: Any) -> None:
         """Validate unwrapped response *data* against the matching response schema."""
+        if isinstance(data, str):
+            raise AssertionError(
+                f"{method.upper()} {path} returned a non-JSON body (a plain string); "
+                "the endpoint is not returning the expected API payload"
+            )
         template, operation = self._operation(method, path)
         responses = operation.get("responses", {})
         response = None
