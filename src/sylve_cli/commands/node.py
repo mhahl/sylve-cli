@@ -630,7 +630,9 @@ def node_drain(
             )
 
             noun = "guest" if len(actionable) == 1 else "guests"
-        confirm_destructive(f"Drain {len(actionable)} {noun} from node '{source_host}'?", yes=yes)
+            confirm_destructive(
+                f"Drain {len(actionable)} {noun} from node '{source_host}'?", yes=yes
+            )
 
         failures = 0
         for item in plan:

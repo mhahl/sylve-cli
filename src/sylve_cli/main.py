@@ -166,7 +166,7 @@ app.add_typer(auth_app, name="auth")
 app.add_typer(cloud_init_app, name="cloud-init")
 
 
-def build_cli() -> click.Command:
+def build_cli() -> Any:
     """Build the click command tree with bare-group help exiting 0.
 
     Typer raises ``NoArgsIsHelpError`` (a ``UsageError``, exit code 2) while
@@ -189,11 +189,11 @@ def build_cli() -> click.Command:
                 click.echo(exc.message, err=True)
                 raise SystemExit(0) from exc
 
-        group.parse_args = parse_args
+        group.parse_args = parse_args  # type: ignore[method-assign]
     return cli
 
 
-def _iter_groups(cli: click.Command) -> list[click.Command]:
+def _iter_groups(cli: Any) -> list[Any]:
     """Yield every command group in the tree, root first.
 
     Typer's ``TyperGroup`` does not subclass ``click.Group`` in newer versions,
