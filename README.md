@@ -96,7 +96,7 @@ generic API request flags.
 | [login](docs/commands/login.md) | Authenticate and save a context |
 | [logout](docs/commands/logout.md) | Revoke the active token and clear it |
 | [whoami](docs/commands/whoami.md) | Display the active session and token status |
-| [config](docs/commands/config.md) | View and modify saved contexts |
+| [config](docs/commands/config.md) | View and modify saved contexts; see also [config-format](docs/config-format.md) |
 | [cluster](docs/commands/cluster.md) | Cluster status, Raft membership, and notes |
 | [node](docs/commands/node.md) | Node inventory, telemetry, drain, reboot, audit logs |
 | [vm](docs/commands/vm.md) | Bhyve VMs, snapshots, and templates (alias: `server`) |

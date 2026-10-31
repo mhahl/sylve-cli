@@ -170,6 +170,6 @@ not a usage error.
 ## SEE ALSO
 
 [sylve(1)](../README.md),
-[sylve-config(1)](commands/config.md),
-[sylve-login(1)](commands/login.md),
-[sylve-config(5)](man/man5/sylve-config.5)
+[sylve-options(1)](commands/config.md),
+[sylve-config(5)](man/man5/sylve-config.5),
+[config-format](config-format.md)

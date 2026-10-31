@@ -58,6 +58,7 @@ are installed as pages for `man(1)`.
 | Guide | Description |
 |---|---|
 | [Options](global-options.md) | Global flags, output formats, environment variables, config format, exit status |
+| [Config file](config-format.md) | YAML config file format reference (`~/.config/sylve/config.yaml`) |
 | [Development](developer-guide.md) | Development setup, source layout, adding commands, and regenerating manpages |
 | [Testing](../TESTING.md) | Unit tests, live OpenAPI contract suite, linting, and type checks |
 | [API contract drift](spec-drift.md) | Known differences between the vendored OpenAPI spec, the 0.3.1 release, and the master branch |
