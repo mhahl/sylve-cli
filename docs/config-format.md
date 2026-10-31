@@ -34,8 +34,8 @@ contexts:
 
 ### `current_context`
 
-String. The name of the context used when `--context` is not supplied on the
-command line. Must match a key in `contexts`.
+String. Context selected when `--context` is omitted. Must match a key in
+`contexts`.
 
 ### `contexts`
 
@@ -58,9 +58,8 @@ server uses for login.
 
 #### `token`
 
-Bearer JWT token. Saved by `sylve login`; do not edit this field by hand.
-The token is never printed by `sylve config view` unless `--show-token` is
-passed.
+Bearer JWT token. Saved by `sylve login`. `sylve config view` prints the
+token only with `--show-token`.
 
 #### `expires_at`
 

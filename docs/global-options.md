@@ -64,9 +64,8 @@ applicable:
   | `csv` | Comma-separated values with a header row |
 
 - `-c, --column NAME`
-  Select and order output columns. May be repeated or given as a
-  comma-separated list. Matches column headers or raw field keys
-  case-insensitively:
+  Select and order output columns. Repeatable or comma-separated. Matches
+  column headers or raw field keys case-insensitively:
   ```sh
   sylve vm list -c RID,Name,State
   sylve vm list -c RID -c Name
@@ -170,6 +169,6 @@ not a usage error.
 ## SEE ALSO
 
 [sylve(1)](../README.md),
-[sylve-options(1)](commands/config.md),
+[sylve-options(7)](commands/config.md),
 [sylve-config(5)](man/man5/sylve-config.5),
 [config-format](config-format.md)

@@ -121,7 +121,7 @@ def vm_list(
     node: NodeOption = None,
     detailed: Annotated[
         bool,
-        typer.Option("--long", "-l", help="Fetch full VM details (CPU/RAM/Boot) from each node."),
+        typer.Option("--long", help="Fetch full VM details (CPU/RAM/Boot) from each node."),
     ] = False,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,

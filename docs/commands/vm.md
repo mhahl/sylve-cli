@@ -143,7 +143,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 
 ### `vm list` and `vm show`
 
-- `list`: `-n, --node NODE`, `--long, -l` (fetches CPU, RAM, VNC, autostart,
+- `list`: `-n, --node NODE`, `--long` (fetches CPU, RAM, VNC, autostart,
   and description), `-f, --format`, `-c, --column`, `--sort-column NAME`,
   `--filter COLUMN=VALUE` (repeatable, substring match), `-l, --limit N`.
 - `show VM`: `VM` (RID or name), `-n, --node NODE`, `-f, --format`, `-c, --column`.
