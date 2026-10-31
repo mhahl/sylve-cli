@@ -70,8 +70,8 @@ lifecycle or migration tasks created by Sylve. Task IDs are returned by
 
 - `GUEST_TYPE GUEST_ID` (required)
   Guest type (`vm` or `jail`) and guest ID.
-- `-d, --data`, `-p, --param`, `-y, --yes`, `-n, --node`, `-f, --format`
-  Generic API options.
+- `-d, --data`, `-p, --param`, `-n, --node`, `-f, --format`
+  Generic API options. `task active` is read-only and has no `--yes`.
 
 ## EXIT STATUS
 
@@ -89,11 +89,8 @@ sylve task list
 
 ```text
 Recent Lifecycle Tasks
-+----+--------------------+------------+----------+--------+---------+---------------------------+
-| ID | Node               | Guest Type | Guest ID | Action | Status  | Created At                |
-+----+--------------------+------------+----------+--------+---------+---------------------------+
-| 42 | node1.example.test | vm         |      101 | start  | SUCCESS | 2026-10-28 20:00:00 +0000 |
-+----+--------------------+------------+----------+--------+---------+---------------------------+
+ ID  Node                Guest Type  Guest ID  Action  Status   Created At
+ 42  node1.example.test  vm               101  start   SUCCESS  2026-10-28 20:00:00 +0000
 ```
 
 List active tasks for VM `101` on one node with extended fields as JSON:

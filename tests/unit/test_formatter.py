@@ -14,6 +14,7 @@ from sylve_cli.formatter import (
     ColumnSpec,
     FormatterError,
     OutputFormat,
+    apply_row_filters,
     configure_table,
     filter_columns,
     format_bytes,
@@ -153,11 +154,21 @@ def test_print_list_table_is_aligned_and_bounded(capsys: pytest.CaptureFixture[s
     configure_table(max_width=60)
     print_list(rows, columns, fmt=OutputFormat.table, title="Items")
     lines = capsys.readouterr().out.splitlines()
-    table_lines = [line for line in lines if line.startswith(("+", "|"))]
-    assert table_lines
-    assert len({len(line) for line in table_lines}) == 1
-    assert max(len(line) for line in table_lines) <= 60
+    content = [line for line in lines if line.strip() and line.strip() != "Items"]
+    assert content
+    assert not any("|" in line or line.lstrip().startswith("+") for line in lines)
+    assert max(len(line) for line in content) <= 60
     assert all(line == line.rstrip() for line in lines)
+
+    # No borders: alignment is vertical, so the Name column starts at the same
+    # index on the header and every row.
+    def name_column(line: str) -> int:
+        for needle in ("Name", "alpha", "beta"):
+            if needle in line:
+                return line.index(needle)
+        return -1
+
+    assert len({name_column(line) for line in content}) == 1
 
 
 def test_print_list_empty_and_no_columns(capsys: pytest.CaptureFixture[str]) -> None:
@@ -246,3 +257,22 @@ def test_table_truncation_and_no_truncate(capsys: pytest.CaptureFixture[str]) ->
     wrapped = capsys.readouterr().out
     assert name in wrapped
     assert "…" not in wrapped
+
+
+def test_apply_row_filters_by_column_text_and_limit() -> None:
+    rows = [
+        {"name": "web-01", "state": "RUNNING"},
+        {"name": "web-02", "state": "SHUTOFF"},
+        {"name": "db-01", "state": "RUNNING"},
+    ]
+    # COLUMN=VALUE is a case-insensitive substring match on that column only.
+    assert [r["name"] for r in apply_row_filters(rows, ["state=running"])] == [
+        "web-01",
+        "db-01",
+    ]
+    # A bare term matches any field.
+    assert [r["name"] for r in apply_row_filters(rows, ["db"])] == ["db-01"]
+    # Multiple filters combine with AND; limit caps the result.
+    assert apply_row_filters(rows, ["state=RUNNING", "web"], limit=1) == [rows[0]]
+    # An unknown column filters everything out rather than silently passing.
+    assert apply_row_filters(rows, ["nope=x"]) == []

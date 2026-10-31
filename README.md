@@ -74,6 +74,18 @@ Global options must precede `COMMAND`:
 - `-h, --help`
   Print usage information and exit.
 
+Running a command group with no subcommand (for example `sylve vm`) prints its
+help and exits `0`.
+
+### Shell completion
+
+```sh
+sylve --install-completion      # write completion into your shell rc file
+sylve --show-completion         # print the script to install it yourself
+```
+
+Supported for bash, zsh, and fish.
+
 See [sylve-options(7)](docs/global-options.md) for output formatting flags and
 generic API request flags.
 

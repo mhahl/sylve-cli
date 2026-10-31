@@ -15,7 +15,7 @@ import typer
 import yaml
 
 from sylve_cli.client import SylveAPIError, SylveClient, SylveError
-from sylve_cli.formatter import OutputFormat, console, format_bytes
+from sylve_cli.formatter import OutputFormat, console, format_bytes, print_result
 from sylve_cli.state import CLIState, FormatOption, NodeOption
 from sylve_cli.tasks import wait_for_lifecycle_task
 
@@ -1058,17 +1058,7 @@ def _print_payload(payload: dict[str, Any], fmt: OutputFormat) -> None:
 
 
 def _print_result(result: dict[str, Any], fmt: OutputFormat, message: str) -> None:
-    if fmt == OutputFormat.json:
-        sys.stdout.write(json.dumps(result, indent=2) + "\n")
-    elif fmt == OutputFormat.yaml:
-        sys.stdout.write(yaml.safe_dump(result, sort_keys=False))
-    elif fmt == OutputFormat.value:
-        if "rid" in result:
-            sys.stdout.write(f"{result['rid']}\n")
-        else:
-            sys.stdout.write(json.dumps(result, separators=(",", ":")) + "\n")
-    else:
-        console.print(message, style="green", markup=False)
+    print_result(result, fmt=fmt, message=message)
 
 
 def _print_plan(lines: list[str], title: str) -> None:

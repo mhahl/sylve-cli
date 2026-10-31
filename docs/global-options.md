@@ -155,10 +155,16 @@ contexts:
 
 ## EXIT STATUS
 
+`Ctrl-C` in a streaming command (`vm logs --follow`, `system events`,
+`network firewall logs --follow`) stops the stream and exits `0`.
+
+Running a command group with no subcommand prints help and exits `0`, which is
+not a usage error.
+
 | Code | Meaning |
 |---|---|
 | `0` | Success |
-| `1` | API error, formatter error, aborted confirmation, or task failure |
+| `1` | API error, formatter error, local I/O error, aborted confirmation, or task failure |
 | `2` | Usage error, unknown option, or missing required argument |
 
 ## SEE ALSO

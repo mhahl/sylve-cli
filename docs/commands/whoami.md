@@ -46,21 +46,18 @@ sylve --no-truncate whoami
 
 ```text
                 Current Session
-+--------------+------------------------------+
-| Field        | Value                        |
-+--------------+------------------------------+
-| context      | admin@sylve.example.test     |
-| server       | https://sylve.example.test   |
-| username     | admin                        |
-| user_id      | 1                            |
-| auth_type    | sylve                        |
-| hostname     | node1.example.test           |
-| node_id      | node-1                       |
-| default_node | node1.example.test           |
-| verify_ssl   | true                         |
-| expires_at   | 2026-11-01T00:00:00Z         |
-| token_status | VALID (3d 13h 57m remaining) |
-+--------------+------------------------------+
+ Field         Value
+ context       admin@sylve.example.test
+ server        https://sylve.example.test
+ username      admin
+ user_id       1
+ auth_type     sylve
+ hostname      node1.example.test
+ node_id       node-1
+ default_node  node1.example.test
+ verify_ssl    true
+ expires_at    2026-11-01T00:00:00Z
+ token_status  VALID (3d 13h 57m remaining)
 ```
 
 Select specific fields as JSON:

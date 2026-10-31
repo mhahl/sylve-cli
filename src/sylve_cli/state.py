@@ -2,15 +2,29 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from sylve_cli.client import SylveClient
+from sylve_cli.client import SylveClient, SylveError
 from sylve_cli.config import load_config
 from sylve_cli.formatter import OutputFormat
+
+
+def confirm_destructive(prompt: str, *, yes: bool) -> None:
+    """Ask before a destructive action, unless *yes* or stdin cannot answer.
+
+    A non-interactive stdin (pipe, CI) must not be treated as consent: it
+    aborts with a hint to pass ``--yes`` instead of silently proceeding.
+    """
+    if yes:
+        return
+    if not sys.stdin.isatty():
+        raise SylveError(f"{prompt} Aborted: stdin is not a terminal; pass --yes to skip.")
+    typer.confirm(prompt, abort=True)
 
 
 @dataclass
@@ -99,4 +113,22 @@ WaitOption = Annotated[
         "--wait/--no-wait",
         help="Wait for asynchronous task completion.",
     ),
+]
+
+YesOption = Annotated[
+    bool,
+    typer.Option("-y", "--yes", help="Skip confirmation prompt."),
+]
+
+FilterOption = Annotated[
+    list[str] | None,
+    typer.Option(
+        "--filter",
+        help="Filter rows by COLUMN=VALUE (substring, repeatable) or by bare text.",
+    ),
+]
+
+LimitOption = Annotated[
+    int | None,
+    typer.Option("--limit", "-l", min=1, help="Show at most this many rows after filtering."),
 ]

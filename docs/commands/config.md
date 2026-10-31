@@ -29,6 +29,7 @@ configuration file with mode `0600`. `view` redacts bearer tokens unless
 | Subcommand | Description |
 |---|---|
 | `view` | Print the configuration file path, current context, and contexts |
+| `validate` | Check the config file for parse errors, dropped contexts, and expired tokens |
 | `get-contexts` | List saved contexts, one row per context |
 | `use-context NAME` | Switch the active context to `NAME` |
 | `set-node [NODE]` | Set or clear the default cluster node for the active context |
@@ -43,6 +44,12 @@ configuration file with mode `0600`. `view` redacts bearer tokens unless
   `--show-token` output into issue reports.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `yaml`).
+
+### `config validate`
+
+No options. Prints a `warning:` line for every problem (a context missing its
+`server` key, a `current_context` that does not exist, a missing or expired
+token) and exits `1` if any were found, `0` when the file is sound.
 
 ### `config get-contexts`
 

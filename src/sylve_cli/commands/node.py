@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
 from typing import Annotated, Any
 
@@ -19,14 +20,18 @@ from sylve_cli.formatter import (
     format_vm_state,
     print_dict,
     print_list,
+    print_result,
 )
 from sylve_cli.state import (
     CLIState,
     ColumnsOption,
+    FilterOption,
     FormatOption,
+    LimitOption,
     LongOption,
     SortColumnOption,
     WaitOption,
+    confirm_destructive,
 )
 from sylve_cli.tasks import wait_for_lifecycle_task
 
@@ -382,6 +387,8 @@ def node_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List all nodes in the cluster with CPU, memory, disk usage, and guest count."""
     state: CLIState = ctx.obj
@@ -421,6 +428,8 @@ def node_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="Cluster Nodes",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -620,12 +629,8 @@ def node_drain(
                 title=f"Planned Drain Operations for {source_host}",
             )
 
-        if not yes:
             noun = "guest" if len(actionable) == 1 else "guests"
-            typer.confirm(
-                f"Drain {len(actionable)} {noun} from node '{source_host}'?",
-                abort=True,
-            )
+        confirm_destructive(f"Drain {len(actionable)} {noun} from node '{source_host}'?", yes=yes)
 
         failures = 0
         for item in plan:
@@ -725,15 +730,19 @@ def node_reboot(
         bool,
         typer.Option("-y", "--yes", help="Skip confirmation prompt."),
     ] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Initiate a system reboot on a node."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         target = client.resolve_node_hostname(node) or client.context.hostname or "current node"
-        if not yes:
-            typer.confirm(f"Reboot node '{target}'?", abort=True)
+        confirm_destructive(f"Reboot node '{target}'?", yes=yes)
         client.post("/basic/system/reboot", node=target)
-    console.print(f"[yellow]Reboot initiated for node '{target}'.[/yellow]")
+    print_result(
+        {"node": target, "status": "reboot_initiated"},
+        fmt,
+        f"Reboot initiated for node '{target}'.",
+    )
 
 
 @node_app.command("remove")
@@ -754,13 +763,13 @@ def node_remove(
         bool,
         typer.Option("-y", "--yes", help="Skip confirmation prompt."),
     ] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Remove a peer node from the cluster."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
         node_uuid, host = client.resolve_node_uuid(node)
-        if not yes:
-            typer.confirm(f"Remove node '{host}' ({node_uuid}) from the cluster?", abort=True)
+        confirm_destructive(f"Remove node '{host}' ({node_uuid}) from the cluster?", yes=yes)
         if force:
             client.post(
                 "/cluster/remove-node/force",
@@ -771,7 +780,21 @@ def node_remove(
                 "/cluster/remove-node",
                 json_body={"nodeId": node_uuid, "retainGuests": retain_guests},
             )
-    console.print(f"[green]Removed node '{host}' ({node_uuid}) from the cluster.[/green]")
+    print_result(
+        {"node": host, "nodeUUID": node_uuid, "removed": True},
+        fmt,
+        f"Removed node '{host}' ({node_uuid}) from the cluster.",
+    )
+
+
+def _audit_request_path(action: Any) -> str:
+    """Recover the request path that audit records embed inside their action JSON."""
+    if not isinstance(action, str):
+        return "-"
+    try:
+        return str(json.loads(action).get("path") or "-")
+    except (ValueError, TypeError):
+        return "-"
 
 
 @node_app.command("audit-logs")
@@ -801,9 +824,9 @@ def node_audit_logs(
     spec = [
         ColumnSpec("ID", "id", justify="right"),
         ColumnSpec("Node", "node"),
-        ColumnSpec("User", "username"),
+        ColumnSpec("User", "user"),
         ColumnSpec("Action", "action"),
-        ColumnSpec("Path", "path"),
+        ColumnSpec("Path", "action", formatter=_audit_request_path),
         ColumnSpec("Status", "status"),
         ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]

@@ -94,11 +94,10 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
 
 - `--uuid, -u UUID` (required)
   Download UUID.
-- `--name, -f FILENAME` (required)
+- `--name, -N FILENAME` (required)
   Filename within the download.
 - `-n, --node NODE`, `-f, --format`
-  Target node and output format. Because `-f` is bound to both `--name` and
-  `--format`, prefer the long flags `--name` and `--format`.
+  Target node and output format.
 
 ### `download storage`
 
@@ -128,12 +127,9 @@ sylve download list
 
 ```text
 Downloads
-+----+---------------------+---------------------+---------+----------+---------+
-| ID | Name                | Node                | Size    | Progress | Status  |
-+----+---------------------+---------------------+---------+----------+---------+
-| 1  | debian-13.iso       | node1.example.test  | 1.2 GiB |   100.0% | READY   |
-| 2  | ubuntu-24.04.img    | node2.example.test  | 2.8 GiB |    42.0% | RUNNING |
-+----+---------------------+---------------------+---------+----------+---------+
+ ID  Name                 Node                 Size     Progress  Status
+ 1   debian-13.iso        node1.example.test   1.2 GiB    100.0%  READY
+ 2   ubuntu-24.04.img     node2.example.test   2.8 GiB     42.0%  RUNNING
 ```
 
 Start a remote download with explicit options:

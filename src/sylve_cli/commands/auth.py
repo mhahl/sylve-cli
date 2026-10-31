@@ -6,8 +6,9 @@ from typing import Annotated, Any
 from urllib.parse import urlparse
 
 import typer
+import yaml
 
-from sylve_cli.client import SylveClient, SylveError
+from sylve_cli.client import ResourceNotFoundError, SylveClient, SylveError
 from sylve_cli.config import (
     ContextConfig,
     decode_jwt_payload,
@@ -313,7 +314,7 @@ def config_use_context(
     state: CLIState = ctx.obj
     cfg = load_config(state.config_path)
     if name not in cfg.contexts:
-        raise typer.BadParameter(
+        raise ResourceNotFoundError(
             f"Context '{name}' does not exist. Available: {', '.join(cfg.contexts.keys())}"
         )
     cfg.current_context = name
@@ -334,7 +335,7 @@ def config_set_node(
     cfg = load_config(state.config_path)
     ctx_name, _ = cfg.get_active_context(state.context_name)
     if ctx_name not in cfg.contexts:
-        raise typer.BadParameter(f"Context '{ctx_name}' is not persisted in config file.")
+        raise ResourceNotFoundError(f"Context '{ctx_name}' is not persisted in config file.")
     cleaned = None if not node or node.strip().lower() in ("all", "none", "-") else node.strip()
     cfg.contexts[ctx_name].default_node = cleaned
     save_config(cfg, state.config_path)
@@ -348,6 +349,50 @@ def config_set_node(
         )
 
 
+@config_app.command("validate")
+def config_validate(ctx: typer.Context) -> None:
+    """Check the configuration file for parse errors and unusable contexts."""
+    state: CLIState = ctx.obj
+    path = state.config_path or get_default_config_path()
+    problems: list[str] = []
+
+    if not path.exists():
+        console.print(f"[yellow]No configuration file at {path}.[/yellow]")
+        raise SystemExit(1)
+
+    try:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception as exc:
+        raise RuntimeError(f"Failed to parse configuration file {path}: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise RuntimeError(f"{path} does not contain a YAML mapping.")
+
+    raw_contexts = raw.get("contexts") or {}
+    if not isinstance(raw_contexts, dict):
+        raise RuntimeError("The 'contexts' key must be a mapping of name to context.")
+    for name, cdata in raw_contexts.items():
+        if not isinstance(cdata, dict) or not cdata.get("server"):
+            # load_config silently drops these, so surface them here instead.
+            problems.append(f"context '{name}': missing 'server' key (ignored by the CLI)")
+    current = str(raw.get("current_context") or "")
+    if current and current not in raw_contexts:
+        problems.append(f"current_context '{current}' does not exist in 'contexts'")
+
+    cfg = load_config(state.config_path)
+    for name, c in cfg.contexts.items():
+        if c.is_token_expired():
+            problems.append(f"context '{name}': token expired (run 'sylve login')")
+        if not c.token:
+            problems.append(f"context '{name}': no token (run 'sylve login')")
+
+    for problem in problems:
+        console.print(f"[yellow]warning:[/yellow] {problem}")
+    console.print(f"Checked {len(cfg.contexts)} context(s) in {path}.")
+    if problems:
+        raise SystemExit(1)
+    console.print("[green]Configuration is valid.[/green]")
+
+
 @config_app.command("delete-context")
 def config_delete_context(
     ctx: typer.Context,
@@ -357,7 +402,7 @@ def config_delete_context(
     state: CLIState = ctx.obj
     cfg = load_config(state.config_path)
     if name not in cfg.contexts:
-        raise typer.BadParameter(f"Context '{name}' not found.")
+        raise ResourceNotFoundError(f"Context '{name}' not found.")
     del cfg.contexts[name]
     if cfg.current_context == name:
         cfg.current_context = next(iter(cfg.contexts.keys()), "")

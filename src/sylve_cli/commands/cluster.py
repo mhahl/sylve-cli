@@ -16,8 +16,18 @@ from sylve_cli.formatter import (
     format_vm_state,
     print_dict,
     print_list,
+    print_result,
 )
-from sylve_cli.state import CLIState, ColumnsOption, FormatOption, LongOption, SortColumnOption
+from sylve_cli.state import (
+    CLIState,
+    ColumnsOption,
+    FilterOption,
+    FormatOption,
+    LimitOption,
+    LongOption,
+    SortColumnOption,
+    confirm_destructive,
+)
 
 cluster_app = typer.Typer(
     name="cluster",
@@ -124,6 +134,8 @@ def cluster_resources(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List all guests (VMs & Jails) and templates across all cluster nodes."""
     state: CLIState = ctx.obj
@@ -195,6 +207,8 @@ def cluster_resources(
         selected_columns=columns,
         sort_column=sort_column,
         title="Cluster Resources",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -309,8 +323,7 @@ def cluster_leave(
     ] = False,
 ) -> None:
     """Remove the current node from the cluster and clear its cluster state."""
-    if not yes:
-        typer.confirm("Are you sure you want this node to leave the cluster?", abort=True)
+    confirm_destructive("Are you sure you want this node to leave the cluster?", yes=yes)
     state: CLIState = ctx.obj
     with state.get_client() as client:
         if force:
@@ -376,21 +389,25 @@ def cluster_note_create(
     ctx: typer.Context,
     title: Annotated[str, typer.Option("--title", "-t", help="Note title (3-128 chars).")],
     content: Annotated[str, typer.Option("--content", "-m", help="Note body content.")],
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a new cluster note."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.post("/cluster/notes", json_body={"title": title, "content": content})
-    console.print(f"[green]Created cluster note '{title}'.[/green]")
+    print_result({"title": title, "created": True}, fmt, f"Created cluster note '{title}'.")
 
 
 @cluster_note_app.command("delete")
 def cluster_note_delete(
     ctx: typer.Context,
     note_id: Annotated[int, typer.Argument(help="Cluster note ID to delete.")],
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a cluster note by ID."""
     state: CLIState = ctx.obj
+    confirm_destructive(f"Delete cluster note #{note_id}?", yes=yes)
     with state.get_client() as client:
         client.delete(f"/cluster/notes/{note_id}")
-    console.print(f"[green]Deleted cluster note #{note_id}.[/green]")
+    print_result({"id": note_id, "deleted": True}, fmt, f"Deleted cluster note #{note_id}.")

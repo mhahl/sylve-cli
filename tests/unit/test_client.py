@@ -7,6 +7,7 @@ import json
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import httpx
 import pytest
@@ -204,3 +205,50 @@ def test_login_updates_context() -> None:
         ctx = client.login("admin", "secret", remember=False)
     assert ctx.token == new_token
     assert ctx.hostname == "node1.lan"
+
+
+def test_enrich_template_metadata_merges_detail() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/api/vm/templates/7"
+        return httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "data": {
+                    "id": 7,
+                    "name": "debian-13",
+                    "sourceVmName": "web-01",
+                    "createdAt": "2026-10-28T14:13:24.369790382+11:00",
+                    "pool": "zroot",
+                },
+            },
+        )
+
+    with client_with(handler) as client:
+        item: dict[str, Any] = {"id": 7, "name": "debian-13"}
+        client.enrich_template_metadata(item, "/vm/templates/7", None)
+    assert item["createdAt"].startswith("2026-10-28")
+    assert item["pool"] == "zroot"
+
+
+def test_enrich_template_metadata_tolerates_missing_or_errored_detail() -> None:
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        if len(calls) == 1:
+            return httpx.Response(404, json={"status": "error", "message": "not_found"})
+        return httpx.Response(
+            200,
+            json={"status": "success", "data": {"id": 9, "name": "x"}},
+        )
+
+    with client_with(handler) as client:
+        gone: dict[str, Any] = {"id": 8}
+        client.enrich_template_metadata(gone, "/vm/templates/8", None)
+        assert "createdAt" not in gone
+        assert "pool" not in gone
+
+        no_date: dict[str, Any] = {"id": 9, "createdAt": "placeholder"}
+        client.enrich_template_metadata(no_date, "/vm/templates/9", None)
+        assert no_date["createdAt"] == "placeholder"

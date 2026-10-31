@@ -10,18 +10,20 @@ from sylve_cli.client import SylveError
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
-    console,
     format_timestamp,
     print_dict,
     print_list,
+    print_result,
 )
 from sylve_cli.state import (
     CLIState,
     ColumnsOption,
+    FilterOption,
     FormatOption,
     LongOption,
     NodeOption,
     SortColumnOption,
+    confirm_destructive,
 )
 from sylve_cli.tasks import get_lifecycle_task, wait_for_lifecycle_task
 
@@ -59,6 +61,7 @@ def task_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
 ) -> None:
     """List active or recent guest lifecycle tasks across cluster nodes."""
     state: CLIState = ctx.obj
@@ -103,6 +106,8 @@ def task_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="Active Lifecycle Tasks" if active_only else "Recent Lifecycle Tasks",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -142,10 +147,17 @@ def task_wait(
 def task_cancel_migration(
     ctx: typer.Context,
     task_id: Annotated[int, typer.Argument(help="Migration task ID to cancel.")],
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Request cancellation of a queued or pre-cutover guest migration task."""
     state: CLIState = ctx.obj
+    confirm_destructive(f"Cancel migration task #{task_id}?", yes=yes)
     with state.get_client(node_override=node) as client:
         client.post(f"/tasks/migration/{task_id}/cancel", node=node)
-    console.print(f"[yellow]Requested cancellation of migration task #{task_id}.[/yellow]")
+    print_result(
+        {"id": task_id, "status": "cancel_requested"},
+        fmt,
+        f"Requested cancellation of migration task #{task_id}.",
+    )

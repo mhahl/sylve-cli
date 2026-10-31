@@ -135,7 +135,10 @@ def test_non_json_error_body_raises_api_error() -> None:
         with pytest.raises(SylveAPIError) as exc_info:
             client.get("/vm/9")
     assert exc_info.value.status_code == 404
-    assert "Not Found" in str(exc_info.value)
+    # The HTML shell must never be echoed as the error text.
+    assert "<html" not in str(exc_info.value)
+    assert "HTTP 404" in str(exc_info.value)
+    assert "endpoint not implemented" in str(exc_info.value)
 
 
 # ---------------------------------------------------------------------------

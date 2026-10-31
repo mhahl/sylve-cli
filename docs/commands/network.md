@@ -111,12 +111,9 @@ sylve network interface list
 
 ```text
 Network Interfaces
-+-----------+--------------------+---------------+-------------+-------------+
-| Name      | Node               | IPv4          | IPv6        | Description |
-+-----------+--------------------+---------------+-------------+-------------+
-| em0       | node1.example.test | 10.0.0.11/24  | fe80::1/64  | uplink      |
-| vm-public | node1.example.test | 10.0.10.1/24  | -           | VM bridge   |
-+-----------+--------------------+---------------+-------------+-------------+
+ Name       Node                IPv4           IPv6         Description
+ em0        node1.example.test  10.0.0.11/24   fe80::1/64   uplink
+ vm-public  node1.example.test  10.0.10.1/24   -            VM bridge
 ```
 
 Create a VLAN-filtered standard switch, a manual switch, and synchronize switch

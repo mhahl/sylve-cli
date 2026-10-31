@@ -144,7 +144,8 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 ### `vm list` and `vm show`
 
 - `list`: `-n, --node NODE`, `--long, -l` (fetches CPU, RAM, VNC, autostart,
-  and description), `-f, --format`, `-c, --column`, `--sort-column NAME`.
+  and description), `-f, --format`, `-c, --column`, `--sort-column NAME`,
+  `--filter COLUMN=VALUE` (repeatable, substring match), `-l, --limit N`.
 - `show VM`: `VM` (RID or name), `-n, --node NODE`, `-f, --format`, `-c, --column`.
   When the VM is running with the QEMU guest agent enabled and responding,
   `show` also reports live `ipAddresses` (non-loopback IPv4 and global IPv6).
@@ -158,6 +159,11 @@ request unless `-y` / `--yes` or `--dry-run` is given.
   Target node.
 - `-w, --wait / --no-wait`
   Wait for the lifecycle task (default: `--no-wait`).
+- `-f, --format`
+  Output format. With `json`/`yaml`/`csv`/`value` each VM's result (`rid`,
+  `name`, `action`, `status`, `taskId`) is printed instead of prose. A failure
+  on one VM does not stop the others; the command reports every failure and
+  exits `1`.
 
 ### `vm migrate`
 
@@ -184,13 +190,19 @@ request unless `-y` / `--yes` or `--dry-run` is given.
   Delete associated MAC objects (default: `--delete-macs`).
 - `--force`
   Best-effort removal.
-- `-y, --yes`, `-n, --node NODE`
-  Skip confirmation; target node.
+- `--dry-run`
+  Print what would be deleted (RID, name, node, volumes/raw disks/MACs) without
+  deleting anything.
+- `-y, --yes`, `-n, --node NODE`, `-f, --format`
+  Skip confirmation; target node; output format (prints `{"deleted":true,...}`).
 
 ### `vm logs`, `vm console`, `vm guest-agent`, `vm rename`
 
 - `VM` (required): RID or name.
 - `NEW_NAME` (required for `rename`): new VM name.
+- `-F, --follow` (`logs` only): keep polling and print only newly appended
+  lines; `--interval SECONDS` sets the poll interval (default: `1.0`).
+  Press `Ctrl-C` to stop.
 - `--baudrate, -b N` (`console` only): serial baud rate (default: `115200`).
 - `--takeover / --observe` (`console` only): request input control or attach
   read-only (default: `--takeover`). Press `Enter`, then type `~.` to detach.
@@ -237,7 +249,9 @@ sylve vm hardware-vnc 101 --data '{"vncEnabled":true,"vncResolution":"1024x768",
 - `snapshot delete VM SNAPSHOT_ID`: `-n/--node`.
 - `template list`: `-n/--node`, `-f/--format`, `-c/--column`.
 - `template capture VM`: `--name NAME` (required), `-n/--node`, `-w/--wait` (default: `--wait`).
-- `template delete TEMPLATE_ID`: `-n/--node`.
+- `template delete TEMPLATE_ID`: `-y/--yes` (the template's stored datasets are
+  deleted too), `-n/--node`.
+- `snapshot delete VM SNAPSHOT_ID`: `-y/--yes`, `-n/--node`.
 
 ### Generic Subcommands
 
@@ -271,12 +285,9 @@ sylve vm list
 
 ```text
 Virtual Machines
-+-----+---------+---------+---------------------+----------+
-| RID | Name    | State   | Node                | VNC Port |
-+-----+---------+---------+---------------------+----------+
-| 101 | web-01  | RUNNING | node1.example.test  | 5900     |
-| 102 | db-01   | SHUTOFF | node2.example.test  | -        |
-+-----+---------+---------+---------------------+----------+
+ RID  Name     State    Node                 VNC Port
+ 101  web-01   RUNNING  node1.example.test   5900
+ 102  db-01    SHUTOFF  node2.example.test   -
 ```
 
 Create and start a VM from scratch with full hardware, storage, network, VNC,

@@ -10,20 +10,23 @@ from sylve_cli.client import ResourceNotFoundError
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
-    console,
     format_bytes,
     format_percent,
     format_timestamp,
     print_dict,
     print_list,
+    print_result,
 )
 from sylve_cli.state import (
     CLIState,
     ColumnsOption,
+    FilterOption,
     FormatOption,
+    LimitOption,
     LongOption,
     NodeOption,
     SortColumnOption,
+    confirm_destructive,
 )
 
 zfs_app = typer.Typer(
@@ -119,6 +122,8 @@ def pool_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List ZFS storage pools across cluster nodes."""
     state: CLIState = ctx.obj
@@ -166,6 +171,8 @@ def pool_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="ZFS Storage Pools",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -195,13 +202,18 @@ def pool_scrub(
     ctx: typer.Context,
     pool: Annotated[str, typer.Argument(help="ZFS pool name or GUID to scrub.")],
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Start a ZFS scrub on a storage pool."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         guid, host = _resolve_pool_guid(client, pool, node=node)
         client.post(f"/zfs/pools/{guid}/scrub", node=host or None)
-    console.print(f"[green]Started scrub on ZFS pool '{pool}' ({host or 'local'}).[/green]")
+    print_result(
+        {"pool": pool, "node": host or "local", "action": "scrub"},
+        fmt,
+        f"Started scrub on ZFS pool '{pool}' ({host or 'local'}).",
+    )
 
 
 # ------------------------------------------------------------------
@@ -219,6 +231,8 @@ def dataset_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List ZFS datasets across cluster nodes."""
     state: CLIState = ctx.obj
@@ -263,6 +277,8 @@ def dataset_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="ZFS Datasets",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -274,6 +290,7 @@ def dataset_create_fs(
     ],
     name: Annotated[str, typer.Option("--name", help="New filesystem name.")],
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a new ZFS filesystem dataset."""
     state: CLIState = ctx.obj
@@ -283,7 +300,11 @@ def dataset_create_fs(
             json_body={"parent": parent, "name": name, "properties": {}},
             node=node,
         )
-    console.print(f"[green]Created ZFS filesystem '{parent}/{name}'.[/green]")
+    print_result(
+        {"name": f"{parent}/{name}", "type": "filesystem"},
+        fmt,
+        f"Created ZFS filesystem '{parent}/{name}'.",
+    )
 
 
 @dataset_app.command("create-vol")
@@ -295,6 +316,7 @@ def dataset_create_vol(
     name: Annotated[str, typer.Option("--name", help="New ZFS volume name.")],
     size: Annotated[str, typer.Option("--size", "-s", help="Volume size (e.g. 10G).")],
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a new ZFS volume (zvol)."""
     state: CLIState = ctx.obj
@@ -304,7 +326,11 @@ def dataset_create_vol(
             json_body={"parent": parent, "name": name, "properties": {"volsize": size}},
             node=node,
         )
-    console.print(f"[green]Created ZFS volume '{parent}/{name}' ({size}).[/green]")
+    print_result(
+        {"name": f"{parent}/{name}", "type": "volume", "size": size},
+        fmt,
+        f"Created ZFS volume '{parent}/{name}' ({size}).",
+    )
 
 
 @dataset_app.command("delete")
@@ -316,7 +342,12 @@ def dataset_delete(
         typer.Option("--type", "-t", help="Dataset type: 'filesystem' or 'volume'."),
     ] = "filesystem",
     yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print what would be deleted without deleting it."),
+    ] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a ZFS filesystem or volume."""
     norm_type = dtype.strip().lower()
@@ -325,12 +356,28 @@ def dataset_delete(
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         guid, host = _resolve_dataset_guid(client, dataset, node=node)
-        if not yes:
-            typer.confirm(
-                f"Delete ZFS {norm_type} '{dataset}' ({guid}) on {host or 'local'}?", abort=True
+        if dry_run:
+            print_result(
+                {
+                    "action": "delete-dataset",
+                    "dataset": dataset,
+                    "type": norm_type,
+                    "guid": guid,
+                    "node": host or "local",
+                },
+                fmt,
+                f"Dry run: would delete ZFS {norm_type} '{dataset}'.",
             )
+            return
+        confirm_destructive(
+            f"Delete ZFS {norm_type} '{dataset}' ({guid}) on {host or 'local'}?", yes=yes
+        )
         client.delete(f"/zfs/datasets/{norm_type}/{guid}", node=host or None)
-    console.print(f"[green]Deleted ZFS {norm_type} '{dataset}'.[/green]")
+    print_result(
+        {"dataset": dataset, "type": norm_type, "deleted": True},
+        fmt,
+        f"Deleted ZFS {norm_type} '{dataset}'.",
+    )
 
 
 # ------------------------------------------------------------------
@@ -365,6 +412,7 @@ def snapshot_create(
         typer.Option("-r", "--recursive/--no-recursive", help="Create snapshot recursively."),
     ] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a ZFS snapshot of a dataset."""
     state: CLIState = ctx.obj
@@ -375,7 +423,9 @@ def snapshot_create(
             json_body={"guid": guid, "name": name, "recursive": recursive},
             node=host or None,
         )
-    console.print(f"[green]Created ZFS snapshot '{dataset}@{name}'.[/green]")
+    print_result(
+        {"snapshot": f"{dataset}@{name}"}, fmt, f"Created ZFS snapshot '{dataset}@{name}'."
+    )
 
 
 @snapshot_app.command("rollback")
@@ -388,19 +438,21 @@ def snapshot_rollback(
     ] = False,
     yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Roll back to a ZFS snapshot."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         guid, host = _resolve_dataset_guid(client, snapshot, dtype="SNAPSHOT", node=node)
-        if not yes:
-            typer.confirm(f"Roll back to snapshot '{snapshot}' ({guid})?", abort=True)
+        confirm_destructive(f"Roll back to snapshot '{snapshot}' ({guid})?", yes=yes)
         client.post(
             f"/zfs/datasets/snapshot/{guid}/rollback",
             json_body={"destroyMoreRecent": destroy_more_recent},
             node=host or None,
         )
-    console.print(f"[green]Rolled back to snapshot '{snapshot}'.[/green]")
+    print_result(
+        {"snapshot": snapshot, "rolledBack": True}, fmt, f"Rolled back to snapshot '{snapshot}'."
+    )
 
 
 @snapshot_app.command("delete")
@@ -413,10 +465,13 @@ def snapshot_delete(
             "-r", "--recursive/--no-recursive", help="Delete child snapshots recursively."
         ),
     ] = False,
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a ZFS snapshot."""
     state: CLIState = ctx.obj
+    confirm_destructive(f"Delete ZFS snapshot '{snapshot}'?", yes=yes)
     with state.get_client(node_override=node) as client:
         guid, host = _resolve_dataset_guid(client, snapshot, dtype="SNAPSHOT", node=node)
         client.delete(
@@ -424,7 +479,9 @@ def snapshot_delete(
             params={"recursive": recursive},
             node=host or None,
         )
-    console.print(f"[green]Deleted ZFS snapshot '{snapshot}'.[/green]")
+    print_result(
+        {"snapshot": snapshot, "deleted": True}, fmt, f"Deleted ZFS snapshot '{snapshot}'."
+    )
 
 
 # ------------------------------------------------------------------

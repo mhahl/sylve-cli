@@ -14,7 +14,6 @@ from enum import Enum
 from typing import Any, Literal
 
 import yaml
-from rich import box
 from rich.cells import cell_len
 from rich.console import Console
 from rich.table import Table
@@ -23,10 +22,9 @@ from rich.text import Text
 console = Console()
 err_console = Console(stderr=True)
 
-TABLE_BOX = box.Box(
-    "+-++\n| ||\n+-++\n| ||\n+-++\n+-++\n| ||\n+-++\n",
-    ascii=True,
-)
+# Borderless tables: column alignment and colour carry the structure, not box edges.
+# Header colour distinguishes the heading from the rows that follow it.
+TABLE_HEADER_STYLE = "bold cyan"
 
 
 class FormatterError(ValueError):
@@ -429,8 +427,8 @@ def _available_content_width(column_count: int) -> int:
         max_width = console.width
     if max_width <= 0:
         return 0
-    # One leading/trailing space per column plus a border per column edge.
-    return max(column_count, max_width - (column_count * 3 + 1))
+    # One padding space per column side (no box borders anymore).
+    return max(column_count, max_width - column_count * 2)
 
 
 def _fit_widths(
@@ -552,6 +550,43 @@ def _add_table_columns(
         )
 
 
+def apply_row_filters(
+    items: Sequence[dict[str, Any]],
+    filters: Sequence[str] | None = None,
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """Filter and cap list rows before rendering.
+
+    ``filters`` are ``COLUMN=VALUE`` pairs (matched against header or key,
+    case-insensitive substring) or bare text matched against any field.
+    ``limit`` keeps the first N rows after filtering.
+    """
+    result = list(items)
+    for spec in _split_columns(filters):
+        column, sep, value = spec.partition("=")
+        if not sep:
+            needle = spec.casefold()
+            result = [
+                row
+                for row in result
+                if any(needle in _stringify_cell(v).casefold() for v in row.values())
+            ]
+            continue
+        needle = value.casefold()
+        result = [
+            row
+            for row in result
+            if any(
+                _stringify_cell(v).casefold().find(needle) >= 0
+                for k, v in row.items()
+                if k == column or k.casefold() == column.casefold()
+            )
+        ]
+    if limit is not None and limit > 0:
+        result = result[:limit]
+    return result
+
+
 def print_list(
     rows: Sequence[dict[str, Any]],
     columns: Sequence[ColumnSpec],
@@ -560,6 +595,8 @@ def print_list(
     sort_column: str | None = None,
     title: str | None = None,
     empty_message: str | None = None,
+    filters: Sequence[str] | None = None,
+    limit: int | None = None,
 ) -> None:
     """Render records in the selected output format.
 
@@ -571,6 +608,8 @@ def print_list(
         sort_column: Header or key to sort by.
         title: Table title or empty-state label.
         empty_message: Message used when *rows* is empty.
+        filters: Optional ``COLUMN=VALUE`` (or bare text) row filters.
+        limit: Optional maximum number of rows after filtering.
 
     Raises:
         FormatterError: If a column or sort key is unknown.
@@ -578,7 +617,7 @@ def print_list(
     Example:
         >>> print_list([{"rid": 1}], [ColumnSpec("RID", "rid")], fmt=OutputFormat.json)
     """
-    items = list(rows)
+    items = apply_row_filters(list(rows), filters, limit)
     selected = _split_columns(selected_columns)
     active_cols = filter_columns(columns, selected)
 
@@ -653,8 +692,8 @@ def print_list(
     table = Table(
         title=Text(title) if title else None,
         show_header=True,
-        header_style="bold",
-        box=TABLE_BOX,
+        header_style=TABLE_HEADER_STYLE,
+        box=None,
     )
     _add_table_columns(table, active_cols, widths)
 
@@ -668,6 +707,38 @@ def print_list(
         table.add_row(*styled_row)
 
     _print_table(table)
+
+
+def print_result(
+    result: Any,
+    fmt: OutputFormat = OutputFormat.table,
+    message: str = "",
+    title: str | None = None,
+) -> None:
+    """Render the result of a mutating command.
+
+    Mutations share one contract: ``table`` prints a human sentence, while the
+    machine formats emit the result dict so scripts never scrape prose. An
+    empty result prints ``OK`` in table mode and is omitted in other formats.
+    """
+    if not result:
+        if fmt == OutputFormat.table:
+            console.print(Text("OK", style="green"))
+        return
+    if fmt == OutputFormat.table:
+        console.print(message or "OK", style="green", markup=False)
+        return
+    if fmt != OutputFormat.value:
+        print_dict(result, fmt=fmt, title=title)
+        return
+    # value: one scalar per line for a dict, one row per line for a list.
+    if isinstance(result, dict):
+        for value in result.values():
+            sys.stdout.write(_stringify_cell(value) + "\n")
+        return
+    for row in result if isinstance(result, list) else [result]:
+        values = row.values() if isinstance(row, dict) else [row]
+        sys.stdout.write(" ".join(_stringify_cell(value) for value in values) + "\n")
 
 
 def _lookup_dict_key(data: dict[str, Any], requested: str) -> tuple[str, Any]:
@@ -765,8 +836,8 @@ def print_dict(
     table = Table(
         title=Text(title) if title else None,
         show_header=True,
-        header_style="bold",
-        box=TABLE_BOX,
+        header_style=TABLE_HEADER_STYLE,
+        box=None,
     )
     table.add_column(Text("Field"), style="bold")
     table.add_column(Text("Value"), overflow="fold")

@@ -18,14 +18,18 @@ from sylve_cli.formatter import (
     format_timestamp,
     print_dict,
     print_list,
+    print_result,
 )
 from sylve_cli.state import (
     CLIState,
     ColumnsOption,
+    FilterOption,
     FormatOption,
+    LimitOption,
     LongOption,
     NodeOption,
     SortColumnOption,
+    confirm_destructive,
 )
 
 network_app = typer.Typer(
@@ -113,6 +117,8 @@ def iface_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List physical and virtual network interfaces across cluster nodes."""
     state: CLIState = ctx.obj
@@ -164,6 +170,8 @@ def iface_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="Network Interfaces",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -217,6 +225,8 @@ def switch_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List standard and manual network switches across the cluster."""
     state: CLIState = ctx.obj
@@ -293,6 +303,8 @@ def switch_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="Network Switches",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -327,6 +339,7 @@ def switch_create_standard(
         ),
     ] = 0,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a managed standard network switch on a node."""
     state: CLIState = ctx.obj
@@ -342,7 +355,11 @@ def switch_create_standard(
     }
     with state.get_client(node_override=node) as client:
         client.post("/network/switch/standard", json_body=payload, node=node)
-    console.print(f"[green]Created standard switch '{name}'.[/green]")
+    print_result(
+        {"name": name, "type": "standard", "created": True},
+        fmt,
+        f"Created standard switch '{name}'.",
+    )
 
 
 @switch_app.command("create-manual")
@@ -353,6 +370,7 @@ def switch_create_manual(
         str, typer.Option("--bridge", help="Existing host bridge interface (e.g. bridge0).")
     ],
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Register an existing host bridge as a manual switch."""
     state: CLIState = ctx.obj
@@ -362,7 +380,11 @@ def switch_create_manual(
             json_body={"name": name, "bridge": bridge},
             node=node,
         )
-    console.print(f"[green]Created manual switch '{name}' on bridge '{bridge}'.[/green]")
+    print_result(
+        {"name": name, "type": "manual", "bridge": bridge, "created": True},
+        fmt,
+        f"Created manual switch '{name}' on bridge '{bridge}'.",
+    )
 
 
 @switch_app.command("delete")
@@ -373,29 +395,41 @@ def switch_delete(
         str,
         typer.Option("--type", "-t", help="Switch type: 'standard' or 'manual'."),
     ] = "standard",
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a standard or manual network switch by ID."""
     stype = switch_type.strip().lower()
     if stype not in ("standard", "manual"):
         raise typer.BadParameter("Switch type must be 'standard' or 'manual'.")
     state: CLIState = ctx.obj
+    confirm_destructive(f"Delete {stype} switch #{switch_id}?", yes=yes)
     with state.get_client(node_override=node) as client:
         client.delete(f"/network/switch/{stype}/{switch_id}", node=node)
-    console.print(f"[green]Deleted {stype} switch #{switch_id}.[/green]")
+    print_result(
+        {"id": switch_id, "type": stype, "deleted": True},
+        fmt,
+        f"Deleted {stype} switch #{switch_id}.",
+    )
 
 
 @switch_app.command("sync")
 def switch_sync(
     ctx: typer.Context,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Re-apply and reconcile stored switch network configuration on a node."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         target = client.resolve_node_hostname(node) or client.context.hostname or "connected node"
         client.post("/network/switch/sync", node=node)
-    console.print(f"[green]Synchronized switch configuration on {target}.[/green]")
+    print_result(
+        {"node": target, "status": "synchronized"},
+        fmt,
+        f"Synchronized switch configuration on {target}.",
+    )
 
 
 # ------------------------------------------------------------------
@@ -448,13 +482,16 @@ def route_list(
 def route_delete(
     ctx: typer.Context,
     route_id: Annotated[int, typer.Argument(help="Static route ID to delete.")],
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a static route by ID."""
     state: CLIState = ctx.obj
+    confirm_destructive(f"Delete static route #{route_id}?", yes=yes)
     with state.get_client(node_override=node) as client:
         client.delete(f"/network/route/{route_id}", node=node)
-    console.print(f"[green]Deleted static route #{route_id}.[/green]")
+    print_result({"id": route_id, "deleted": True}, fmt, f"Deleted static route #{route_id}.")
 
 
 # ------------------------------------------------------------------
@@ -817,6 +854,7 @@ def object_create(
         list[str], typer.Option("--value", "-v", help="Object value(s) (repeatable).")
     ],
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a network object."""
     state: CLIState = ctx.obj
@@ -826,20 +864,27 @@ def object_create(
             json_body={"name": name, "type": obj_type, "values": values},
             node=node,
         )
-    console.print(f"[green]Created network object '{name}' ({obj_type}).[/green]")
+    print_result(
+        {"name": name, "type": obj_type, "created": True},
+        fmt,
+        f"Created network object '{name}' ({obj_type}).",
+    )
 
 
 @object_app.command("delete")
 def object_delete(
     ctx: typer.Context,
     object_id: Annotated[int, typer.Argument(help="Network object ID.")],
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a network object by ID."""
     state: CLIState = ctx.obj
+    confirm_destructive(f"Delete network object #{object_id}?", yes=yes)
     with state.get_client(node_override=node) as client:
         client.delete(f"/network/object/{object_id}", node=node)
-    console.print(f"[green]Deleted network object #{object_id}.[/green]")
+    print_result({"id": object_id, "deleted": True}, fmt, f"Deleted network object #{object_id}.")
 
 
 # ------------------------------------------------------------------
@@ -877,6 +922,11 @@ def wg_client_list(
             for c in data:
                 if isinstance(c, dict):
                     item = dict(c)
+                    # Schema splits the peer endpoint into host + port.
+                    ep_host = c.get("endpointHost")
+                    ep_port = c.get("endpointPort")
+                    if ep_host:
+                        item["endpoint"] = f"{ep_host}:{ep_port}" if ep_port else ep_host
                     item.setdefault("node", host)
                     rows.append(item)
     spec = [

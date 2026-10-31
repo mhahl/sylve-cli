@@ -130,12 +130,9 @@ sylve node list
 
 ```text
 Cluster Nodes
-+---------------------+--------+------+------+------+--------+---------+
-| Hostname            | Status | CPU% | RAM% | Disk%| Guests | Version |
-+---------------------+--------+------+------+------+--------+---------+
-| node1.example.test  | ONLINE |  8.2%| 31.4%| 44.0%|     5  | 0.3.1   |
-| node2.example.test  | ONLINE | 12.7%| 48.1%| 52.3%|     7  | 0.3.1   |
-+---------------------+--------+------+------+------+--------+---------+
+ Hostname             Status  CPU%  RAM%  Disk% Guests  Version
+ node1.example.test   ONLINE   8.2% 31.4% 44.0%     5   0.3.1
+ node2.example.test   ONLINE  12.7% 48.1% 52.3%     7   0.3.1
 ```
 
 Preview a stop-only drain plan without executing it:
@@ -146,11 +143,8 @@ sylve node drain node1.example.test --dry-run --stop-only
 
 ```text
 Drain Plan (DRY RUN) for node1.example.test
-+-------+-----+---------+---------+----------+---------------------+--------+------------------+---------+
-| Type  | ID  | Name    | State   | Action   | Source              | Target | Preflight/Reason | Result  |
-+-------+-----+---------+---------+----------+---------------------+--------+------------------+---------+
-| vm    | 101 | web-01  | RUNNING | shutdown | node1.example.test  | -      | stop-only...     | pending |
-+-------+-----+---------+---------+----------+---------------------+--------+------------------+---------+
+ Type   ID   Name     State    Action    Source               Target  Preflight/Reason  Result
+ vm     101  web-01   RUNNING  shutdown  node1.example.test   -       stop-only...      pending
 ```
 
 Drain running guests to `node2.example.test` with fallback shutdown and JSON

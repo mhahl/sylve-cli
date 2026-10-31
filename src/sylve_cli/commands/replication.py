@@ -14,14 +14,18 @@ from sylve_cli.formatter import (
     format_timestamp,
     print_dict,
     print_list,
+    print_result,
 )
 from sylve_cli.state import (
     CLIState,
     ColumnsOption,
+    FilterOption,
     FormatOption,
+    LimitOption,
     LongOption,
     SortColumnOption,
     WaitOption,
+    confirm_destructive,
 )
 from sylve_cli.tasks import wait_for_replication_event
 
@@ -56,6 +60,8 @@ def policy_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List cluster replication policies and their current HA state."""
     state: CLIState = ctx.obj
@@ -105,6 +111,8 @@ def policy_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="Replication Policies",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -183,12 +191,17 @@ def policy_create(
 def policy_run(
     ctx: typer.Context,
     policy_id: Annotated[int, typer.Argument(help="Replication policy ID to run now.")],
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Queue an immediate replication run for a policy."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.post(f"/cluster/replication/policies/{policy_id}/run")
-    console.print(f"[green]Queued immediate run for replication policy #{policy_id}.[/green]")
+    print_result(
+        {"id": policy_id, "status": "queued"},
+        fmt,
+        f"Queued immediate run for replication policy #{policy_id}.",
+    )
 
 
 @policy_app.command("failover")
@@ -218,6 +231,7 @@ def policy_failover(
             "--confirm-data-loss", help="Acknowledge potential data loss for forced failover."
         ),
     ] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Queue a safe or forced HA failover for a replication policy."""
     state: CLIState = ctx.obj
@@ -233,7 +247,11 @@ def policy_failover(
         if target_uuid:
             body["targetNodeId"] = target_uuid
         client.post(f"/cluster/replication/policies/{policy_id}/failover", json_body=body)
-    console.print(f"[green]Queued {mode} failover for replication policy #{policy_id}.[/green]")
+    print_result(
+        {"id": policy_id, "mode": mode, "status": "queued"},
+        fmt,
+        f"Queued {mode} failover for replication policy #{policy_id}.",
+    )
 
 
 @policy_app.command("delete")
@@ -241,14 +259,16 @@ def policy_delete(
     ctx: typer.Context,
     policy_id: Annotated[int, typer.Argument(help="Replication policy ID to delete.")],
     yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a replication policy."""
-    if not yes:
-        typer.confirm(f"Delete replication policy #{policy_id}?", abort=True)
+    confirm_destructive(f"Delete replication policy #{policy_id}?", yes=yes)
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.delete(f"/cluster/replication/policies/{policy_id}")
-    console.print(f"[green]Deleted replication policy #{policy_id}.[/green]")
+    print_result(
+        {"id": policy_id, "deleted": True}, fmt, f"Deleted replication policy #{policy_id}."
+    )
 
 
 @event_app.command("list")

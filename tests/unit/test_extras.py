@@ -87,10 +87,12 @@ def test_print_result_json_and_yaml_round_trip(capsys) -> None:
     assert yaml.safe_load(capsys.readouterr().out) == data
 
 
-def test_print_result_value_joins_dict_and_list(capsys) -> None:
+def test_print_result_value_matches_print_dict(capsys) -> None:
+    # A dict prints one value per line, the same as print_dict -f value.
     _print_result({"a": 1, "b": 2}, OutputFormat.value, "ok")
-    assert capsys.readouterr().out.splitlines() == ["1 2"]
+    assert capsys.readouterr().out.splitlines() == ["1", "2"]
 
+    # A list of rows keeps one row per line.
     _print_result([{"x": 1, "y": 2}], OutputFormat.value, "ok")
     assert capsys.readouterr().out.splitlines() == ["1 2"]
 

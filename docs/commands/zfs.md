@@ -91,11 +91,8 @@ sylve zfs pool list
 
 ```text
 ZFS Storage Pools
-+-------+---------------------+-------+---------+---------+-------+
-| Name  | Node                | State | Size    | Free    | Frag% |
-+-------+---------------------+-------+---------+---------+-------+
-| zroot | node1.example.test  | ONLINE| 1.8 TiB | 1.2 TiB |   8.0%|
-+-------+---------------------+-------+---------+---------+-------+
+ Name   Node                 State  Size     Free     Frag%
+ zroot  node1.example.test   ONLINE 1.8 TiB  1.2 TiB    8.0%
 ```
 
 List all pools including non-configured ones as JSON, check status, and start a
@@ -113,6 +110,7 @@ Create and delete filesystems and volumes:
 sylve zfs dataset list --type VOLUME --long
 sylve zfs dataset create-fs --parent zroot --name backups --node node1.example.test
 sylve zfs dataset create-vol --parent zroot --name data --size 50G --node node1.example.test
+sylve zfs dataset delete zroot/backups --type filesystem --dry-run   # preview
 sylve zfs dataset delete zroot/backups --type filesystem --yes
 ```
 
@@ -121,7 +119,7 @@ Create, roll back, and delete ZFS snapshots:
 ```sh
 sylve zfs snapshot create zroot/data --name pre-upgrade --recursive --node node1.example.test
 sylve zfs snapshot rollback zroot/data@pre-upgrade --destroy-more-recent --yes
-sylve zfs snapshot delete zroot/data@pre-upgrade --recursive
+sylve zfs snapshot delete zroot/data@pre-upgrade --recursive --yes
 ```
 
 Create a periodic snapshot schedule via the generic endpoint:

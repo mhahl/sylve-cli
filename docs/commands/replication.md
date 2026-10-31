@@ -66,7 +66,7 @@ failovers, and monitors replication events.
     node (default: `--move-pinned-source`).
   - `--confirm-data-loss`: required acknowledgement when `--mode force` is set.
 - `delete POLICY_ID`: `-y, --yes`.
-- `update POLICY_ID`: `-d, --data BODY`, `-p, --param KEY=VALUE`, `-y, --yes`,
+- `update POLICY_ID`: `-d, --data BODY`, `-p, --param KEY=VALUE`,
   `-n, --node NODE`, `-f, --format`.
 
 ### `event list` and `event show`
@@ -92,11 +92,8 @@ sylve replication policy list
 
 ```text
 Replication Policies
-+----+---------+------------+----------+---------------------+-------------+---------+
-| ID | Name    | Guest Type | Guest ID | Active Node         | Last Status | Enabled |
-+----+---------+------------+----------+---------------------+-------------+---------+
-| 1  | web-ha  | vm         | 101      | node1.example.test  | SUCCESS     | true    |
-+----+---------+------------+----------+---------------------+-------------+---------+
+ ID  Name     Guest Type  Guest ID  Active Node          Last Status  Enabled
+ 1   web-ha   vm          101       node1.example.test   SUCCESS      true
 ```
 
 Create a weighted multi-target automatic failover policy:

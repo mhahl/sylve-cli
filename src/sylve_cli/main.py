@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
+import click
 import typer
+from typer._click.exceptions import NoArgsIsHelpError
 
 from sylve_cli import __version__
 from sylve_cli.client import SylveError
@@ -43,7 +45,6 @@ app = typer.Typer(
     ),
     no_args_is_help=True,
     rich_markup_mode=None,
-    add_completion=False,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
@@ -165,13 +166,60 @@ app.add_typer(auth_app, name="auth")
 app.add_typer(cloud_init_app, name="cloud-init")
 
 
+def build_cli() -> click.Command:
+    """Build the click command tree with bare-group help exiting 0.
+
+    Typer raises ``NoArgsIsHelpError`` (a ``UsageError``, exit code 2) while
+    parsing an empty group invocation. Running ``sylve vm`` is not a usage
+    error, so that specific error is rewritten to a clean exit 0. Every other
+    click behaviour (error formatting, standalone mode) is left untouched.
+    """
+    cli = typer.main.get_command(app)
+    for group in _iter_groups(cli):
+        original_parse_args = group.parse_args
+
+        def parse_args(
+            ctx: Any,
+            args: list[str],
+            _original: Any = original_parse_args,
+        ) -> list[str]:
+            try:
+                return _original(ctx, args)
+            except NoArgsIsHelpError as exc:
+                click.echo(exc.message, err=True)
+                raise SystemExit(0) from exc
+
+        group.parse_args = parse_args
+    return cli
+
+
+def _iter_groups(cli: click.Command) -> list[click.Command]:
+    """Yield every command group in the tree, root first.
+
+    Typer's ``TyperGroup`` does not subclass ``click.Group`` in newer versions,
+    so groups are detected by having subcommands and their own ``parse_args``.
+    """
+    groups: list[click.Command] = []
+    stack: list[click.Command] = [cli]
+    while stack:
+        current = stack.pop()
+        commands = getattr(current, "commands", None)
+        if not isinstance(commands, dict):
+            continue
+        groups.append(current)
+        stack.extend(sub for sub in commands.values() if hasattr(sub, "commands"))
+    return groups
+
+
 def run() -> None:
     """Console script entry point with clean error reporting."""
     try:
-        app()
-    except (FormatterError, SylveError, RuntimeError) as exc:
+        build_cli()()
+    except (FormatterError, SylveError, RuntimeError, OSError) as exc:
         # RuntimeError covers "not logged in / unknown context" from config
         # resolution, which must print as a one-line error, not a traceback.
+        # OSError covers local file failures (unwritable --output, unreadable
+        # --data file), which must not dump a traceback either.
         err_console.print(f"[bold red]Error:[/bold red] {exc}")
         raise SystemExit(1) from exc
 

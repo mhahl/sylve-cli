@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
@@ -37,6 +38,35 @@ class SylveAPIError(SylveError):
 
 class ResourceNotFoundError(SylveError):
     """Raised when a VM, Jail, Node, or other resource cannot be found."""
+
+
+_HTML_BODY_RE = re.compile(r"<[a-zA-Z!/][^>]*>")
+_MAX_ERROR_BODY = 200
+
+
+def _response_error_message(status_code: int, payload: Any, what: str) -> str:
+    """Build a one-line error from a failed response.
+
+    The Sylve web UI serves an HTML shell on some unreleased routes, and raw
+    HTML must never be printed as if it were an error message. JSON envelopes
+    supply ``message``/``error``; anything else is reduced to a short snippet.
+    """
+    if isinstance(payload, dict):
+        code = str(payload.get("error") or "")
+        message = str(payload.get("message") or code or "").strip()
+        if code and code != message:
+            message = f"{message} ({code})"
+        if message:
+            return f"HTTP {status_code} {what}: {message}"
+    text = payload.strip() if isinstance(payload, str) else ""
+    if text and not _HTML_BODY_RE.search(text):
+        snippet = text[:_MAX_ERROR_BODY].replace("\n", " ")
+        return f"HTTP {status_code} {what}: {snippet}"
+    if text:
+        return (
+            f"HTTP {status_code} {what}: server returned an HTML page (endpoint not implemented?)"
+        )
+    return f"HTTP {status_code} {what}"
 
 
 class SylveClient:
@@ -238,19 +268,13 @@ class SylveClient:
                 payload = resp.text
 
         if resp.status_code >= 400:
-            err_msg = f"HTTP {resp.status_code}"
             err_code = ""
             err_data = None
             if isinstance(payload, dict):
                 err_code = str(payload.get("error") or payload.get("message") or "")
-                err_msg = str(payload.get("message") or payload.get("error") or err_msg)
                 err_data = payload.get("data")
-                if err_code and err_code != err_msg:
-                    err_msg = f"{err_msg} ({err_code})"
-            elif isinstance(payload, str) and payload.strip():
-                err_msg = payload.strip()
             raise SylveAPIError(
-                message=err_msg,
+                message=_response_error_message(resp.status_code, payload, method.upper()),
                 status_code=resp.status_code,
                 error_code=err_code,
                 data=err_data,
@@ -279,6 +303,25 @@ class SylveClient:
         unwrap_data: bool = True,
     ) -> Any:
         return self.request("GET", path, params=params, node=node, unwrap_data=unwrap_data)
+
+    def enrich_template_metadata(
+        self, item: dict[str, Any], detail_path: str, node: str | None
+    ) -> None:
+        """Merge template-detail fields the simple list endpoints omit.
+
+        The VM and jail ``SimpleTemplateList`` DTOs carry only id/name/source;
+        the detail models add ``createdAt`` (and, for jails, ``pool``). Fetch
+        the detail per template and merge whatever it supplies. A template that
+        vanished mid-list keeps the list row as-is.
+        """
+        try:
+            detail = self.get(detail_path, node=node)
+        except SylveError:
+            return
+        if isinstance(detail, dict):
+            for key in ("createdAt", "pool"):
+                if detail.get(key) is not None:
+                    item[key] = detail.get(key)
 
     def post(
         self,
@@ -337,7 +380,14 @@ class SylveClient:
             "GET", path, params=clean_params or None, headers=headers
         ) as response:
             if response.status_code >= 400:
-                raise SylveError(f"HTTP {response.status_code} downloading {path}.")
+                body: Any = None
+                try:
+                    body = response.json()
+                except ValueError:
+                    body = response.read().decode("utf-8", "replace")
+                raise SylveError(
+                    _response_error_message(response.status_code, body, f"downloading {path}")
+                )
             with target.open("wb") as handle:
                 for chunk in response.iter_bytes():
                     handle.write(chunk)
@@ -377,7 +427,14 @@ class SylveClient:
             "GET", path, params=clean_params or None, headers=headers
         ) as response:
             if response.status_code >= 400:
-                raise SylveError(f"HTTP {response.status_code} streaming {path}.")
+                body: Any = None
+                try:
+                    body = response.json()
+                except ValueError:
+                    body = response.read().decode("utf-8", "replace")
+                raise SylveError(
+                    _response_error_message(response.status_code, body, f"streaming {path}")
+                )
             yield from response.iter_lines()
 
     def put(

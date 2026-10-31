@@ -16,15 +16,20 @@ from sylve_cli.formatter import (
     format_timestamp,
     print_dict,
     print_list,
+    print_result,
 )
 from sylve_cli.state import (
     CLIState,
     ColumnsOption,
+    FilterOption,
     FormatOption,
+    LimitOption,
     LongOption,
     NodeOption,
     SortColumnOption,
     WaitOption,
+    YesOption,
+    confirm_destructive,
 )
 from sylve_cli.tasks import wait_for_lifecycle_task
 
@@ -91,6 +96,8 @@ def jail_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List jails across all cluster nodes (or a specific node with --node)."""
     state: CLIState = ctx.obj
@@ -135,6 +142,8 @@ def jail_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="FreeBSD Jails",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -276,20 +285,39 @@ def jail_delete(
         typer.Option("--delete-macs/--keep-macs", help="Delete unused MAC objects."),
     ] = True,
     yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print what would be deleted without deleting it."),
+    ] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a jail by CTID or name."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        ctid, host, _ = client.resolve_jail(jail, node=node)
-        if not yes:
-            typer.confirm(f"Delete Jail {ctid} on node '{host or 'local'}'?", abort=True)
+        ctid, host, summary = client.resolve_jail(jail, node=node)
+        plan = {
+            "action": "delete-jail",
+            "ctid": ctid,
+            "name": summary.get("name"),
+            "node": host or "local",
+            "deleteRootfs": delete_rootfs,
+            "deleteMacs": delete_macs,
+        }
+        if dry_run:
+            print_result(plan, fmt, f"Dry run: would delete Jail {ctid} ({host or 'local'}).")
+            return
+        confirm_destructive(f"Delete Jail {ctid} on node '{host or 'local'}'?", yes=yes)
         client.delete(
             f"/jail/{ctid}",
             params={"deleterootfs": delete_rootfs, "deletemacs": delete_macs},
             node=host or None,
         )
-    console.print(f"[green]Deleted Jail {ctid} ({host or 'local'}).[/green]")
+    print_result(
+        {"deleted": True, "ctid": ctid, "node": host or "local"},
+        fmt,
+        f"Deleted Jail {ctid} ({host or 'local'}).",
+    )
 
 
 @jail_app.command("logs")
@@ -434,11 +462,10 @@ def jail_snapshot_rollback(
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         ctid, host, _ = client.resolve_jail(jail, node=node)
-        if not yes:
-            typer.confirm(
-                f"Roll back Jail {ctid} to snapshot #{snapshot_id}? Newer ZFS snapshots will be destroyed.",
-                abort=True,
-            )
+        confirm_destructive(
+            f"Roll back Jail {ctid} to snapshot #{snapshot_id}? Newer ZFS snapshots will be destroyed.",
+            yes=yes,
+        )
         client.post(f"/jail/{ctid}/snapshots/{snapshot_id}/rollback", node=host or None)
     console.print(f"[green]Rolled back Jail {ctid} to snapshot #{snapshot_id}.[/green]")
 
@@ -448,12 +475,14 @@ def jail_snapshot_delete(
     ctx: typer.Context,
     jail: Annotated[str, typer.Argument(help="Jail CTID or name.")],
     snapshot_id: Annotated[int, typer.Argument(help="Snapshot ID to delete.")],
+    yes: YesOption = False,
     node: NodeOption = None,
 ) -> None:
     """Delete a jail snapshot."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         ctid, host, _ = client.resolve_jail(jail, node=node)
+        confirm_destructive(f"Delete snapshot #{snapshot_id} for Jail {ctid}?", yes=yes)
         client.delete(f"/jail/{ctid}/snapshots/{snapshot_id}", node=host or None)
     console.print(f"[green]Deleted snapshot #{snapshot_id} for Jail {ctid}.[/green]")
 
@@ -526,13 +555,16 @@ def jail_template_list(
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         results = client.fan_out_get("/jail/templates", node=node)
-    rows: list[dict[str, Any]] = []
-    for host, data in results:
-        if isinstance(data, list):
-            for t in data:
-                if isinstance(t, dict):
+        rows: list[dict[str, Any]] = []
+        for host, data in results:
+            if isinstance(data, list):
+                for t in data:
+                    if not isinstance(t, dict):
+                        continue
                     row = dict(t)
                     row.setdefault("node", host)
+                    # The simple list omits detail metadata; fetch it per template.
+                    client.enrich_template_metadata(row, f"/jail/templates/{row.get('id')}", host)
                     rows.append(row)
     spec = [
         ColumnSpec("ID", "id", justify="right"),

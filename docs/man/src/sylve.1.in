@@ -138,7 +138,10 @@ Destructive commands prompt for confirmation on a terminal. Use
 .B \-y
 or
 .B \-\-yes
-to skip the prompt.
+to skip the prompt. When standard input is not a terminal (a pipe or CI job)
+the command aborts unless
+.B \-y
+is given, so a non-interactive run never deletes by accident.
 .SH ENVIRONMENT
 .TP
 .B SYLVE_CONFIG

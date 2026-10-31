@@ -14,14 +14,18 @@ from sylve_cli.formatter import (
     format_timestamp,
     print_dict,
     print_list,
+    print_result,
 )
 from sylve_cli.state import (
     CLIState,
     ColumnsOption,
+    FilterOption,
     FormatOption,
+    LimitOption,
     LongOption,
     SortColumnOption,
     WaitOption,
+    confirm_destructive,
 )
 from sylve_cli.tasks import wait_for_backup_event
 
@@ -63,6 +67,8 @@ def target_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List cluster backup targets."""
     state: CLIState = ctx.obj
@@ -91,6 +97,8 @@ def target_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="Backup Targets",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -156,12 +164,15 @@ def target_datasets(
 def target_validate(
     ctx: typer.Context,
     target_id: Annotated[int, typer.Argument(help="Backup target ID.")],
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Validate connectivity and readiness for a backup target."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.post(f"/cluster/backups/targets/{target_id}/validate")
-    console.print(f"[green]Backup target #{target_id} validated successfully.[/green]")
+    print_result(
+        {"id": target_id, "valid": True}, fmt, f"Backup target #{target_id} validated successfully."
+    )
 
 
 @target_app.command("delete")
@@ -169,14 +180,14 @@ def target_delete(
     ctx: typer.Context,
     target_id: Annotated[int, typer.Argument(help="Backup target ID.")],
     yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a disabled backup target."""
-    if not yes:
-        typer.confirm(f"Delete backup target #{target_id}?", abort=True)
+    confirm_destructive(f"Delete backup target #{target_id}?", yes=yes)
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.delete(f"/cluster/backups/targets/{target_id}")
-    console.print(f"[green]Deleted backup target #{target_id}.[/green]")
+    print_result({"id": target_id, "deleted": True}, fmt, f"Deleted backup target #{target_id}.")
 
 
 # ------------------------------------------------------------------
@@ -196,6 +207,8 @@ def job_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List scheduled backup jobs."""
     state: CLIState = ctx.obj
@@ -235,6 +248,8 @@ def job_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="Backup Jobs",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -242,12 +257,15 @@ def job_list(
 def job_run(
     ctx: typer.Context,
     job_id: Annotated[int, typer.Argument(help="Backup job ID to run immediately.")],
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Queue an immediate run of a backup job."""
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.post(f"/cluster/backups/jobs/{job_id}/run")
-    console.print(f"[green]Queued immediate run for backup job #{job_id}.[/green]")
+    print_result(
+        {"id": job_id, "status": "queued"}, fmt, f"Queued immediate run for backup job #{job_id}."
+    )
 
 
 @job_app.command("snapshots")
@@ -312,14 +330,14 @@ def job_delete(
     ctx: typer.Context,
     job_id: Annotated[int, typer.Argument(help="Backup job ID to delete.")],
     yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a backup job."""
-    if not yes:
-        typer.confirm(f"Delete backup job #{job_id}?", abort=True)
+    confirm_destructive(f"Delete backup job #{job_id}?", yes=yes)
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.delete(f"/cluster/backups/jobs/{job_id}")
-    console.print(f"[green]Deleted backup job #{job_id}.[/green]")
+    print_result({"id": job_id, "deleted": True}, fmt, f"Deleted backup job #{job_id}.")
 
 
 # ------------------------------------------------------------------

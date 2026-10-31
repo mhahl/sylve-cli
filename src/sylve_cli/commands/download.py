@@ -16,14 +16,18 @@ from sylve_cli.formatter import (
     format_percent,
     print_dict,
     print_list,
+    print_result,
 )
 from sylve_cli.state import (
     CLIState,
     ColumnsOption,
+    FilterOption,
     FormatOption,
+    LimitOption,
     LongOption,
     NodeOption,
     SortColumnOption,
+    confirm_destructive,
 )
 
 download_app = typer.Typer(
@@ -42,6 +46,8 @@ def download_list(
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List downloads across all cluster nodes (or a specific node with --node)."""
     state: CLIState = ctx.obj
@@ -86,6 +92,8 @@ def download_list(
         selected_columns=columns,
         sort_column=sort_column,
         title="Downloads",
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -166,6 +174,7 @@ def download_create(
         typer.Option("--ignore-tls", help="Ignore TLS verification on the remote download URL."),
     ] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Start a new download on the target node."""
     state: CLIState = ctx.obj
@@ -188,7 +197,7 @@ def download_create(
             f"[green]Queued download[/green] [bold]{data.get('name') or url}[/bold] (UUID: {data.get('uuid')})."
         )
     else:
-        console.print(f"[green]Queued download from '{url}'.[/green]")
+        print_result({"url": url, "status": "queued"}, fmt, f"Queued download from '{url}'.")
 
 
 @download_app.command("upload")
@@ -255,14 +264,17 @@ def download_upload(
 def download_delete(
     ctx: typer.Context,
     ids: Annotated[list[int], typer.Argument(help="One or more download IDs to delete.")],
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete one or more downloads by ID."""
     state: CLIState = ctx.obj
+    confirm_destructive(f"Delete {len(ids)} download(s): {', '.join(map(str, ids))}?", yes=yes)
     with state.get_client(node_override=node) as client:
         if len(ids) == 1:
             client.delete(f"/utilities/downloads/{ids[0]}", node=node)
-            console.print(f"[green]Deleted download #{ids[0]}.[/green]")
+            print_result({"ids": ids, "deleted": True}, fmt, f"Deleted download #{ids[0]}.")
         else:
             client.post("/utilities/downloads/bulk-delete", json_body={"ids": ids}, node=node)
             console.print(f"[green]Deleted {len(ids)} downloads.[/green]")
@@ -272,7 +284,7 @@ def download_delete(
 def download_signed_url(
     ctx: typer.Context,
     parent_uuid: Annotated[str, typer.Option("--uuid", "-u", help="Download UUID.")],
-    name: Annotated[str, typer.Option("--name", "-f", help="Filename within the download.")],
+    name: Annotated[str, typer.Option("--name", "-N", help="Filename within the download.")],
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
 ) -> None:

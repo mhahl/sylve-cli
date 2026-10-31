@@ -10,9 +10,7 @@ the source of truth for request shapes, and new fields do not need a new flag.
 
 from __future__ import annotations
 
-import json
 import re
-import sys
 import time
 from pathlib import Path
 from typing import Annotated, Any
@@ -45,8 +43,9 @@ from sylve_cli.formatter import (
     console,
     print_dict,
     print_list,
+    print_result,
 )
-from sylve_cli.state import CLIState, ColumnsOption, FormatOption, NodeOption
+from sylve_cli.state import CLIState, ColumnsOption, FormatOption, NodeOption, confirm_destructive
 
 system_app = typer.Typer(
     name="system",
@@ -152,33 +151,17 @@ def _parse_params(values: list[str] | None) -> dict[str, Any] | None:
 
 
 def _print_result(data: Any, fmt: OutputFormat, title: str | None = None) -> None:
-    if fmt == OutputFormat.json:
-        sys.stdout.write(json.dumps(data, indent=2, default=str) + "\n")
-        return
-    if fmt == OutputFormat.yaml:
-        sys.stdout.write(yaml.safe_dump(data, sort_keys=False))
-        return
-    if fmt == OutputFormat.value:
-        if isinstance(data, list):
-            for row in data:
-                if isinstance(row, dict):
-                    sys.stdout.write(" ".join(str(value) for value in row.values()) + "\n")
-                else:
-                    sys.stdout.write(str(row) + "\n")
-        elif isinstance(data, dict):
-            sys.stdout.write(" ".join(str(value) for value in data.values()) + "\n")
-        elif data is not None:
-            sys.stdout.write(str(data) + "\n")
-        return
     if data in (None, {}, []):
-        console.print("OK", style="green", markup=False)
-    elif isinstance(data, list) and all(isinstance(row, dict) for row in data):
+        if fmt not in (OutputFormat.json, OutputFormat.yaml, OutputFormat.value):
+            console.print("OK", style="green", markup=False)
+        return
+    if isinstance(data, list) and all(isinstance(row, dict) for row in data):
         columns = [ColumnSpec(str(key), str(key)) for key in data[0]]
         print_list(data, columns, fmt=fmt, title=title)
     elif isinstance(data, dict):
         print_dict(data, fmt=fmt, title=title)
     else:
-        console.print(str(data), markup=False)
+        print_result(data, fmt)
 
 
 def _path_for(template: str, args: list[str] | None) -> str:
@@ -209,8 +192,10 @@ def _execute_generic(
     state: CLIState = ctx.obj
     target_path = _path_for(path, args)
     destructive = method == "DELETE" or "delete" in path.lower()
-    if destructive and not yes and sys.stdin.isatty():
-        typer.confirm(f"Send {method} {target_path}?", abort=True)
+    if destructive:
+        # A non-interactive stdin must not count as consent; the helper aborts
+        # with a "--yes" hint instead of deleting silently.
+        confirm_destructive(f"Send {method} {target_path}?", yes=yes)
     with state.get_client(node_override=node) as client:
         result = client.request(
             method,

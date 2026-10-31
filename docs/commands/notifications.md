@@ -31,7 +31,7 @@ generic Sylve API bindings.
 | `rule-delete` | `ID` | Delete rule `ID` |
 | `rules-bulk-delete` | none | Delete multiple rules |
 | `rules-bulk-update` | none | Update multiple rules |
-| `rule-test` | `ID` | Send a test notification for rule `ID` |
+| `rule-test` | none | Send a test notification using a `--data` payload (not tied to one rule) |
 | `transports` | none | List notification transports |
 | `transport-create` | none | Create a notification transport |
 | `transport-update` | `ID` | Update transport `ID` |
@@ -81,7 +81,8 @@ Create, update, test, and delete rules and transports:
 sylve notifications rule-create \
   --data '{"name":"node-offline","event":"node.offline","transportId":1,"enabled":true}'
 sylve notifications rule-update 2 --data '{"enabled":false}' -f json
-sylve notifications rule-test 2
+sylve notifications rule-test \
+  --data '{"templateKey":"node-offline","targetKey":"mail","severity":"warning"}'
 
 sylve notifications transport-create \
   --data '{"name":"mail","type":"email","config":{"to":"admin@example.test"}}'

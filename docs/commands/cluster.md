@@ -147,19 +147,16 @@ sylve cluster status
 
 ```text
 Cluster Status
-+-----------------+-----------------------------+
-| Field           | Value                       |
-+-----------------+-----------------------------+
-| enabled         | true                        |
-| node_id         | node-1                      |
-| leader_id       | node-1                      |
-| leader_address  | 10.0.0.11                   |
-| raft_ip         | 10.0.0.11                   |
-| raft_port       | 8182                        |
-| partial         | false                       |
-| nodes_online    | 3/3                         |
-| total_guests    | 12                          |
-+-----------------+-----------------------------+
+ Field            Value
+ enabled          true
+ node_id          node-1
+ leader_id        node-1
+ leader_address   10.0.0.11
+ raft_ip          10.0.0.11
+ raft_port        8182
+ partial          false
+ nodes_online     3/3
+ total_guests     12
 ```
 
 List cluster-wide resources sorted by name as JSON:
@@ -215,11 +212,8 @@ sylve cluster note list --long -f table
 
 ```text
 Cluster Notes
-+----+-------------+--------------------------+---------------------+
-| ID | Title       | Content                  | Updated At          |
-+----+-------------+--------------------------+---------------------+
-| 1  | Maintenance | node2 drains at 22:00    | 2026-10-28T20:00:00Z|
-+----+-------------+--------------------------+---------------------+
+ ID  Title        Content                   Updated At
+ 1   Maintenance  node2 drains at 22:00     2026-10-28T20:00:00Z
 ```
 
 ```sh

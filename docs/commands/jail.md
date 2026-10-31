@@ -78,8 +78,10 @@ and jail templates.
   Delete the root ZFS dataset (default: `--delete-rootfs`).
 - `--delete-macs / --keep-macs`
   Delete unused MAC objects (default: `--delete-macs`).
-- `-y, --yes`, `-n, --node NODE`
-  Skip confirmation; target node.
+- `--dry-run`
+  Print what would be deleted (CTID, name, node, root dataset) without deleting.
+- `-y, --yes`, `-n, --node NODE`, `-f, --format`
+  Skip confirmation; target node; output format.
 
 ### `jail logs`, `jail console`, `jail guest-info`, `jail rename`
 
@@ -95,7 +97,7 @@ and jail templates.
 - `snapshot create JAIL`: `--name, -m NAME` (required),
   `--description, -d TEXT`, `-n/--node`.
 - `snapshot rollback JAIL SNAPSHOT_ID`: `-y/--yes`, `-n/--node`.
-- `snapshot delete JAIL SNAPSHOT_ID`: `-n/--node`.
+- `snapshot delete JAIL SNAPSHOT_ID`: `-y/--yes`, `-n/--node`.
 - `bootstrap list`: `--pool, -p POOL` (required), `-n/--node`, `-f/--format`,
   `-c/--column`.
 - `bootstrap create`: `--pool, -p POOL` (required), `--major N` (required),
@@ -134,12 +136,9 @@ sylve jail list
 
 ```text
 FreeBSD Jails
-+------+---------+---------+---------+---------------------+-------+--------+
-| CTID | Name    | State   | Type    | Node                | Cores | Memory |
-+------+---------+---------+---------+---------------------+-------+--------+
-| 201  | dns-01  | RUNNING | freebsd | node1.example.test  | 2     | 2.0 GiB|
-| 202  | cache   | STOPPED | freebsd | node2.example.test  | 1     | 1.0 GiB|
-+------+---------+---------+---------+---------------------+-------+--------+
+ CTID  Name     State    Type     Node                 Cores  Memory
+ 201   dns-01   RUNNING  freebsd  node1.example.test   2      2.0 GiB
+ 202   cache    STOPPED  freebsd  node2.example.test   1      1.0 GiB
 ```
 
 Create a jail from a definition file:
