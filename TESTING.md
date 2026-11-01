@@ -13,6 +13,7 @@ make live-test
 make lint
 make type
 make man
+make schemas
 make tox
 ```
 

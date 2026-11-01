@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (e.g. `jail hardware-cpu 201 --set cores=4`), so small updates need no JSON.
 - `--dry-run` on all generic API commands: print `method`, `path`, `params`,
   and `body` without sending anything.
+- Every generic command's `--help` now lists its settable `--set` body fields
+  and `--param` query parameters with types and required markers, generated
+  from `docs/swagger.json` by `make schemas` (`scripts/build_schemas.py`).
 - `examples/jail/basic.yaml` starter definition for `jail create --file`.
 
 ### Changed

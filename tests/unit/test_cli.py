@@ -301,6 +301,24 @@ def test_generic_set_merges_over_data() -> None:
     assert json.loads(result.stdout)["body"] == {"sockets": 1, "cores": 4}
 
 
+def test_generic_help_lists_settable_fields(cli_env: Path) -> None:
+    """--help must show the settable body fields so users never guess keys."""
+    cpu = runner.invoke(app, ["vm", "hardware-cpu", "--help"])
+    assert cpu.exit_code == 0
+    assert "Settable body fields (--set):" in cpu.stdout
+    assert "cpuCores (integer, required)" in cpu.stdout
+
+    tunable = runner.invoke(app, ["system", "tunable-set", "--help"])
+    assert tunable.exit_code == 0
+    assert "name (string, required), value (string, required)" in " ".join(tunable.stdout.split())
+
+    # Reads advertise query parameters instead of body fields.
+    tunables = runner.invoke(app, ["system", "tunables", "--help"])
+    assert tunables.exit_code == 0
+    assert "Query parameters (--param):" in tunables.stdout
+    assert "Settable body fields" not in tunables.stdout
+
+
 def test_generic_set_rejects_bad_input() -> None:
     missing_equals = runner.invoke(
         app, ["vm", "hardware-cpu", "101", "--set", "oops", "--dry-run", "-f", "json"]

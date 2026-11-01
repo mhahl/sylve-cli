@@ -148,7 +148,7 @@ sylve login https://sylve.example.test
 sylve node list
 sylve vm list
 sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
-sylve vm hardware-cpu 101 --set cores=4
+sylve vm hardware-cpu 101 --set cpuCores=4 --set cpuSockets=1
 sylve jail list -f json
 sylve jail console 201     # interactive jail console; press Enter, then type ~. to detach
 ```

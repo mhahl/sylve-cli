@@ -100,10 +100,13 @@ Commands that wrap Sylve API endpoints directly accept:
   Base JSON or YAML request body, or `@FILE` to read the body from disk.
 - `-s, --set KEY=VALUE`
   Set one body field (repeatable). Dotted keys address nested objects and
-  values are parsed as YAML, so no JSON is needed for common updates:
+  values are parsed as YAML, so no JSON is needed for common updates.
+  Every command's `--help` lists its settable fields with types and required
+  markers, so you never guess key names:
   ```sh
+  sylve system tunable-set --help    # Settable body fields: name, value
   sylve system tunable-set --set name=vfs.zfs.prefetch_disable --set value=0
-  sylve vm hardware-cpu 101 --set sockets=1 --set cores=4
+  sylve vm hardware-cpu 101 --set cpuSockets=1 --set cpuCores=4
   ```
   `--set` merges over `--data` (nested objects merge key by key) and is the
   preferred way to send small updates. Quote values the server expects as

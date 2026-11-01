@@ -193,7 +193,7 @@ sylve login https://sylve.example.test
 sylve node list
 sylve vm list -f json
 sylve vm show 101
-sylve vm hardware-cpu 101 --set cores=4 --set sockets=1
+sylve vm hardware-cpu 101 --set cpuCores=4 --set cpuSockets=1
 sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
 sylve vm create --template debian-13 --rid 120 --start --wait
 sylve jail list -f table

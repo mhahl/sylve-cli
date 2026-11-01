@@ -10,7 +10,7 @@
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e '.[dev]'
-make test lint type man
+make test lint type man schemas
 ```
 
 ## DESCRIPTION
@@ -43,6 +43,7 @@ make test lint type man
 | `src/sylve_cli/commands/zfs.py` | `zfs` |
 | `src/sylve_cli/commands/task.py` | `task` |
 | `src/sylve_cli/commands/extras.py` | `system`, `samba`, `iscsi`, `ddns`, `mdns`, `notifications`, `user`, `group`, `auth`, `cloud-init`, and generic API bindings |
+| `src/sylve_cli/body_schemas.py` | Generated `(METHOD, path)` to body/query field map for generic `--help` output. Do not edit; see below |
 
 ## ADDING A COMMAND
 
@@ -52,7 +53,11 @@ make test lint type man
    related annotations from `src/sylve_cli/state.py`.
 4. For thin wrappers around endpoints in `docs/swagger.json`, register a
    generic command in `src/sylve_cli/commands/extras.py` with `_add(...)`; it
-   automatically provides `--data`, `--param`, `--node`, `--format`, and `-y`.
+   automatically provides `--data`, `--set`, `--param`, `--dry-run`, `--node`,
+   `--format`, output selection on reads, and `-y` on destructive commands.
+   Its `--help` lists the settable body/query fields from
+   `src/sylve_cli/body_schemas.py` — regenerate that file with `make schemas`
+   after changing `docs/swagger.json` (CI checks it is current).
 5. Add unit tests in `tests/unit/`.
 6. Update `docs/commands/<command>.md` and `docs/man/src/sylve.1.in`, then run
    `make man`.
@@ -97,6 +102,24 @@ make type
 make tox
 ```
 
+### Generated Help Schemas
+
+Generic commands accept free-form `--set` keys, so `--help` shows the valid
+fields per command (types, `required` markers, one nested level for `--set`
+dotted keys, plus query parameters on reads). The text comes from
+`src/sylve_cli/body_schemas.py`, generated from `docs/swagger.json`:
+
+```sh
+make schemas                          # regenerate after spec or spec-list changes
+python scripts/build_schemas.py --check   # what CI runs
+```
+
+Regenerate when you change `docs/swagger.json`, add or remove a generic
+command in `extras.py`, or change a request path there — the generator keys
+entries by `(METHOD, path)`. Never hand-edit the generated file. The
+installed package does not ship `docs/swagger.json`, so this baking step is
+what keeps `--help` working offline.
+
 ### Manual Pages
 
 Edit the roff templates in `docs/man/src/` and render them with:
@@ -113,6 +136,7 @@ This writes `docs/man/man1/sylve.1` and `docs/man/man5/sylve-config.5`.
 - `pyproject.toml` — package metadata, dependencies, and tool configuration.
 - `docs/swagger.json` — Sylve API OpenAPI/Swagger specification.
 - `scripts/build_man.py` — manual page renderer and freshness check.
+- `scripts/build_schemas.py` — `--help` field-list generator and freshness check.
 
 ## SEE ALSO
 

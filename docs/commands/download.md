@@ -169,7 +169,7 @@ Generate a signed URL and fetch the file locally:
 
 ```sh
 sylve download signed-url --uuid 8f14... --name debian-13.iso
-sylve download file 8f14... --param sig=SIGNATURE --param expires=1790000000 --output ./debian-13.iso
+sylve download file 8f14... --param sig=SIGNATURE --param expires=1790000000 --param id=0 --param node=node1.example.test --output ./debian-13.iso
 # Saved to debian-13.iso
 ```
 
@@ -226,7 +226,7 @@ sylve download start https://example.test/debian-13.iso \
 sylve download list --node node1.example.test --filter status=RUNNING --sort-column name -l 5 --long
 sylve download show 8f14... -c UUID -c Name -c Status --node node1.example.test
 sylve download signed-url --uuid 8f14... --name debian-13.iso --node node1.example.test
-sylve download file 8f14... --param sig=SIGNATURE --param expires=1790000000 --output ./debian-13.iso
+sylve download file 8f14... --param sig=SIGNATURE --param expires=1790000000 --param id=0 --param node=node1.example.test --output ./debian-13.iso
 # Saved to debian-13.iso
 ```
 

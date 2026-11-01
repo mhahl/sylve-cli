@@ -69,3 +69,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: python scripts/build_man.py --check
+      - run: python scripts/build_schemas.py --check

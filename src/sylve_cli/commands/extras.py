@@ -19,6 +19,7 @@ from typing import Annotated, Any
 import typer
 import yaml
 
+from sylve_cli.body_schemas import BODY_SCHEMAS
 from sylve_cli.client import ResourceNotFoundError, SylveError
 from sylve_cli.commands.backup import backup_event_app, job_app, target_app
 from sylve_cli.commands.cluster import cluster_app, cluster_note_app
@@ -247,6 +248,39 @@ def _print_result(
         print_result(data, fmt)
 
 
+def _schema_help_suffix(method: str, path: str) -> str:
+    """Describe the settable body/query fields for ``--help`` output.
+
+    Generic commands take free-form ``--set`` keys, so the schema is the
+    only in-terminal discovery. Shapes come from the checked-in
+    ``body_schemas`` module (built from ``docs/swagger.json``), never from
+    the network, so ``--help`` stays offline-fast.
+    """
+    entry = BODY_SCHEMAS.get((method, path))
+    if not entry:
+        return ""
+    parts: list[str] = []
+    body = entry.get("body")
+    required = entry.get("body_required") or []
+    if isinstance(body, dict) and body:
+        assert isinstance(required, list)
+        fields = ", ".join(
+            f"{name} ({body[name]}{', required' if name in required else ''})"
+            for name in sorted(body)
+        )
+        parts.append(f"Settable body fields (--set): {fields}.")
+    query = entry.get("query")
+    query_required = entry.get("query_required") or []
+    if isinstance(query, dict) and query:
+        assert isinstance(query_required, list)
+        fields = ", ".join(
+            f"{name} ({query[name]}{', required' if name in query_required else ''})"
+            for name in sorted(query)
+        )
+        parts.append(f"Query parameters (--param): {fields}.")
+    return (" " + " ".join(parts)) if parts else ""
+
+
 def _path_for(template: str, args: list[str] | None) -> str:
     args = args or []
     placeholders = re.findall(r"\{[^}]+\}", template)
@@ -319,6 +353,7 @@ def _add(
 ) -> None:
     title = description.split(".")[0]
     help_text = description if not args_help else f"{description} Arguments: {args_help}."
+    help_text += _schema_help_suffix(method, path)
     destructive = method == "DELETE" or "delete" in path.lower()
 
     if binary:

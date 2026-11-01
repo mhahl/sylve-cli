@@ -1,4 +1,4 @@
-.PHONY: test lint format live-test live-mutate tox man type
+.PHONY: test lint format live-test live-mutate tox man schemas type
 
 PYTHON != command -v python3 2>/dev/null || command -v python3.12 2>/dev/null || command -v python
 
@@ -28,3 +28,6 @@ tox:
 
 man:
 	$(PYTHON) scripts/build_man.py
+
+schemas:
+	$(PYTHON) scripts/build_schemas.py
