@@ -7,8 +7,10 @@ and networking
 [\fIOPTIONS\fR] \fICOMMAND\fR [\fIARGS\fR...]
 .SH DESCRIPTION
 .B sylve
-is the command-line client for Sylve. It stores a bearer token in the active
-context and sends it to the selected Sylve node.
+talks to a Sylve node over HTTPS. You authenticate with
+.B login
+and sylve saves the bearer token in the active context, sending it
+with each request.
 .SH OPTIONS
 .TP
 .BR \-h ", " \-\-help
@@ -29,7 +31,7 @@ Target a cluster node by hostname or UUID.
 Skip TLS certificate verification.
 .TP
 .BR \-\-timeout " " \fISECONDS\fR
-HTTP request timeout. Default: 30.
+Seconds to wait for a server reply. Default: 30.
 .TP
 .BR \-\-max\-width " " \fICOLUMNS\fR
 Maximum table width. Default: terminal width.
@@ -42,14 +44,17 @@ Print the CLI version and exit.
 .SH COMMANDS
 .SS Authentication and configuration
 .TP
-.BR "login " [\fISERVER\fR] " [" \-u " " USER "]" " [" \-p " " PASSWORD "]"
-Authenticate and save a context.
+.BR "login " [\fISERVER\fR] " [" \-u " " USER "]" " [" \-\-password " " PASSWORD "]"
+Log in and save a context. Prompts for anything you omit; prefer the
+prompt over
+.B \-\-password
+so the secret stays out of shell history.
 .TP
 .BR "logout"
 Revoke the current token and clear it from the active context.
 .TP
 .BR "whoami"
-Show the authenticated user and token status.
+Show the active user and token status.
 .TP
 .BR "config " \fISUBCOMMAND\fR
 View or edit contexts. Subcommands:
@@ -66,18 +71,18 @@ List nodes, show telemetry, drain a node, reboot it, remove a peer, or
 read audit logs.
 .TP
 .BR "vm " \fISUBCOMMAND\fR
-List, create, inspect, start, stop, migrate, snapshot, template, and
-configure VMs.
+List, create, inspect, start, stop, migrate, snapshot, and configure VMs;
+manage templates.
 .TP
 .BR "jail " \fISUBCOMMAND\fR
-List, create, inspect, start, stop, migrate, snapshot, template, and
-configure jails.
+List, create, inspect, start, stop, migrate, snapshot, and configure jails;
+manage templates.
 .TP
 .BR "network " \fISUBCOMMAND\fR
 Manage interfaces, switches, routes, DHCP, PF firewall, objects, and WireGuard.
 .TP
 .BR "download " \fISUBCOMMAND\fR
-List, start, upload, delete, and download ISO or disk images.
+Queue, upload, track, and delete ISO or disk image downloads.
 .TP
 .BR "replication " \fISUBCOMMAND\fR
 Manage HA replication policies and events.
@@ -93,9 +98,9 @@ Inspect, wait for, or cancel guest lifecycle and migration tasks.
 .SS Host and identity commands
 .TP
 .BR "system " \fISUBCOMMAND\fR
-Manage disks, SMART tests, PCI passthrough, files, certificates, settings,
-services, tunables, host notes, SSE event streams, host terminals, and health
-checks.
+Manage host disks, SMART tests, PCI passthrough, files, certificates,
+and settings. Also: tunables, host notes, event streams, host terminals,
+and health checks.
 .TP
 .BR "samba " \fISUBCOMMAND\fR
 Manage Samba configuration and shares.
@@ -124,24 +129,28 @@ Inspect login configuration, create SSE tokens, and use passkeys.
 .BR "cloud-init " \fISUBCOMMAND\fR
 Manage reusable cloud-init templates.
 .SH "WRITE COMMANDS"
-Commands with generic API access accept:
+Commands that change something take a request body:
 .TP
 .BR \-\-data " " \fIDATA\fR
-JSON or YAML request body, or
+JSON or YAML, or
 .I @FILE
 to read it from disk.
 .TP
+.BR \-\-set " " \fIKEY=VALUE\fR
+Set one body field. Repeat it; dotted keys nest. Values parse as YAML,
+so small updates need no JSON.
+.TP
+.BR \-\-dry\-run
+Print the request without sending it.
+.TP
 .BR \-\-param " " \fIKEY=VALUE\fR
-Query parameter. Repeat for multiple parameters.
+Query parameter. Repeat it for more.
 .PP
-Destructive commands prompt for confirmation on a terminal. Use
+A destructive command asks first on a terminal; pass
 .B \-y
-or
-.B \-\-yes
-to skip the prompt. When standard input is not a terminal (a pipe or CI job)
-the command aborts unless
+to skip the question. Piped input never counts as yes: without
 .B \-y
-is given, so a non-interactive run never deletes by accident.
+the command aborts instead of deleting.
 .SH ENVIRONMENT
 .TP
 .B SYLVE_CONFIG
@@ -184,6 +193,7 @@ sylve login https://sylve.example.test
 sylve node list
 sylve vm list -f json
 sylve vm show 101
+sylve vm hardware-cpu 101 --set cores=4 --set sockets=1
 sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
 sylve vm create --template debian-13 --rid 120 --start --wait
 sylve jail list -f table

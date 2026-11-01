@@ -4,7 +4,7 @@
 
 ## NAME
 
-`sylve` — command-line client for Sylve FreeBSD clusters, Bhyve VMs, jails, ZFS, and networking
+`sylve` - command-line client for Sylve FreeBSD clusters, Bhyve VMs, jails, ZFS, and networking
 
 ## SYNOPSIS
 
@@ -16,26 +16,25 @@ sylve [--config FILE] [--context NAME] [-n NODE] [-k] [--timeout SECONDS]
 
 ## DESCRIPTION
 
-`sylve` manages Sylve FreeBSD nodes and clusters over HTTPS. It authenticates
-against a Sylve server, stores the session bearer token in a local context file
-(`mode 0600`), and executes resource, storage, network, and host operations
-against the selected cluster node.
+`sylve` talks to Sylve FreeBSD nodes and clusters over HTTPS. You log in
+once; sylve saves the session bearer token in a local context file
+(`mode 0600`) and sends it with each request to the node you target.
 
-Output defaults to human-readable tables and can be switched to `json`, `yaml`,
-`value`, or `csv` with `-f` / `--format` on data-producing commands.
+You get tables by default; pass `-f` / `--format` on data-producing commands
+for `json`, `yaml`, `value`, or `csv`.
 
-`sylve-cli` is an independent tool and is not affiliated with or endorsed by
-the Sylve project.
+`sylve-cli` is independent of the Sylve project: no affiliation, no
+endorsement.
 
 ## INSTALLATION
 
-From a local checkout with `pip`:
+Local checkout:
 
 ```sh
 pip install .
 ```
 
-From the FreeBSD port:
+FreeBSD port:
 
 ```sh
 cd packaging/freebsd/sysutils/py-sylve-cli
@@ -43,8 +42,8 @@ make package
 pkg add work/pkg/py312-sylve-cli-0.3.1.pkg
 ```
 
-Only `sylve(1)` and `sylve-config(5)` are installed as roff manual pages. The
-linked command guides below are Markdown, not separate `man` pages:
+Only `sylve(1)` and `sylve-config(5)` install as `man` pages; the guides
+below are Markdown:
 
 ```sh
 man sylve
@@ -53,18 +52,18 @@ man sylve-config
 
 ## GLOBAL OPTIONS
 
-Global options must precede `COMMAND`:
+Global options precede `COMMAND`:
 
 - `--config FILE`
   Path to the configuration file.
 - `--context NAME`
-  Named login context to use for this invocation.
+  Login context for this run.
 - `-n, --node NODE`
   Target cluster node hostname or UUID.
 - `-k, --insecure`
-  Disable TLS certificate verification.
+  Skip TLS certificate verification.
 - `--timeout SECONDS`
-  HTTP request timeout in seconds (default: `30.0`).
+  Seconds to wait for a reply (default: `30.0`).
 - `--max-width COLUMNS`
   Maximum table width in columns (default: terminal width).
 - `--no-truncate`
@@ -74,8 +73,7 @@ Global options must precede `COMMAND`:
 - `-h, --help`
   Print usage information and exit.
 
-Running a command group with no subcommand (for example `sylve vm`) prints its
-help and exits `0`.
+A bare group (`sylve vm`) prints its help and exits `0`.
 
 ### Shell completion
 
@@ -86,8 +84,8 @@ sylve --show-completion         # print the script to install it yourself
 
 Supported for bash, zsh, and fish.
 
-See [sylve-options(7)](docs/global-options.md) for output formatting flags and
-generic API request flags.
+Output flags (`-f`, `-c`, `--filter`) and request flags (`--data`, `--set`,
+`--dry-run`) live in [sylve-options(7)](docs/global-options.md).
 
 ## COMMANDS
 
@@ -150,6 +148,7 @@ sylve login https://sylve.example.test
 sylve node list
 sylve vm list
 sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
+sylve vm hardware-cpu 101 --set cores=4
 sylve jail list -f json
 sylve jail console 201     # interactive jail console; press Enter, then type ~. to detach
 ```
