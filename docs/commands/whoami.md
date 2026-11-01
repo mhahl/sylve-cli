@@ -95,6 +95,49 @@ sylve whoami -f value
 admin
 ```
 
+Inspect a stateless session from environment variables without a config
+file (`SYLVE_SERVER` and `SYLVE_TOKEN` override the saved context):
+
+```sh
+SYLVE_SERVER=https://sylve.example.test SYLVE_TOKEN=eyJhbGciOi... sylve whoami
+```
+
+```text
+             Current Session
+ Field         Value
+ context       env
+ server        https://sylve.example.test
+ username
+ user_id
+ auth_type     sylve
+ hostname
+ node_id
+ default_node  (all/origin)
+ verify_ssl    true
+ expires_at    unknown
+ token_status  VALID (unknown remaining)
+```
+
+An expired token is reported as `EXPIRED`:
+
+```sh
+sylve whoami -f json -c username,token_status
+```
+
+```json
+{
+  "username": "admin",
+  "token_status": "EXPIRED"
+}
+```
+
+With no context or token configured, `whoami` exits `1`:
+
+```sh
+sylve whoami
+# exit 1: no context or token is configured.
+```
+
 ## SEE ALSO
 
 [sylve(1)](../../README.md),

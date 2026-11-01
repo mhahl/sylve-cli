@@ -40,7 +40,7 @@ All subcommands accept:
 - `--dry-run`
   Print the request without sending it.
 - `-y, --yes`
-  Skip destructive-request confirmation.
+  Skip confirmation (destructive commands only, e.g. deletes).
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
@@ -77,15 +77,32 @@ Create, update, and delete a record, and configure the mDNS service:
 
 ```sh
 sylve mdns record-create \
-  --set name=sylve.local --set type=A --set value=10.0.0.11 --set ttl=300 \
-  --param validate=1 \
+  --set name=sylve.local --set type=A --set 'interfaces=[em0]' \
   --node node1.example.test \
   --format json
 
-sylve mdns record-update 2 --set ttl=600 -f json
+sylve mdns record-update 2 --set 'interfaces=[em0,em1]' -f json
 sylve mdns record-delete 2 --yes
 sylve mdns config -f json
-sylve mdns config-set --set enabled=true --set 'interfaces=[em0]' -f json
+sylve mdns config-set --set hostname=example-host --set 'interfaces=[em0]' -f json
+```
+
+Preview a daemon config change and a record create with `--set`:
+
+```sh
+sylve mdns config-set --set hostname=example-host --set interfaces=em0 --dry-run -f json
+sylve mdns record-create \
+  --set name=example-service --set type=_http._tcp \
+  --set port=8080 --set interfaces=em0 \
+  --dry-run -f json
+```
+
+Filter the record list, preview an update, and delete:
+
+```sh
+sylve mdns records -c id -c name -c type --filter type=_http -l 10
+sylve mdns record-update 2 --set port=9090 --dry-run -f json
+sylve mdns record-delete 2 --yes
 ```
 
 ## SEE ALSO

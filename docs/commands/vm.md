@@ -263,7 +263,7 @@ sylve vm hardware-vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --s
 ### Generic Subcommands
 
 All generic VM subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
-`--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format` (reads also take
+`--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
 
@@ -436,8 +436,62 @@ sylve vm migrate 101 --target node2.example.test --wait
 sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"
 sylve vm snapshot rollback 101 1 --yes
 sylve vm template capture 101 --name debian-web --wait
-sylve vm hardware-cpu 101 --set sockets=1 --set cores=4 --set threads=2 -f json
+sylve vm hardware-cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2 -f json
 sylve vm delete 101 --keep-volumes --keep-raw-disks --keep-macs --yes
+```
+
+Resize RAM or CPU without JSON, previewing the exact request first.
+Integer byte fields take raw byte counts, so `4294967296` means 4 GiB:
+
+```sh
+sylve vm hardware-ram 101 --set ram=4294967296 --dry-run -f json
+# {"method":"PUT","path":"/vm/101/hardware/ram","body":{"ram":4294967296}}
+
+sylve vm hardware-ram 101 --set ram=4294967296        # 4 GiB
+sylve vm hardware-cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2
+sylve vm options-boot-order 101 --set bootOrder=10 --set startAtBoot=true
+sylve vm options-shutdown-wait-time 101 --set waitTime=60
+```
+
+Slice list output to the rows and columns you need. `vm list` and
+`vm snapshot list` both take `-c/--column`, `--sort-column`, `--filter`,
+and `-l/--limit`, and both take `--long` for the full column set:
+
+```sh
+sylve vm list --long -c RID,Name,State,Node -l 5
+sylve vm list --filter State=RUNNING --sort-column Name
+sylve vm snapshot list 101 --long --sort-column Name --filter Name=pre -l 10
+sylve vm template list --filter Name=debian --sort-column Name -c ID,Name
+```
+
+Full snapshot lifecycle for a VM:
+
+```sh
+sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"
+sylve vm snapshot list 101 --long
+sylve vm snapshot rollback 101 1 --yes
+sylve vm snapshot delete 101 1 --yes
+```
+
+Capture a template, deploy from it, and migrate with a preflight check
+first. Draining a node for maintenance works the same way
+(`sylve node drain --help`):
+
+```sh
+sylve vm template capture 101 --name debian-web --wait
+sylve vm template list --filter Name=debian-web
+sylve vm create --template debian-web --node node2.example.test --rid 121 --yes
+sylve vm migrate 101 --target node2.example.test --dry-run   # preflight only
+sylve vm migrate 101 --target node2.example.test --wait
+sylve node drain node1.example.test --dry-run
+```
+
+Preview a ready-made definition file, overriding values on the command
+line. Run from the repo root so the relative cloud-init paths resolve:
+
+```sh
+sylve vm create --file examples/vm/fedora-cloud.yaml --dry-run -f json
+sylve vm create --file examples/vm/fedora-cloud.yaml --memory 8G --yes
 ```
 
 ## SEE ALSO

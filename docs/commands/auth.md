@@ -71,24 +71,39 @@ sylve auth login-config -f json
 }
 ```
 
-Issue an SSE token:
+Issue an SSE token for a monitoring job:
 
 ```sh
-sylve auth sse-token \
-  --set name=monitoring --set expiresIn=3600 \
-  --param dryRun=0 \
-  --node node1.example.test \
-  --format json
+sylve auth sse-token --node node1.example.test --format json
+# Prints the short-lived token id and expiry for SSE streams.
 ```
 
 Run passkey login and registration ceremonies:
 
 ```sh
-sylve auth passkey-login-begin --set username=admin -f json
+sylve auth passkey-login-begin -f json
 sylve auth passkey-login-finish --data @passkey-response.json -f json
 
 sylve auth passkey-register-begin -f json
 sylve auth passkey-register-finish --data @passkey-registration.json -f json
+```
+
+Preview the SSE token request without sending it (the endpoint takes no
+request body):
+
+```sh
+sylve auth sse-token --dry-run -f json
+```
+
+Preview the passkey registration and login finish requests (the real
+ceremonies need a live server and a WebAuthn response):
+
+```sh
+sylve auth passkey-login-begin --dry-run -f json
+sylve auth passkey-login-finish --set requestId=example-request --dry-run -f json
+sylve auth passkey-register-begin --set userId=2 --dry-run -f json
+sylve auth passkey-register-finish \
+  --set requestId=example-request --set label=example-key --dry-run -f json
 ```
 
 ## SEE ALSO

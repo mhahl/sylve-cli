@@ -139,6 +139,63 @@ sylve replication policy update 1 --set enabled=false -f json
 sylve replication policy delete 1 --yes
 ```
 
+Preview a policy rename before sending it:
+
+```sh
+sylve replication policy update 1 \
+  --set name=web-ha \
+  --set guestType=vm \
+  --set guestId=101 \
+  --set enabled=false \
+  --dry-run -f json
+```
+
+```json
+{
+  "method": "PUT",
+  "path": "/cluster/replication/policies/1",
+  "params": null,
+  "body": {
+    "name": "web-ha",
+    "guestType": "vm",
+    "guestId": 101,
+    "enabled": false
+  }
+}
+```
+
+Run the full create -> run -> follow-progress flow for one policy:
+
+```sh
+sylve replication policy create \
+  --name web-ha \
+  --guest-type vm \
+  --guest-id 101 \
+  --target node2.example.test:150 \
+  --cron '*/15 * * * *' \
+  --failover-mode manual \
+  --enabled
+# Created replication policy 'web-ha' for vm 101.
+sylve replication policy run 1
+# Queued replication run for policy #1.
+sylve replication event show 12 --wait
+```
+
+Queue a safe failover to a specific node (the default mode):
+
+```sh
+sylve replication policy failover 1 --target node2.example.test --mode safe
+# Queued safe failover of policy #1 to node2.example.test.
+```
+
+Slice list output with selection flags:
+
+```sh
+sylve replication policy list --long --filter name=web --sort-column name -l 5
+sylve replication event list --policy-id 1 --filter status=FAILED --sort-column created -l 10 --long
+sylve replication policy list -c ID -c Name -c 'Active Node' --filter enabled=true
+```
+
 ## SEE ALSO
 
 [sylve(1)](../../README.md),

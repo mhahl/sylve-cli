@@ -42,7 +42,7 @@ All subcommands accept:
 - `--dry-run`
   Print the request without sending it.
 - `-y, --yes`
-  Skip destructive-request confirmation.
+  Skip confirmation (destructive commands only, e.g. deletes).
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
@@ -79,12 +79,11 @@ Create, update, disable, and delete a share:
 
 ```sh
 sylve samba share-create \
-  --set name=media --set path=/zroot/media --set readOnly=false --set guestOk=true \
-  --param validate=1 \
+  --set name=media --set dataset=zroot/media --set enabled=true \
   --node node1.example.test \
   --format json
 
-sylve samba share-update 2 --set readOnly=true -f json
+sylve samba share-update 2 --set guest=true -f json
 sylve samba share-enable 2 --set enabled=false -f json
 sylve samba share-delete 2 --yes
 ```
@@ -94,7 +93,26 @@ Inspect and update global Samba settings and read audit logs:
 ```sh
 sylve samba config -f json
 sylve samba config-set --set workgroup=WORKGROUP --set serverString=Sylve -f json
-sylve samba audit-logs --param limit=20
+sylve samba audit-logs --param size=20
+```
+
+Preview a global config change and a share create with `--set`:
+
+```sh
+sylve samba config-set --set workgroup=EXAMPLE --set serverString=Example --dry-run -f json
+sylve samba share-create \
+  --set name=example-media --set dataset=tank/media --set enabled=true \
+  --dry-run -f json
+```
+
+Update, disable, and delete a share, and narrow list output:
+
+```sh
+sylve samba share-update 2 --set enabled=true --set timeMachine=false --dry-run -f json
+sylve samba share-enable 2 --set enabled=false --dry-run -f json
+sylve samba shares -c id -c name -c dataset --sort-column name -l 10
+sylve samba audit-logs -c id -c share -l 5
+sylve samba share-delete 2 --yes
 ```
 
 ## SEE ALSO

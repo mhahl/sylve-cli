@@ -51,7 +51,7 @@ All subcommands accept:
 - `--dry-run`
   Print the request without sending it.
 - `-y, --yes`
-  Skip destructive-request confirmation.
+  Skip confirmation (destructive commands only, e.g. deletes).
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
@@ -85,15 +85,50 @@ Create, update, test, and delete rules and transports:
 
 ```sh
 sylve notifications rule-create \
-  --set name=node-offline --set event=node.offline --set transportId=1 --set enabled=true
-sylve notifications rule-update 2 --set enabled=false -f json
+  --set templateKey=node-offline --set targetKey=mail --set uiEnabled=true --set emailEnabled=true
+sylve notifications rule-update 2 --set emailEnabled=false --set uiEnabled=true -f json
 sylve notifications rule-test \
   --set templateKey=node-offline --set targetKey=mail --set severity=warning
 
 sylve notifications transport-create \
-  --set name=mail --set type=email --set 'config={to: admin@example.test}'
+  --set name=mail --set type=email --set enabled=true
 sylve notifications transport-test 1
 sylve notifications transport-delete 1 --yes
+```
+
+Preview rule and transport creates and updates with `--set`:
+
+```sh
+sylve notifications rule-create \
+  --set templateKey=node-offline --set targetKey=mail \
+  --set uiEnabled=true --set emailEnabled=true \
+  --dry-run -f json
+sylve notifications rule-update 2 --set emailEnabled=false --set uiEnabled=true --dry-run -f json
+sylve notifications transport-create \
+  --set name=example-mail --set type=email --set enabled=true \
+  --dry-run -f json
+sylve notifications transport-update 1 --set enabled=false --dry-run -f json
+```
+
+Test delivery, bulk-update rules, and clean up:
+
+```sh
+sylve notifications rule-test \
+  --set templateKey=node-offline --set targetKey=mail --set severity=warning \
+  --dry-run -f json
+sylve notifications transport-test 1 --dry-run -f json
+sylve notifications rules -c id -c templateKey -c targetKey -l 10
+sylve notifications rules-bulk-update --set 'ids=[1,2]' --set emailEnabled=false --dry-run -f json
+sylve notifications rules-bulk-delete --set 'ids=[3,4]' --dry-run -f json
+sylve notifications rule-delete 2 --yes
+sylve notifications transport-delete 1 --yes
+```
+
+Preview dismissing notifications without sending anything:
+
+```sh
+sylve notifications dismiss 1 --dry-run -f json
+sylve notifications dismiss-all --dry-run -f json
 ```
 
 ## SEE ALSO

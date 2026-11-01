@@ -69,7 +69,7 @@ backup execution events.
 ### Generic Subcommands
 
 All generic backup subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
-`--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format` (reads also take
+`--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
 
@@ -117,7 +117,114 @@ sylve backup event show 7 --wait
 Create a target from a YAML payload file:
 
 ```sh
-sylve backup target create --data @target.yaml --param validate=1 --node node1.example.test -f json
+sylve backup target create --data @target.yaml --node node1.example.test -f json
+```
+
+Preview a new backup target before sending it:
+
+```sh
+sylve backup target create \
+  --set name=offsite \
+  --set sshHost=backup.example.test \
+  --set backupRoot=/tank/backups \
+  --set sshPort=22 \
+  --dry-run -f json
+```
+
+```json
+{
+  "method": "POST",
+  "path": "/cluster/backups/targets",
+  "params": null,
+  "body": {
+    "name": "offsite",
+    "sshHost": "backup.example.test",
+    "backupRoot": "/tank/backups",
+    "sshPort": 22
+  }
+}
+```
+
+Preview a new backup job before sending it:
+
+```sh
+sylve backup job create \
+  --set name=vm101-nightly \
+  --set mode=vm \
+  --set targetId=1 \
+  --set sourceDataset=zroot/vm/101 \
+  --set 'cronExpr=0 2 * * *' \
+  --set recursive=true \
+  --dry-run -f json
+```
+
+```json
+{
+  "method": "POST",
+  "path": "/cluster/backups/jobs",
+  "params": null,
+  "body": {
+    "name": "vm101-nightly",
+    "mode": "vm",
+    "targetId": 1,
+    "sourceDataset": "zroot/vm/101",
+    "cronExpr": "0 2 * * *",
+    "recursive": true
+  }
+}
+```
+
+Disable a job and rename a target with small `--set` updates:
+
+```sh
+sylve backup job update 3 --set mode=vm --set name=vm101-nightly --set targetId=1 --set enabled=false --dry-run -f json
+sylve backup target update 1 --set 'description=Nightly offsite' --set enabled=true --dry-run -f json
+```
+
+Run the full validate -> run -> follow-progress flow for one job:
+
+```sh
+sylve backup target validate 1
+# Backup target #1 validated successfully.
+sylve backup job run 3
+sylve backup event show 7 --wait
+sylve backup event list --job-id 3 --limit 10 --filter status=SUCCESS --long
+```
+
+Slice list output with selection flags:
+
+```sh
+sylve backup target list --long --sort-column name --filter enabled=true -l 5
+sylve backup target datasets 1 -c Name -c Size --sort-column name -l 5 --long
+sylve backup job snapshots 3 -c Name -c Created --filter name=auto --sort-column name -l 5
+sylve backup event list --job-id 3 --filter status=FAILED --sort-column created -l 10
+```
+
+Queue a dataset restore from a target and clean up with confirmation skipped:
+
+```sh
+sylve backup target restore 1 \
+  --set remoteDataset=tank/backups/vm-101 \
+  --set 'snapshot=zroot/vm/101@auto-2026-10-28' \
+  --set destinationDataset=zroot/vm/101-restored \
+  --dry-run -f json
+sylve backup job delete 3 --yes
+# Deleted backup job #3.
+sylve backup target delete 2 --yes
+# Deleted backup target #2.
+```
+
+```json
+{
+  "method": "POST",
+  "path": "/cluster/backups/targets/1/restore",
+  "params": null,
+  "body": {
+    "remoteDataset": "tank/backups/vm-101",
+    "snapshot": "zroot/vm/101@auto-2026-10-28",
+    "destinationDataset": "zroot/vm/101-restored"
+  }
+}
 ```
 
 ## SEE ALSO

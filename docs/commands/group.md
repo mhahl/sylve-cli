@@ -38,7 +38,7 @@ All subcommands accept:
 - `--dry-run`
   Print the request without sending it.
 - `-y, --yes`
-  Skip destructive-request confirmation.
+  Skip confirmation (destructive commands only, e.g. deletes).
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
@@ -74,12 +74,25 @@ Create a group, replace its member list, and delete it:
 
 ```sh
 sylve group create \
-  --set name=operators --set 'description=VM and jail operators' --set 'permissions=[vm:write,jail:write]' \
-  --param validate=1 \
+  --set name=operators --set 'members=[1,2]' \
   --node node1.example.test \
   --format json
 
-sylve group members 2 --set 'memberIds=[1,3]' -f json
+sylve group members 2 --set 'usernames=[ops,admin]' -f json
+sylve group delete 2 --yes
+```
+
+Preview a create (`members` is required) and a full member replacement:
+
+```sh
+sylve group create --set name=operators --set 'members=[1,2]' --dry-run -f json
+sylve group members 2 --set 'usernames=[ops,admin]' --dry-run -f json
+```
+
+List a few columns and delete with confirmation skipped:
+
+```sh
+sylve group list -c id -c name --sort-column name -l 10
 sylve group delete 2 --yes
 ```
 

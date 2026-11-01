@@ -198,7 +198,57 @@ Query audit logs and CPU history:
 
 ```sh
 sylve node audit-logs --node node1.example.test -f json -c User,Action,Path,Status
-sylve node cpu-history --param hours=24 -f json
+sylve node cpu-history -f json
+```
+
+Preview a targeted migration drain without executing it:
+
+```sh
+sylve node drain node1.example.test --target-node node2.example.test --dry-run
+```
+
+Preview a drain that stops guests failing migration preflight, leaving
+stopped guests in place:
+
+```sh
+sylve node drain node1.example.test --fallback-stop --running-only --dry-run
+```
+
+List nodes filtered to online hosts with selected columns:
+
+```sh
+sylve node list --filter Status=ONLINE -l 5 -c Hostname,Status,Guests,Version
+```
+
+Force-remove an offline, externally fenced peer without prompting:
+
+```sh
+sylve node remove node3.example.test --force --yes
+# Node node3.example.test has been removed from the cluster.
+```
+
+Reboot the connected node without prompting:
+
+```sh
+sylve node reboot --yes
+# Reboot initiated.
+```
+
+Filter audit logs to one action and limit the rows returned:
+
+```sh
+sylve node audit-logs --filter Action=login -l 5 -c Time,User,Action,Status
+sylve node audit-logs --node node1.example.test --filter Status=FAIL -l 10
+```
+
+Preview telemetry history requests without querying the server:
+
+```sh
+sylve node ram-history --dry-run
+sylve node network-history --dry-run
+sylve node swap-history --dry-run
+sylve node summary-history --dry-run
+sylve node summary-delta --dry-run
 ```
 
 ## SEE ALSO

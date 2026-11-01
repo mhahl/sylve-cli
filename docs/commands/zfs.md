@@ -68,7 +68,7 @@ manual snapshots, and scheduled periodic snapshot jobs across Sylve nodes.
 ### Generic Subcommands
 
 All remaining subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
-`--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format` (reads also take
+`--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
 
@@ -129,9 +129,44 @@ sylve zfs snapshot delete zroot/data@pre-upgrade --recursive --yes
 Create a periodic snapshot schedule via the generic endpoint:
 
 ```sh
-sylve zfs periodic create --param validate=1 --node node1.example.test \
-  --set pool=zroot --set prefix=auto --set 'cronExpr=0 * * * *' --set keepLast=24 --set recursive=true \
+sylve zfs periodic create --node node1.example.test \
+  --set guid=zroot --set prefix=auto --set keepLast=24 --set recursive=true \
   -f json
+```
+
+Slice list output to the rows and columns you need. The pool, dataset,
+snapshot, and periodic lists all take `-c/--column`, `--filter`, and
+`-l/--limit`; pool, dataset, and periodic lists also take `--long` and
+`--sort-column`:
+
+```sh
+sylve zfs pool list --all --long -c Name,State,Size,Free -l 5
+sylve zfs dataset list --type VOLUME --long --sort-column Name
+sylve zfs snapshot list --filter Name=pre --sort-column Name -l 10
+sylve zfs periodic list --long --filter Prefix=auto
+```
+
+Full snapshot lifecycle, then a recurring schedule on top:
+
+```sh
+sylve zfs snapshot create zroot/data --name pre-upgrade --node node1.example.test
+sylve zfs snapshot list --filter Name=pre-upgrade
+sylve zfs snapshot rollback zroot/data@pre-upgrade --destroy-more-recent --yes
+sylve zfs periodic create --node node1.example.test \
+  --set guid=zroot --set prefix=auto --set keepLast=24 --set recursive=true
+sylve zfs periodic list --filter Prefix=auto
+sylve zfs snapshot delete zroot/data@pre-upgrade --yes
+```
+
+Tune a dataset or volume without JSON, previewing the exact request
+first. Dotted `--set` keys nest into the `properties` object:
+
+```sh
+sylve zfs dataset edit <guid> --set properties.compression=lz4 --dry-run -f json
+sylve zfs dataset edit <guid> --set properties.compression=lz4
+sylve zfs dataset volume-edit <guid> --set properties.volsize=10737418240 --dry-run -f json
+# 10737418240 bytes = 10 GiB
+sylve zfs pool detach <guid> --set device=/dev/da1 --dry-run -f json
 ```
 
 ## SEE ALSO

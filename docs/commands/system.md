@@ -50,7 +50,7 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
 - `--dry-run`
   Print the request without sending it.
 - `-y, --yes`
-  Skip destructive-request confirmation.
+  Skip confirmation (destructive commands only, e.g. deletes).
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
@@ -104,8 +104,7 @@ Set a kernel tunable:
 
 ```sh
 sylve system tunable-set \
-  --set name=kern.maxfiles --set 'value="200000"' --set comment='raised for jails' \
-  --param dryRun=0 \
+  --set name=kern.maxfiles --set 'value="200000"' \
   --node node1.example.test \
   --format json
 ```
@@ -128,6 +127,110 @@ sylve system file-download --param id=/root/config.json --output ./config.json -
 sylve system cert-archive 7 --output ./cert-7.zip
 sylve system events --lines 20
 sylve system terminal --node node1.example.test
+```
+
+Preview a tunable change before sending it:
+
+```sh
+sylve system tunable-set \
+  --set name=kern.maxfiles --set 'value="200000"' \
+  --dry-run -f json
+```
+
+```json
+{
+  "method": "PUT",
+  "path": "/system/tunables",
+  "params": null,
+  "body": {
+    "name": "kern.maxfiles",
+    "value": "200000"
+  }
+}
+```
+
+Narrow list output with selection flags (reads only):
+
+```sh
+sylve system tunables -c Name -c Value --filter name=kern --sort-column name -l 5
+sylve system disk-list -c Name -c Size -c Model --sort-column name -l 5
+sylve system cert-list --filter name=web --sort-column name -l 5
+sylve system notes-list -c ID -c Title --filter title=Maintenance -l 5
+```
+
+Schedule SMART self-tests, then adjust and remove the schedule:
+
+```sh
+sylve system disk-smart-schedule-create \
+  --set device=ada0 --set testType=long --set 'cronExpr=0 2 * * 0' \
+  --dry-run -f json
+sylve system disk-smart-schedule-update 1 \
+  --set device=ada0 --set testType=short --set 'cronExpr=0 3 * * 0' \
+  --dry-run -f json
+sylve system disk-smart-start --set device=ada0 --set testType=short --dry-run -f json
+sylve system disk-smart-schedule-delete 1 --yes --dry-run -f json
+```
+
+```json
+{
+  "method": "POST",
+  "path": "/disk/smart/self-test/schedules",
+  "params": null,
+  "body": {
+    "device": "ada0",
+    "testType": "long",
+    "cronExpr": "0 2 * * 0"
+  }
+}
+```
+
+Enable a service, create a file, and delete files with confirmation skipped:
+
+```sh
+sylve system service sshd --set enabled=true --dry-run -f json
+sylve system file-create --set path=/root --set name=notes.txt --set isFolder=false --dry-run -f json
+sylve system file-delete --set 'paths=[/root/old.iso]' --yes --dry-run -f json
+```
+
+```json
+{
+  "method": "PATCH",
+  "path": "/system/basic-settings/services/sshd",
+  "params": null,
+  "body": {
+    "enabled": true
+  }
+}
+```
+
+Full certificate lifecycle with dry-run previews and a confirmation-safe delete:
+
+```sh
+sylve system cert-create --set name=web --set domain=example.test --dry-run -f json
+sylve system cert-update 7 --set name=web-renamed --dry-run -f json
+sylve system cert-activate 7 --dry-run -f json
+sylve system cert-renew 7 --dry-run -f json
+sylve system cert-delete 7 --yes --dry-run -f json
+```
+
+```json
+{
+  "method": "POST",
+  "path": "/certificates",
+  "params": null,
+  "body": {
+    "name": "web",
+    "domain": "example.test"
+  }
+}
+```
+
+Update a host note and delete it without a prompt:
+
+```sh
+sylve system notes-create --set title=Maintenance --set 'content=Disk replacement 22:00' --dry-run -f json
+sylve system notes-update 3 --set title=Maintenance --set content=Done --dry-run -f json
+sylve system notes-delete 3 --yes --dry-run -f json
 ```
 
 ## SEE ALSO

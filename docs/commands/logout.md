@@ -62,6 +62,24 @@ sylve --context prod --config /home/admin/.config/sylve/prod.yaml logout
 Logged out of context prod (https://sylve.example.test).
 ```
 
+Log out of a stateless session that uses environment variables instead of
+a saved context:
+
+```sh
+SYLVE_SERVER=https://sylve.example.test SYLVE_TOKEN=eyJhbGciOi... sylve logout
+```
+
+```text
+Logged out of context env (https://sylve.example.test).
+```
+
+Confirm the session is gone:
+
+```sh
+sylve whoami
+# error: no context or token is configured (exit 1).
+```
+
 ## SEE ALSO
 
 [sylve(1)](../../README.md),

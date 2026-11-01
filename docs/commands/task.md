@@ -63,8 +63,12 @@ lifecycle or migration tasks created by Sylve. Task IDs are returned by
 
 - `TASK_ID` (required)
   Migration task ID.
+- `-y, --yes`
+  Skip confirmation prompt.
 - `-n, --node NODE`
   Target node.
+- `-f, --format`
+  Standard output option.
 
 ### `task active`
 
@@ -130,6 +134,49 @@ Query the active task for VM `101`:
 
 ```sh
 sylve task active vm 101 -f json
+```
+
+List only active tasks across all nodes, filtered and sorted:
+
+```sh
+sylve task list --active -f table -c ID,Node,Action,Status --sort-column Status
+sylve task list --active --guest-type jail --filter Status=RUNNING
+```
+
+List recent tasks for one guest with a small page size:
+
+```sh
+sylve task list --recent --guest-type vm --guest-id 101 -l 5
+sylve task list --recent --guest-type jail -l 10 --node node1.example.test -f json
+```
+
+Wait with a short timeout and show the completion output:
+
+```sh
+sylve task wait 42 --timeout 30
+# Task #42 completed: SUCCESS.
+```
+
+Cancel a migration without prompting:
+
+```sh
+sylve task cancel-migration 43 --yes --node node1.example.test
+# Requested cancellation of migration task #43.
+```
+
+Preview the active-task request for a jail without querying the server:
+
+```sh
+sylve task active jail 5 --dry-run
+```
+
+```text
+Dry run: GET /tasks/lifecycle/active/jail/5
+ Field   Value
+ method  GET
+ path    /tasks/lifecycle/active/jail/5
+ params  -
+ body    -
 ```
 
 ## SEE ALSO

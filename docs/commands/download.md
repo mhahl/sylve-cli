@@ -118,7 +118,7 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
 - `file UUID` and `file-with-name UUID FILENAME` require `--output, -o PATH` and
   accept `--param, -p KEY=VALUE` and `-n, --node NODE`.
 - `update ID`, `utype`, and `abort-upload ID` accept `--data/-d`, `--set/-s`,
-  `--param/-p`, `--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format`
+  `--param/-p`, `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format`
   (reads also take `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`).
   Small updates need no JSON; see [sylve-options(7)](../global-options.md).
 
@@ -169,14 +169,82 @@ Generate a signed URL and fetch the file locally:
 
 ```sh
 sylve download signed-url --uuid 8f14... --name debian-13.iso
-sylve download file 8f14... --param token=... --output ./debian-13.iso
+sylve download file 8f14... --param sig=SIGNATURE --param expires=1790000000 --output ./debian-13.iso
 # Saved to debian-13.iso
 ```
 
 Update download metadata via the generic endpoint:
 
 ```sh
-sylve download update 1 --set name=debian-13-cloudinit.iso --param validate=1 --node node1.example.test -f json
+sylve download update 1 --set name=debian-13-cloudinit.iso --node node1.example.test -f json
+```
+
+Preview a metadata rename before sending it:
+
+```sh
+sylve download update 1 --set name=debian-13-cloudinit.iso --dry-run -f json
+```
+
+```json
+{
+  "method": "PATCH",
+  "path": "/utilities/downloads/1",
+  "params": null,
+  "body": {
+    "name": "debian-13-cloudinit.iso"
+  }
+}
+```
+
+Preview extraction and format-conversion flags before sending them:
+
+```sh
+sylve download update 1 --set automaticExtraction=false --set automaticRawConversion=true --dry-run -f json
+```
+
+```json
+{
+  "method": "PATCH",
+  "path": "/utilities/downloads/1",
+  "params": null,
+  "body": {
+    "automaticExtraction": false,
+    "automaticRawConversion": true
+  }
+}
+```
+
+Run the full start -> list -> signed-url -> fetch flow:
+
+```sh
+sylve download start https://example.test/debian-13.iso \
+  --filename debian-13.iso \
+  --type cloud-init \
+  --pool zroot \
+  --node node1.example.test
+# Queued download debian-13.iso (UUID: 8f14...).
+sylve download list --node node1.example.test --filter status=RUNNING --sort-column name -l 5 --long
+sylve download show 8f14... -c UUID -c Name -c Status --node node1.example.test
+sylve download signed-url --uuid 8f14... --name debian-13.iso --node node1.example.test
+sylve download file 8f14... --param sig=SIGNATURE --param expires=1790000000 --output ./debian-13.iso
+# Saved to debian-13.iso
+```
+
+Slice list and storage output with selection flags:
+
+```sh
+sylve download list -c ID -c Name -c Status --filter status=READY --sort-column name -l 10
+sylve download list --long --filter node=node1.example.test -l 5
+sylve download storage -c Pool -c Path --filter pool=zroot -l 5 --node node1.example.test
+```
+
+Delete one download or a batch without a prompt:
+
+```sh
+sylve download delete 1 --yes --node node1.example.test
+# Deleted download #1.
+sylve download delete 2 3 4 --yes --node node1.example.test
+# Deleted 3 downloads.
 ```
 
 ## SEE ALSO

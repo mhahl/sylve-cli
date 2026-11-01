@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `jail create` no longer takes a raw `--data` body; use flags, `--file`
   (the old `--data @jail.yaml` file works as `--file jail.yaml`), or `--set`.
   Generic `--data` remains as an escape hatch for the other commands.
+- Every command guide now carries `--set`-based examples with `--dry-run`
+  previews, selection-flag usage, and multi-step flows; stale examples were
+  corrected to the `swagger.json` contract (real body fields, no invented
+  `--param validate/dryRun/sendWelcome`, `-y/--yes` scoped to destructive
+  commands only).
 
 ### Fixed
 - Output conventions are now uniform: every list takes `-c/--column`,

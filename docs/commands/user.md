@@ -44,7 +44,7 @@ All subcommands accept:
 - `--dry-run`
   Print the request without sending it.
 - `-y, --yes`
-  Skip destructive-request confirmation.
+  Skip confirmation (destructive commands only, e.g. deletes).
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
@@ -67,9 +67,9 @@ history in a file):
 {
   "username": "ops",
   "password": "secret",
-  "authType": "sylve",
+  "admin": true,
   "uid": 1001,
-  "groups": [1]
+  "fullName": "Operations"
 }
 ```
 
@@ -77,7 +77,7 @@ history in a file):
 sylve user list -f json
 sylve user create \
   --data @ops-user.json \
-  --param sendWelcome=0 \
+  --node node1.example.test \
   --node node1.example.test \
   --format json
 ```
@@ -86,7 +86,7 @@ Import a Unix user, create a PAM account, and query the next UID:
 
 ```sh
 sylve user importable -f json
-sylve user import --set username=mark --set uid=1000
+sylve user import --set username=mark --set admin=false
 sylve user pam-create --set username=ops-pam
 sylve user next-uid
 ```
@@ -97,6 +97,41 @@ Update a user, manage passkeys, and delete an account:
 sylve user update 2 --set fullName=Operations -f json
 sylve user passkeys 2
 sylve user passkey-delete 2 cred-abc
+sylve user delete 2 --yes
+```
+
+Create a local account with the password kept in a file (never inline):
+
+```json
+{
+  "username": "ops",
+  "password": "secret",
+  "admin": false,
+  "fullName": "Operations"
+}
+```
+
+```sh
+sylve user create --data @ops-user.json --dry-run -f json
+sylve user list -c id -c username -c admin --sort-column username -l 10
+```
+
+Preview an update, import a host user, and register a PAM account:
+
+```sh
+sylve user update 2 --set fullName=Operations --set admin=false --dry-run -f json
+sylve user import --set username=ops --set admin=false --dry-run -f json
+sylve user pam-create \
+  --set username=ops-pam --set admin=false --set uid=1001 --set homeDirPerms=755 \
+  --dry-run -f json
+sylve user importable -c username -c uid --filter username=ops -l 5
+```
+
+List passkeys for a user and delete one with confirmation skipped:
+
+```sh
+sylve user passkeys 2 -c credentialId -c label -l 10
+sylve user passkey-delete 2 cred-abc --yes --dry-run -f json
 sylve user delete 2 --yes
 ```
 

@@ -38,7 +38,7 @@ All subcommands accept:
 - `--dry-run`
   Print the request without sending it.
 - `-y, --yes`
-  Skip destructive-request confirmation.
+  Skip confirmation (destructive commands only, e.g. deletes).
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
@@ -92,12 +92,30 @@ networkConfig: |
 ```sh
 sylve cloud-init template-create \
   --data @template.yaml \
-  --param validate=1 \
   --node node1.example.test \
   --format json
 
-sylve cloud-init template-update 2 --set description=Updated -f json
 sylve cloud-init template-delete 2 --yes
+```
+
+Preview a create with `--set` fields and show the request:
+
+```sh
+sylve cloud-init template-create \
+  --set name=example-base --set user=example-user \
+  --set meta=example-meta --set networkConfig=example-net \
+  --dry-run -f json
+```
+
+Update a template, narrow the list to a few columns, and delete:
+
+```sh
+sylve cloud-init template-update 1 \
+  --set name=example-base-v2 --set user=example-user \
+  --set meta=example-meta --set networkConfig=example-net \
+  --dry-run -f json
+sylve cloud-init templates -c id -c name --sort-column name -l 5
+sylve cloud-init template-delete 1 --yes
 ```
 
 ## SEE ALSO

@@ -191,6 +191,40 @@ sylve config delete-context old
 # Deleted context old.
 ```
 
+Select columns, filter, and limit the context list:
+
+```sh
+sylve config get-contexts -c name,server,default_node
+sylve config get-contexts --filter name=admin -l 1
+sylve config get-contexts --sort-column name -f json
+```
+
+Clear the default node with any of the equivalent spellings:
+
+```sh
+sylve config set-node none
+# Cleared default node for context admin@sylve.example.test (operating cluster-wide).
+
+sylve config set-node -
+# Cleared default node for context admin@sylve.example.test (operating cluster-wide).
+```
+
+Check the configuration file for problems:
+
+```sh
+sylve config validate
+# Checked 1 context(s) in /home/admin/.config/sylve/config.yaml.
+# Configuration is valid.
+```
+
+An expired token produces a warning and exit status `1`:
+
+```sh
+sylve config validate
+# warning: context 'admin@sylve.example.test': token expired (run 'sylve login')
+# Checked 1 context(s) in /home/admin/.config/sylve/config.yaml.
+```
+
 ## SEE ALSO
 
 [sylve(1)](../../README.md),

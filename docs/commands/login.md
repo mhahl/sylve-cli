@@ -108,6 +108,52 @@ Login successful! Logged into https://sylve.example.test as token-user (sylve).
 Context ci saved to /home/admin/.config/sylve/config.yaml.
 ```
 
+Request a 7-day token and pin a default node for the context:
+
+```sh
+sylve login https://sylve.example.test \
+  --username admin \
+  --remember \
+  --default-node node1.example.test \
+  --context-name prod
+```
+
+```text
+Password:
+Login successful! Logged into https://sylve.example.test as admin (sylve).
+Connected node: node1.example.test (node-1)
+Session token valid until 2026-11-08T12:00:00Z (6d 23h 59m remaining).
+Context prod saved to /home/admin/.config/sylve/config.yaml.
+```
+
+Log in over TLS without verifying the server certificate (lab use only):
+
+```sh
+sylve login https://sylve.example.test --username admin -k --context-name lab
+```
+
+```text
+Password:
+Login successful! Logged into https://sylve.example.test as admin (sylve).
+Connected node: node1.example.test (node-1)
+Session token valid until 2026-11-02T12:00:00Z (23h 59m remaining).
+Context lab saved to /home/admin/.config/sylve/config.yaml.
+```
+
+Refresh an expiring session by logging in again to the same context:
+
+```sh
+sylve login https://sylve.example.test --username admin --context-name prod
+```
+
+```text
+Password:
+Login successful! Logged into https://sylve.example.test as admin (sylve).
+Connected node: node1.example.test (node-1)
+Session token valid until 2026-11-08T12:00:00Z (6d 23h 59m remaining).
+Context prod saved to /home/admin/.config/sylve/config.yaml.
+```
+
 ## SEE ALSO
 
 [sylve(1)](../../README.md),
