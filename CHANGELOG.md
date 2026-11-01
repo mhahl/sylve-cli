@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   goes quiet or dies: TCP keepalive plus a periodic client ping keeps idle
   sessions alive through NATs/proxies, reads are bounded so `~.` detach keeps
   working, and a lost connection prints an error instead of hanging.
+- A generic command run with no path argument, body, or parameters prints its
+  `--help` instead of erroring (like a bare command group); anything else
+  supplied with a wrong path-argument count is a usage error (exit `2`).
 
 ## [0.3.1] - 2026-10-30
 

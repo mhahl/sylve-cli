@@ -96,6 +96,10 @@ applicable:
 
 Commands that wrap Sylve API endpoints directly accept:
 
+Run one with nothing supplied and it prints its own `--help` instead of
+erroring. A wrong or missing path argument with anything else supplied is a
+usage error (exit `2`).
+
 - `-d, --data BODY`
   Base JSON or YAML request body, or `@FILE` to read the body from disk.
 - `-s, --set KEY=VALUE`

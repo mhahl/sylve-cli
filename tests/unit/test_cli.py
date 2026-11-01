@@ -319,6 +319,23 @@ def test_generic_help_lists_settable_fields(cli_env: Path) -> None:
     assert "Settable body fields" not in tunables.stdout
 
 
+def test_generic_bare_command_shows_help(cli_env: Path) -> None:
+    """A generic command with nothing supplied prints help, like bare groups."""
+    bare = runner.invoke(app, ["vm", "hardware-cpu"])
+    assert bare.exit_code == 0
+    assert "Usage:" in bare.stdout
+    assert "Settable body fields" in bare.stdout
+
+    # Options but no path argument is a usage error, not an API failure.
+    partial = runner.invoke(app, ["vm", "hardware-cpu", "--set", "cores=4"])
+    assert partial.exit_code == 2
+
+    # Read commands without path placeholders still execute when bare.
+    listed = runner.invoke(app, ["system", "pci-list", "-f", "json"])
+    assert listed.exit_code == 0
+    assert json.loads(listed.stdout)[0]["bus"] == 1
+
+
 def test_generic_set_rejects_bad_input() -> None:
     missing_equals = runner.invoke(
         app, ["vm", "hardware-cpu", "101", "--set", "oops", "--dry-run", "-f", "json"]

@@ -312,8 +312,28 @@ def _execute_generic(
     limit: int | None = None,
 ) -> None:
     """Run one generic API request and print the result."""
+    try:
+        target_path = _path_for(path, args)
+    except SylveError as exc:
+        # Wrong path-argument count with no body or parameters either: the
+        # user is exploring, so show this command's help like a bare command
+        # group does. Anything else supplied means a real (broken) invocation,
+        # reported as a usage error (exit 2) with the command's usage.
+        # ctx.fail() raises the UsageError class of this app's click copy, so
+        # the error is rendered (not dumped as a traceback) on every runner.
+        if (
+            not data
+            and not set_values
+            and not param
+            and not selected
+            and not sort_column
+            and not filters
+            and not limit
+        ):
+            typer.echo(ctx.get_help())
+            raise typer.Exit(0)
+        ctx.fail(str(exc))
     state: CLIState = ctx.obj
-    target_path = _path_for(path, args)
     body = _merge_body(data, set_values)
     params = _parse_params(param)
     if dry_run:
