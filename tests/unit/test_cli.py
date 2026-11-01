@@ -450,6 +450,37 @@ def test_sse_events_and_firewall_logs_cursor(cli_env: Path) -> None:
     assert items[0]["action"] == "pass"
 
 
+def test_console_frame_timeout_breaks_instead_of_hanging() -> None:
+    import socket as socket_mod
+
+    from sylve_cli.console_ws import _enable_keepalive, decode_server_frame
+
+    class _StalledSock:
+        def recv(self, n: int) -> bytes:
+            raise TimeoutError("timed out")
+
+    # A stalled connection surfaces as a catchable timeout (the attach loop
+    # turns it into "back to select"), not an eternal block...
+    with pytest.raises(socket_mod.timeout):
+        decode_server_frame(_StalledSock(), bytearray())
+
+    # ...and bytes of a partial frame already read are preserved for resume.
+    buf = bytearray(b"\x82")
+    with pytest.raises(socket_mod.timeout):
+        decode_server_frame(_StalledSock(), buf)
+    assert buf == bytearray(b"\x82")
+
+    # Keepalive setup is best-effort and must never raise on odd platforms.
+    seen: list[tuple[int, int, int]] = []
+
+    class _OptSock:
+        def setsockopt(self, level: int, opt: int, value: int) -> None:
+            seen.append((level, opt, value))
+
+    _enable_keepalive(_OptSock())
+    assert any(opt == socket_mod.SO_KEEPALIVE for _, opt, _ in seen)
+
+
 def test_console_ws_auth_and_protocol() -> None:
     import hashlib
 

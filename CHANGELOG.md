@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `-p` no longer means `--password` on `login` (long form only), so `-p`
   unambiguously means `--param`/`--port`/`--pool` elsewhere and secrets stay
   out of `ps` and shell history by default.
+- `jail/vm console` and `system terminal` no longer freeze when the connection
+  goes quiet or dies: TCP keepalive plus a periodic client ping keeps idle
+  sessions alive through NATs/proxies, reads are bounded so `~.` detach keeps
+  working, and a lost connection prints an error instead of hanging.
 
 ## [0.3.1] - 2026-10-30
 

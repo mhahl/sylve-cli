@@ -16,6 +16,7 @@ import socket
 import ssl
 import struct
 import sys
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse
@@ -38,6 +39,17 @@ _OP_BINARY = 0x2
 _OP_CLOSE = 0x8
 _OP_PING = 0x9
 _OP_PONG = 0xA
+
+# Bounds a single socket read so a stalled connection can never wedge the
+# event loop: partial-frame bytes stay in the caller's buffer and the loop
+# goes back to select, keeping keystrokes (including ~.) live.
+_RECV_TIMEOUT = 10.0
+# Idle consoles die silently behind NATs and proxies; a periodic ping keeps
+# the path alive and turns a dead peer into an error instead of a frozen screen.
+_PING_INTERVAL = 20.0
+_KEEPALIVE_IDLE = 20
+_KEEPALIVE_INTERVAL = 5
+_KEEPALIVE_COUNT = 3
 
 CTRL_INPUT = b"\x00"
 CTRL_RESIZE = b"\x01"
@@ -226,6 +238,7 @@ def _open_websocket(
     port = parsed.port or (443 if scheme == "https" else 80)
 
     raw_sock: Any = socket.create_connection((host, port), timeout=client.timeout)
+    _enable_keepalive(raw_sock)
     if scheme == "https":
         if client.context.verify_ssl:
             ssl_ctx = ssl.create_default_context()
@@ -302,6 +315,25 @@ def _open_websocket(
     return sock, rest
 
 
+def _enable_keepalive(raw_sock: Any) -> None:
+    """Turn on TCP keepalive so a silently dropped connection surfaces fast.
+
+    Without this, a NAT or proxy that discards an idle console connection
+    leaves the reader waiting forever: the classic frozen console.
+    """
+    try:
+        raw_sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        idle = getattr(socket, "TCP_KEEPIDLE", getattr(socket, "TCP_KEEPALIVE", None))
+        if idle is not None:
+            raw_sock.setsockopt(socket.IPPROTO_TCP, idle, _KEEPALIVE_IDLE)
+        if hasattr(socket, "TCP_KEEPINTVL"):
+            raw_sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, _KEEPALIVE_INTERVAL)
+        if hasattr(socket, "TCP_KEEPCNT"):
+            raw_sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, _KEEPALIVE_COUNT)
+    except OSError:
+        pass
+
+
 def build_resize_frame(cols: int, rows: int) -> bytes:
     """Build a resize control frame (``0x01`` + JSON ``{"rows": R, "cols": C}``)."""
     body = json.dumps({"rows": max(1, rows), "cols": max(1, cols)}, separators=(",", ":")).encode(
@@ -364,6 +396,10 @@ def attach_console(
     params["auth"] = auth_hex
 
     sock, buffer = _open_websocket(client, path, params, target_host)
+    # Bound reads (not the handshake above): a stalled server then raises
+    # TimeoutError instead of wedging the loop, and sends fail fast instead
+    # of hanging on a dead connection.
+    sock.settimeout(_RECV_TIMEOUT)
     if banner:
         err_console.print(f"[dim]{banner} (press Enter, then type ~. to detach)[/dim]")
 
@@ -406,22 +442,42 @@ def attach_console(
 
     at_line_start = True
     pending = b""
+    last_ping = time.monotonic()
     try:
         while True:
             events = sel.select(timeout=1.0)
+            if not events:
+                # Idle consoles die silently behind NATs/proxies; pinging keeps
+                # the path alive and turns a dead peer into an error message.
+                if time.monotonic() - last_ping >= _PING_INTERVAL:
+                    try:
+                        sock.sendall(encode_client_frame(b"", _OP_PING))
+                    except OSError:
+                        err_console.print("[red]Console connection lost.[/red]")
+                        return
+                    last_ping = time.monotonic()
+                continue
             for key, _ in events:
                 if key.fileobj is sock:
                     while True:
-                        frame = decode_server_frame(sock, buffer)
+                        try:
+                            frame = decode_server_frame(sock, buffer)
+                        except TimeoutError:
+                            # Partial frame still arriving; back to select so
+                            # keystrokes (including ~.) keep working.
+                            break
                         if frame is None:
                             return
                         opcode, payload = frame
                         if opcode == _OP_CLOSE:
                             return
                         if opcode == _OP_PING:
-                            sock.sendall(encode_client_frame(payload, _OP_PONG))
-                            continue
-                        if opcode == _OP_TEXT:
+                            try:
+                                sock.sendall(encode_client_frame(payload, _OP_PONG))
+                            except OSError:
+                                err_console.print("[red]Console connection lost.[/red]")
+                                return
+                        elif opcode == _OP_TEXT:
                             text = payload.decode("utf-8", errors="replace")
                             try:
                                 msg = json.loads(text)
@@ -444,11 +500,20 @@ def attach_console(
                         pending + raw, at_line_start
                     )
                     if forwarded:
-                        sock.sendall(encode_client_frame(CTRL_INPUT + forwarded, _OP_BINARY))
+                        try:
+                            sock.sendall(encode_client_frame(CTRL_INPUT + forwarded, _OP_BINARY))
+                        except OSError:
+                            err_console.print("[red]Console connection lost.[/red]")
+                            return
                     if detach:
                         if kill_on_exit:
                             kill_body = json.dumps({"kill": ""}).encode("utf-8")
-                            sock.sendall(encode_client_frame(CTRL_EXTRA + kill_body, _OP_BINARY))
+                            try:
+                                sock.sendall(
+                                    encode_client_frame(CTRL_EXTRA + kill_body, _OP_BINARY)
+                                )
+                            except OSError:
+                                pass
                         return
     finally:
         sel.close()
