@@ -50,7 +50,8 @@ manual snapshots, and scheduled periodic snapshot jobs across Sylve nodes.
 
 ### `snapshot`
 
-- `list`: `-n/--node`, `-f/--format`, `-c/--column`, `--sort-column`.
+- `list`: `-n/--node`, `-f/--format`, `-c/--column`, `--sort-column`,
+  `--filter COLUMN=VALUE`, `-l/--limit N`.
 - `create DATASET`: `DATASET` (name or GUID), `--name, -m NAME` (required,
   snapshot name after `@`), `-r, --recursive / --no-recursive` (default: off),
   `-n/--node`.
@@ -61,12 +62,15 @@ manual snapshots, and scheduled periodic snapshot jobs across Sylve nodes.
 
 ### `periodic`
 
-- `list`: `-n/--node`, `-f/--format`, `-c/--column`, `--long`.
+- `list`: `-n/--node`, `-f/--format`, `-c/--column`, `--sort-column NAME`,
+  `--filter COLUMN=VALUE`, `-l/--limit N`, `--long`.
 
 ### Generic Subcommands
 
-All remaining subcommands accept `--data/-d`, `--param/-p`, `-y/--yes`,
-`-n/--node`, and `-f/--format`:
+All remaining subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+`--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format` (reads also take
+`-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
+need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
@@ -126,7 +130,7 @@ Create a periodic snapshot schedule via the generic endpoint:
 
 ```sh
 sylve zfs periodic create --param validate=1 --node node1.example.test \
-  --data '{"pool":"zroot","prefix":"auto","cronExpr":"0 * * * *","keepLast":24,"recursive":true}' \
+  --set pool=zroot --set prefix=auto --set 'cronExpr=0 * * * *' --set keepLast=24 --set recursive=true \
   -f json
 ```
 

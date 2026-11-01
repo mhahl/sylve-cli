@@ -259,6 +259,120 @@ def test_dynamic_system_command(cli_env: Path) -> None:
     assert data[0]["bus"] == 1
 
 
+def test_generic_set_replaces_inline_json() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "system",
+            "tunable-set",
+            "--set",
+            "name=kern.maxfiles",
+            "--set",
+            "value=200000",
+            "--dry-run",
+            "-f",
+            "json",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["method"] == "PUT"
+    assert payload["path"] == "/system/tunables"
+    assert payload["body"] == {"name": "kern.maxfiles", "value": 200000}
+
+
+def test_generic_set_merges_over_data() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "vm",
+            "hardware-cpu",
+            "101",
+            "--data",
+            '{"sockets": 1}',
+            "--set",
+            "cores=4",
+            "--dry-run",
+            "-f",
+            "json",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    assert json.loads(result.stdout)["body"] == {"sockets": 1, "cores": 4}
+
+
+def test_generic_set_rejects_bad_input() -> None:
+    missing_equals = runner.invoke(
+        app, ["vm", "hardware-cpu", "101", "--set", "oops", "--dry-run", "-f", "json"]
+    )
+    assert missing_equals.exit_code == 1
+
+    non_object = runner.invoke(
+        app,
+        ["vm", "hardware-cpu", "101", "--data", "[1, 2]", "--set", "a=1", "--dry-run"],
+    )
+    assert non_object.exit_code == 1
+
+
+def test_every_leaf_command_renders_help() -> None:
+    """Every registered command must render help (catches wiring mistakes)."""
+    from click import Context
+    from typer.main import get_command
+
+    root = get_command(app)
+    leafs: list[tuple[tuple[str, ...], object]] = []
+
+    def walk(command: object, prefix: tuple[str, ...]) -> None:
+        children = getattr(command, "commands", None)
+        if children:
+            for name, child in children.items():
+                walk(child, (*prefix, name))
+        else:
+            leafs.append((prefix, command))
+
+    walk(root, ())
+    assert len(leafs) > 300
+    for path, command in leafs:
+        if path[0] == "server":
+            continue
+        text = command.get_help(Context(command))  # type: ignore[union-attr]
+        assert "Usage:" in text, f"help output missing Usage for: {' '.join(path)}"
+
+
+def test_power_and_snapshot_machine_output_is_pure_json(cli_env: Path) -> None:
+    """Machine output must parse as JSON with no prose lines mixed in."""
+    cases = (
+        ["vm", "start", "web", "-f", "json"],
+        ["jail", "start", "app", "-f", "json"],
+        ["vm", "snapshot", "create", "web", "--name", "s1", "-f", "json"],
+        ["jail", "snapshot", "create", "app", "--name", "s1", "-f", "json"],
+        ["vm", "rename", "web", "web2", "-f", "json"],
+        ["jail", "rename", "app", "app2", "-f", "json"],
+        ["vm", "template", "capture", "web", "--name", "t1", "-f", "json"],
+        ["backup", "job", "restore", "3", "--snapshot", "snap1", "-f", "json"],
+    )
+    for args in cases:
+        result = runner.invoke(app, args)
+        assert result.exit_code == 0, (args, result.stdout)
+        json.loads(result.stdout)
+
+
+def test_generic_read_selection(cli_env: Path) -> None:
+    projected = runner.invoke(app, ["system", "pci-list", "-c", "bus", "-f", "json"])
+    assert projected.exit_code == 0
+    assert json.loads(projected.stdout) == [{"bus": 1}]
+
+    filtered = runner.invoke(app, ["system", "pci-list", "--filter", "bus=9", "-f", "json"])
+    assert filtered.exit_code == 0
+    assert json.loads(filtered.stdout) == []
+
+
+def test_login_password_has_no_short_flag() -> None:
+    out = runner.invoke(app, ["login", "--help"]).stdout
+    assert "--password" in out
+    assert "-p," not in out
+
+
 def test_api_and_formatter_errors_exit_nonzero(cli_env: Path) -> None:
     missing = runner.invoke(app, ["vm", "show", "999", "-f", "json"])
     assert missing.exit_code == 1

@@ -70,7 +70,8 @@ lifecycle or migration tasks created by Sylve. Task IDs are returned by
 
 - `GUEST_TYPE GUEST_ID` (required)
   Guest type (`vm` or `jail`) and guest ID.
-- `-d, --data`, `-p, --param`, `-n, --node`, `-f, --format`
+- `-d, --data`, `-s, --set`, `-p, --param`, `--dry-run`, `-n, --node`,
+  `-f, --format`, `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
   Generic API options. `task active` is read-only and has no `--yes`.
 
 ## EXIT STATUS

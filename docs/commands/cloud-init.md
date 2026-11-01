@@ -31,14 +31,20 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -90,7 +96,7 @@ sylve cloud-init template-create \
   --node node1.example.test \
   --format json
 
-sylve cloud-init template-update 2 --data '{"description":"Updated"}' -f json
+sylve cloud-init template-update 2 --set description=Updated -f json
 sylve cloud-init template-delete 2 --yes
 ```
 

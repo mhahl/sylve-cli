@@ -718,24 +718,43 @@ def print_result(
     """Render the result of a mutating command.
 
     Mutations share one contract: ``table`` prints a human sentence, while the
-    machine formats emit the result dict so scripts never scrape prose. An
-    empty result prints ``OK`` in table mode and is omitted in other formats.
+    machine formats emit the result rows or fields so scripts never scrape
+    prose. An empty result prints ``OK`` in table mode and is omitted in other
+    formats.
     """
     if not result:
         if fmt == OutputFormat.table:
             console.print(Text("OK", style="green"))
         return
+    if isinstance(result, list) and all(isinstance(row, dict) for row in result):
+        if fmt == OutputFormat.table:
+            console.print(message or "OK", style="green", markup=False)
+            return
+        columns = [ColumnSpec(str(key), str(key)) for key in result[0]] if result else []
+        print_list(result, columns, fmt=fmt, title=title)
+        return
+    if isinstance(result, dict):
+        if fmt == OutputFormat.table:
+            console.print(message or "OK", style="green", markup=False)
+            return
+        print_dict(result, fmt=fmt, title=title)
+        return
     if fmt == OutputFormat.table:
         console.print(message or "OK", style="green", markup=False)
         return
-    if fmt != OutputFormat.value:
-        print_dict(result, fmt=fmt, title=title)
+    if fmt == OutputFormat.json:
+        sys.stdout.write(json.dumps(result, indent=2, default=str) + "\n")
         return
-    # value: one scalar per line for a dict, one row per line for a list.
-    if isinstance(result, dict):
-        for value in result.values():
-            sys.stdout.write(_stringify_cell(value) + "\n")
+    if fmt == OutputFormat.yaml:
+        sys.stdout.write(yaml.safe_dump(result, sort_keys=False))
         return
+    if fmt == OutputFormat.csv:
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow([_csv_safe(_stringify_cell(result))])
+        sys.stdout.write(buf.getvalue())
+        return
+    # value: one row per line; scalars print as a single value.
     for row in result if isinstance(result, list) else [result]:
         values = row.values() if isinstance(row, dict) else [row]
         sys.stdout.write(" ".join(_stringify_cell(value) for value in values) + "\n")

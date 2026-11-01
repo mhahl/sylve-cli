@@ -72,6 +72,14 @@ applicable:
   ```
 - `--sort-column NAME`
   Sort table rows by column header or field key.
+- `--filter COLUMN=VALUE`
+  Keep only rows whose column contains `VALUE` (case-insensitive substring),
+  or bare text matched against any field. Repeatable:
+  ```sh
+  sylve vm list --filter State=running --filter node1
+  ```
+- `-l, --limit N`
+  Show at most `N` rows after filtering.
 - `--long`
   Include lower-priority columns in table output. The extra columns vary by
   command.
@@ -89,9 +97,24 @@ applicable:
 Commands that wrap Sylve API endpoints directly accept:
 
 - `-d, --data BODY`
-  Inline JSON or YAML request body, or `@FILE` to read the body from disk.
+  Base JSON or YAML request body, or `@FILE` to read the body from disk.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable). Dotted keys address nested objects and
+  values are parsed as YAML, so no JSON is needed for common updates:
+  ```sh
+  sylve system tunable-set --set name=vfs.zfs.prefetch_disable --set value=0
+  sylve vm hardware-cpu 101 --set sockets=1 --set cores=4
+  ```
+  `--set` merges over `--data` (nested objects merge key by key) and is the
+  preferred way to send small updates. Quote values the server expects as
+  strings: `--set value='"200000"'`.
+- `--dry-run`
+  Print the request (`method`, `path`, `params`, `body`) without sending it.
+  Useful with `-f json` to preview exactly what `--set` and `--data` build.
 - `-p, --param KEY=VALUE`
   Query string parameter. Repeatable; values are parsed as YAML scalars.
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection on reads (see above).
 
 `@FILE` keeps long bodies out of shell history and lets you review them like
 any other configuration:
@@ -106,7 +129,8 @@ value: "0"
 sylve system tunable-set --data @tunable.yaml
 ```
 
-`--data` sends the body verbatim. `vm create --file` is different: it reads a
+`--data` sends the body verbatim; `--set` overrides individual fields on top
+of it. `vm create --file` and `jail create --file` are different: they read a
 create configuration that the CLI normalizes first (defaults, aliases,
 `2G`-style sizes). Two names for two behaviours. `-f` always means `--format`,
 never "file".

@@ -32,7 +32,8 @@ and jail templates.
 | `snapshot list/create/rollback/delete` | Manage ZFS jail snapshots |
 | `bootstrap list/create` | List or build `pkgbase` jail bootstraps |
 | `template list` | List jail templates |
-| `create`, `description`, `hardware-cpu`, `hardware-ram`, `hardware-resource-limits` | Generic jail creation and hardware update commands |
+| `create [NAME]` | Create a jail from flags or a YAML/JSON file |
+| `description`, `hardware-cpu`, `hardware-ram`, `hardware-resource-limits` | Generic jail hardware update commands |
 | `network-inheritance`, `network-attach`, `network-detach`, `network-update` | Generic jail network commands |
 | `options-additional`, `options-allowed`, `options-boot-order`, `options-devfs-rules`, `options-execution-timeout`, `options-fstab`, `options-lifecycle-hooks`, `options-metadata`, `options-resolv-conf`, `options-wol` | Generic jail option commands |
 | `root-mountpoint`, `state`, `stats` | Generic read commands |
@@ -48,6 +49,77 @@ and jail templates.
 - `show JAIL`: `JAIL` (CTID or name), `-n, --node NODE`, `-f, --format`,
   `-c, --column`.
 
+### `jail create`
+
+- `NAME` / `--name NAME`
+  Jail name. `--name` overrides the positional argument.
+- `-n, --node NODE`
+  Target node.
+- `--ctid CTID`
+  Jail CTID (`1`–`9999`, default: next free guest ID).
+- `--pool, -p POOL`
+  ZFS pool for the jail root dataset.
+- `--type, -t TYPE`
+  `freebsd` or `linux` (default: `freebsd`).
+- `--bootstrap NAME`
+  `pkgbase` bootstrap name (e.g. `15-1-Base`). Resolved against the pool.
+- `--base TEXT`
+  Base release for the jail.
+- `--cores N`, `--memory SIZE`
+  CPU core limit and memory limit, e.g. `--memory 2G` (parsed to bytes).
+- `--resource-limits / --no-resource-limits`
+  Enforce `rctl` limits.
+- `--description, -d TEXT`
+  Jail description (up to 1024 characters).
+- `--hostname HOSTNAME`
+  Hostname inside the jail (defaults to the name).
+- `--switch NAME`
+  Network switch name, or `none` (default: no switch).
+- `--dhcp / --no-dhcp`, `--slaac / --no-slaac`
+  Configure addresses via DHCP or IPv6 SLAAC.
+- `--inherit-ipv4 / --no-inherit-ipv4`, `--inherit-ipv6 / --no-inherit-ipv6`
+  Inherit host addresses.
+- `--ipv4 ADDR`, `--ipv4-gw ADDR`, `--ipv6 ADDR`, `--ipv6-gw ADDR`
+  Static addresses and gateways.
+- `--mac MAC`, `--mac-object NAME|ID`
+  Static MAC address or existing MAC object (pass one, not both).
+- `--vlan-mode MODE`, `--vlan-untagged ID`, `--vlan-tagged ID`
+  VLAN policy for filtered switches (`--vlan-tagged` is repeatable).
+- `--start-at-boot / --no-start-at-boot`, `--start-order N`
+  Autostart at host boot (default: off) and boot order (`0`).
+- `--devfs-ruleset TEXT`, `--fstab TEXT`, `--resolv-conf TEXT`
+  DevFS, fstab, and resolv.conf configuration.
+- `--additional-options TEXT`, `--allowed-option TEXT`
+  Extra `jail.conf` options (`--allowed-option` is repeatable).
+- `--metadata-env TEXT`, `--metadata-meta TEXT`
+  Metadata environment and document.
+- `--clean-environment / --no-clean-environment`
+  Start the jail with a clean environment.
+- `--zfs-source-dataset DATASET`, `--zfs-source-guid GUID`,
+  `--zfs-source-mode {copy,rename}`
+  Clone from an existing ZFS dataset instead of a bootstrap.
+- `--file FILE`
+  Read the create configuration from a YAML or JSON file. Keys may be flat
+  (`cores`, `memory`, `switch`, `pool`) or grouped under `cpu`, `network`,
+  `boot`, and `options`. Command-line flags override file values.
+- `--set KEY=VALUE`
+  Set any other API field without JSON (repeatable, dotted keys nest), e.g.
+  `--set hooks.prestart.enabled=true`. Values go through the same parsing as
+  flags, so `--set memory=2G` works.
+- `--start`
+  Start the jail immediately after creation.
+- `-w, --wait / --no-wait`
+  Wait for the start task (default: `--no-wait`).
+- `--dry-run`
+  Print the normalized API payload without creating anything.
+- `-y, --yes`
+  Skip interactive confirmation.
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
+
+On a terminal, `jail create` prints a confirmation plan before sending the API
+request unless `-y` / `--yes` or `--dry-run` is given.
+
 ### `jail start`, `stop`, `restart`
 
 - `JAILS...` (required)
@@ -56,6 +128,11 @@ and jail templates.
   Target node.
 - `-w, --wait / --no-wait`
   Wait for the lifecycle task (default: `--no-wait`).
+- `-f, --format`
+  Output format. With `json`/`yaml`/`csv`/`value` each jail's result (`action`,
+  `ctid`, `name`, `node`, `outcome`, `status`, `taskId`) is printed instead of
+  prose. A failure on one jail does not stop the others; the command reports
+  every failure and exits `1`.
 
 ### `jail migrate`
 
@@ -69,6 +146,9 @@ and jail templates.
   Source node.
 - `-w, --wait / --no-wait`
   Wait for migration completion (default: `--wait`).
+- `-f, --format`
+  Output format. With `json`/`yaml`/`csv`/`value` the migration result
+  (`ctid`, `source`, `target`, `status`, `taskId`) is printed instead of prose.
 
 ### `jail delete`
 
@@ -88,27 +168,31 @@ and jail templates.
 - `JAIL` (required): CTID or name.
 - `NEW_NAME` (required for `rename`): new jail name.
 - `-n, --node NODE`: target node.
-- `-f, --format`, `-c, --column`: output options (`guest-info` only).
+- `-f, --format`, `-c, --column`: output options (`guest-info` only; `rename`
+  takes `-f/--format` and prints `{"ctid","name","renamed"}` in machine modes).
 - `console` attaches over WebSocket. Press `Enter`, then type `~.` to detach.
 
 ### `jail snapshot`, `jail bootstrap`, and `jail template`
 
-- `snapshot list JAIL`: `-n/--node`, `-f/--format`, `-c/--column`, `--long`.
+- `snapshot list JAIL`: `-n/--node`, `-f/--format`, `-c/--column`,
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`, `--long`.
 - `snapshot create JAIL`: `--name, -m NAME` (required),
-  `--description, -d TEXT`, `-n/--node`.
-- `snapshot rollback JAIL SNAPSHOT_ID`: `-y/--yes`, `-n/--node`.
-- `snapshot delete JAIL SNAPSHOT_ID`: `-y/--yes`, `-n/--node`.
+  `--description, -d TEXT`, `-n/--node`, `-f/--format`.
+- `snapshot rollback JAIL SNAPSHOT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
+- `snapshot delete JAIL SNAPSHOT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
 - `bootstrap list`: `--pool, -p POOL` (required), `-n/--node`, `-f/--format`,
-  `-c/--column`.
+  `-c/--column`, `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
 - `bootstrap create`: `--pool, -p POOL` (required), `--major N` (required),
   `--minor N` (default: `0`), `--type TYPE` (default: `base`, e.g. `base` or
-  `minimal`), `-n/--node`.
-- `template list`: `-n/--node`, `-f/--format`, `-c/--column`.
+  `minimal`), `-n/--node`, `-f/--format`.
+- `template list`: `-n/--node`, `-f/--format`, `-c/--column`,
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
 
 ### Generic Subcommands
 
-All generic jail subcommands accept `--data/-d`, `--param/-p`, `-y/--yes`,
-`-n/--node`, and `-f/--format`:
+All generic jail subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+`--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format`. Small updates need no
+JSON: `sylve jail hardware-cpu 201 --set cores=4`.
 
 | Subcommand | Path Arguments |
 |---|---|
@@ -118,7 +202,6 @@ All generic jail subcommands accept `--data/-d`, `--param/-p`, `-y/--yes`,
 | `options-*`, `root-mountpoint`, `state`, `stats`, `template-capture` | `ctid` |
 | `template-show`, `template-delete`, `template-deploy` | `templateId` |
 | `bootstrap-delete` | `name` |
-| `create` | none |
 
 ## EXIT STATUS
 
@@ -141,27 +224,51 @@ FreeBSD Jails
  202   cache    STOPPED  freebsd  node2.example.test   1      1.0 GiB
 ```
 
-Create a jail from a definition file:
+Create a jail from flags, or preview a definition file with `--dry-run`:
+
+```sh
+sylve jail create dns-03 --ctid 203 --pool zroot --type freebsd \
+  --bootstrap 15-1-Base --cores 2 --memory 2G --resource-limits \
+  --switch vm-switch --dhcp --description "secondary resolver" \
+  --node node1.example.test --dry-run -f json
+
+sylve jail create dns-03 --pool zroot --bootstrap 15-1-Base \
+  --switch vm-switch --dhcp --start --yes
+```
+
+`--file` separates the machine definition from the command line, so the same
+file can be reviewed in a pull request and reused across nodes. Keys are flat
+or grouped; flags such as `--memory` override the file:
 
 ```yaml
 # jail.yaml
-ctId: 203
 name: dns-03
+ctid: 203
 type: freebsd
 pool: zroot
-switchName: vm-switch
-resourceLimits: true
-cores: 2
-memory: 2147483648   # bytes (2 GiB); jail create takes the raw API value
+bootstrap: 15-1-Base
 description: secondary resolver
+
+cpu:
+  cores: 2
+  memory: 2G
+
+network:
+  switch: vm-switch
+  dhcp: true
+
+options:
+  resource_limits: true
 ```
 
 ```sh
-sylve jail create --data @jail.yaml --node node1.example.test -f json
+sylve jail create --file jail.yaml --dry-run   # print the request without sending it
+sylve jail create --file jail.yaml --memory 4G --yes
 ```
 
-`--data` reads inline JSON/YAML or `@FILE`. Sizes are API units here; only
-`vm create --file` parses `2G`-style shorthands.
+Migrating from the old raw-body syntax: `--data @jail.yaml` becomes
+`--file jail.yaml`, and inline `--data '{"cores":4}'` becomes
+`--set cores=4`.
 
 Create and list a jail snapshot:
 
@@ -198,8 +305,8 @@ Migrate, update CPU limits, deploy a template, or delete a jail:
 ```sh
 sylve jail migrate 201 --target node2.example.test --dry-run
 sylve jail migrate 201 --target node2.example.test --wait
-sylve jail hardware-cpu 201 --data '{"cores":4}' --param dryRun=0 --node node1.example.test -f json
-sylve jail template-deploy 3 --data '{"name":"dns-02","ctid":203}' -f json
+sylve jail hardware-cpu 201 --set cores=4 --node node1.example.test -f json
+sylve jail template-deploy 3 --set name=dns-02 --set ctid=203 -f json
 sylve jail delete 201 --keep-rootfs --keep-macs --yes
 ```
 

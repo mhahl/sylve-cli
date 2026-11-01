@@ -32,14 +32,20 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -70,12 +76,12 @@ Create, update, synchronize, and delete an entry:
 
 ```sh
 sylve ddns create \
-  --data '{"name":"home.example.test","provider":"cloudflare","zone":"example.test","recordType":"A","proxied":false}' \
+  --set name=home.example.test --set provider=cloudflare --set zone=example.test --set recordType=A --set proxied=false \
   --param validate=1 \
   --node node1.example.test \
   --format json
 
-sylve ddns update 2 --data '{"enabled":false}' -f json
+sylve ddns update 2 --set enabled=false -f json
 sylve ddns sync 2
 sylve ddns delete 2 --yes
 ```

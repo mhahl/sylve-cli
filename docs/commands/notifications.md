@@ -44,14 +44,20 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -79,13 +85,13 @@ Create, update, test, and delete rules and transports:
 
 ```sh
 sylve notifications rule-create \
-  --data '{"name":"node-offline","event":"node.offline","transportId":1,"enabled":true}'
-sylve notifications rule-update 2 --data '{"enabled":false}' -f json
+  --set name=node-offline --set event=node.offline --set transportId=1 --set enabled=true
+sylve notifications rule-update 2 --set enabled=false -f json
 sylve notifications rule-test \
-  --data '{"templateKey":"node-offline","targetKey":"mail","severity":"warning"}'
+  --set templateKey=node-offline --set targetKey=mail --set severity=warning
 
 sylve notifications transport-create \
-  --data '{"name":"mail","type":"email","config":{"to":"admin@example.test"}}'
+  --set name=mail --set type=email --set 'config={to: admin@example.test}'
 sylve notifications transport-test 1
 sylve notifications transport-delete 1 --yes
 ```

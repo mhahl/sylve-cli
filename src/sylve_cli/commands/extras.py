@@ -1,8 +1,9 @@
 """Additional command groups backed by the Sylve v0.3.1 HTTP API.
 
-The commands here intentionally accept JSON/YAML bodies through ``--data`` and
-query parameters through ``--param``.  That keeps the CLI thin: the API remains
-the source of truth for request shapes, and new fields do not need a new flag.
+The commands here accept request bodies through ``--data`` (a JSON/YAML blob
+or ``@FILE``) with per-field ``--set KEY=VALUE`` overrides, plus query
+parameters through ``--param``. That keeps the CLI thin: the API remains the
+source of truth for request shapes, and new fields do not need a new flag.
 """
 
 # shortcut: generic --data/--param commands avoid per-endpoint flag boilerplate.
@@ -45,7 +46,16 @@ from sylve_cli.formatter import (
     print_list,
     print_result,
 )
-from sylve_cli.state import CLIState, ColumnsOption, FormatOption, NodeOption, confirm_destructive
+from sylve_cli.state import (
+    CLIState,
+    ColumnsOption,
+    FilterOption,
+    FormatOption,
+    LimitOption,
+    NodeOption,
+    SortColumnOption,
+    confirm_destructive,
+)
 
 system_app = typer.Typer(
     name="system",
@@ -150,16 +160,89 @@ def _parse_params(values: list[str] | None) -> dict[str, Any] | None:
     return result
 
 
-def _print_result(data: Any, fmt: OutputFormat, title: str | None = None) -> None:
+def _parse_set(values: list[str] | None) -> dict[str, Any]:
+    """Parse ``--set KEY=VALUE`` overrides into a (possibly nested) dict.
+
+    Dotted keys address nested objects (``vlanPolicy.mode=tagged``) and
+    values are parsed as YAML scalars so ``--set cores=4`` sends an int,
+    not a string. Later entries win.
+    """
+    result: dict[str, Any] = {}
+    for item in values or []:
+        if "=" not in item:
+            raise SylveError("--set must use KEY=VALUE format.")
+        key, value = item.split("=", 1)
+        parts = [part.strip() for part in key.split(".")]
+        if not key.strip() or any(not part for part in parts):
+            raise SylveError("--set must use KEY=VALUE format with a non-empty key.")
+        try:
+            parsed: Any = yaml.safe_load(value)
+        except yaml.YAMLError:
+            parsed = value
+        target = result
+        for part in parts[:-1]:
+            existing = target.get(part)
+            if not isinstance(existing, dict):
+                existing = {}
+                target[part] = existing
+            target = existing
+        target[parts[-1]] = parsed
+    return result
+
+
+def _merge_body(data: str | None, set_values: list[str] | None) -> Any:
+    """Combine ``--data`` with ``--set`` overrides.
+
+    ``--set`` wins field by field; nested dicts merge instead of replacing.
+    ``--set`` needs a JSON object body to merge into.
+    """
+
+    def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+        for key, value in override.items():
+            if isinstance(value, dict) and isinstance(base.get(key), dict):
+                _deep_merge(base[key], value)
+            else:
+                base[key] = value
+        return base
+
+    base = _parse_data(data)
+    overrides = _parse_set(set_values)
+    if not overrides:
+        return base
+    if base is None:
+        return overrides
+    if not isinstance(base, dict):
+        raise SylveError("--set needs a JSON object body; use --data '{\"key\": ...}' first.")
+    return _deep_merge(base, overrides)
+
+
+def _print_result(
+    data: Any,
+    fmt: OutputFormat,
+    title: str | None = None,
+    selected: list[str] | None = None,
+    sort_column: str | None = None,
+    filters: list[str] | None = None,
+    limit: int | None = None,
+) -> None:
     if data in (None, {}, []):
         if fmt not in (OutputFormat.json, OutputFormat.yaml, OutputFormat.value):
             console.print("OK", style="green", markup=False)
         return
     if isinstance(data, list) and all(isinstance(row, dict) for row in data):
         columns = [ColumnSpec(str(key), str(key)) for key in data[0]]
-        print_list(data, columns, fmt=fmt, title=title)
+        print_list(
+            data,
+            columns,
+            fmt=fmt,
+            title=title,
+            selected_columns=selected,
+            sort_column=sort_column,
+            filters=filters,
+            limit=limit,
+        )
     elif isinstance(data, dict):
-        print_dict(data, fmt=fmt, title=title)
+        print_dict(data, fmt=fmt, title=title, selected_columns=selected)
     else:
         print_result(data, fmt)
 
@@ -187,10 +270,25 @@ def _execute_generic(
     node: str | None,
     fmt: OutputFormat,
     title: str,
+    set_values: list[str] | None = None,
+    dry_run: bool = False,
+    selected: list[str] | None = None,
+    sort_column: str | None = None,
+    filters: list[str] | None = None,
+    limit: int | None = None,
 ) -> None:
     """Run one generic API request and print the result."""
     state: CLIState = ctx.obj
     target_path = _path_for(path, args)
+    body = _merge_body(data, set_values)
+    params = _parse_params(param)
+    if dry_run:
+        _print_result(
+            {"method": method, "path": target_path, "params": params, "body": body},
+            fmt,
+            f"Dry run: {method} {target_path}",
+        )
+        return
     destructive = method == "DELETE" or "delete" in path.lower()
     if destructive:
         # A non-interactive stdin must not count as consent; the helper aborts
@@ -200,12 +298,12 @@ def _execute_generic(
         result = client.request(
             method,
             target_path,
-            params=_parse_params(param),
-            json_body=_parse_data(data),
+            params=params,
+            json_body=body,
             node=node,
             require_auth=path not in _PUBLIC_PATHS,
         )
-    _print_result(result, fmt, title)
+    _print_result(result, fmt, title, selected, sort_column, filters, limit)
 
 
 def _add(
@@ -290,7 +388,16 @@ def _add(
                 typer.Option(
                     "--data",
                     "-d",
-                    help="Raw JSON or YAML request body, or @FILE to read it from disk.",
+                    help="Base JSON or YAML request body, or @FILE to read it from disk.",
+                ),
+            ] = None,
+            set_value: Annotated[
+                list[str] | None,
+                typer.Option(
+                    "--set",
+                    "-s",
+                    help="Set a body field KEY=VALUE (repeatable, dotted keys nest). "
+                    "Values are parsed as YAML; overrides --data.",
                 ),
             ] = None,
             param: Annotated[
@@ -301,10 +408,74 @@ def _add(
                 bool,
                 typer.Option("-y", "--yes", help="Skip confirmation prompt."),
             ] = False,
+            dry_run: Annotated[
+                bool,
+                typer.Option("--dry-run", help="Print the request without sending it."),
+            ] = False,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
         ) -> None:
-            _execute_generic(ctx, method, path, args, data, param, yes, node, fmt, title)
+            _execute_generic(
+                ctx, method, path, args, data, param, yes, node, fmt, title, set_value, dry_run
+            )
+
+    elif method == "GET":
+
+        def command(  # type: ignore[misc]
+            ctx: typer.Context,
+            args: Annotated[
+                list[str] | None, typer.Argument(help="Path arguments in URL order.")
+            ] = None,
+            data: Annotated[
+                str | None,
+                typer.Option(
+                    "--data",
+                    "-d",
+                    help="Base JSON or YAML request body, or @FILE to read it from disk.",
+                ),
+            ] = None,
+            set_value: Annotated[
+                list[str] | None,
+                typer.Option(
+                    "--set",
+                    "-s",
+                    help="Set a body field KEY=VALUE (repeatable, dotted keys nest). "
+                    "Values are parsed as YAML; overrides --data.",
+                ),
+            ] = None,
+            param: Annotated[
+                list[str] | None,
+                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+            ] = None,
+            dry_run: Annotated[
+                bool,
+                typer.Option("--dry-run", help="Print the request without sending it."),
+            ] = False,
+            node: NodeOption = None,
+            fmt: FormatOption = OutputFormat.table,
+            columns: ColumnsOption = None,
+            sort_column: SortColumnOption = None,
+            filters: FilterOption = None,
+            limit: LimitOption = None,
+        ) -> None:
+            _execute_generic(
+                ctx,
+                method,
+                path,
+                args,
+                data,
+                param,
+                False,
+                node,
+                fmt,
+                title,
+                set_value,
+                dry_run,
+                columns,
+                sort_column,
+                filters,
+                limit,
+            )
 
     else:
 
@@ -318,17 +489,32 @@ def _add(
                 typer.Option(
                     "--data",
                     "-d",
-                    help="Raw JSON or YAML request body, or @FILE to read it from disk.",
+                    help="Base JSON or YAML request body, or @FILE to read it from disk.",
+                ),
+            ] = None,
+            set_value: Annotated[
+                list[str] | None,
+                typer.Option(
+                    "--set",
+                    "-s",
+                    help="Set a body field KEY=VALUE (repeatable, dotted keys nest). "
+                    "Values are parsed as YAML; overrides --data.",
                 ),
             ] = None,
             param: Annotated[
                 list[str] | None,
                 typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
             ] = None,
+            dry_run: Annotated[
+                bool,
+                typer.Option("--dry-run", help="Print the request without sending it."),
+            ] = False,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
         ) -> None:
-            _execute_generic(ctx, method, path, args, data, param, False, node, fmt, title)
+            _execute_generic(
+                ctx, method, path, args, data, param, False, node, fmt, title, set_value, dry_run
+            )
 
     command.__name__ = f"{app.info.name}_{name}".replace("-", "_")
     command.__doc__ = help_text
@@ -535,7 +721,6 @@ for spec in [  # type: ignore[assignment]
 # Jail configuration
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
-    (jail_app, "create", "POST", "/jail", "Create a Jail."),
     (
         jail_app,
         "description",

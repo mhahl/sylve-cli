@@ -29,6 +29,7 @@ from sylve_cli.state import (
     FormatOption,
     LimitOption,
     LongOption,
+    NodeOption,
     SortColumnOption,
     WaitOption,
     confirm_destructive,
@@ -571,12 +572,12 @@ def node_drain(
         ]
 
         if not plan:
-            if fmt in (OutputFormat.json, OutputFormat.yaml):
-                print_list([], plan_cols, fmt=fmt, selected_columns=columns)
-            else:
+            if fmt == OutputFormat.table:
                 console.print(
                     f"[green]Node '{source_host}' ({source_uuid}) has no guests to drain.[/green]"
                 )
+            else:
+                print_list([], plan_cols, fmt=fmt, selected_columns=columns)
             return
 
         if dry_run:
@@ -617,7 +618,8 @@ def node_drain(
                 selected_columns=columns,
                 title=f"Drain Plan for {source_host}",
             )
-            console.print(f"[green]Node '{source_host}' has no guests to drain.[/green]")
+            if fmt == OutputFormat.table:
+                console.print(f"[green]Node '{source_host}' has no guests to drain.[/green]")
             return
 
         if fmt == OutputFormat.table:
@@ -802,12 +804,12 @@ def _audit_request_path(action: Any) -> str:
 @node_app.command("audit-logs")
 def node_audit_logs(
     ctx: typer.Context,
-    node: Annotated[
-        str | None,
-        typer.Option("-n", "--node", help="Target node hostname or UUID."),
-    ] = None,
+    node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """Show recent audit records from a node (or all nodes)."""
     state: CLIState = ctx.obj
@@ -832,4 +834,13 @@ def node_audit_logs(
         ColumnSpec("Status", "status"),
         ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Node Audit Records")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Node Audit Records",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )

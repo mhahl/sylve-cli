@@ -96,18 +96,28 @@ def throwaway_jail(jail_target: dict[str, str], run_cli: Any) -> Iterator[dict[s
     name = f"{PREFIX}jail-{uuid.uuid4().hex[:8]}"
     # A high, random CTID keeps clear of existing guests (e.g. test-jail = 100).
     ctid = 8000 + uuid.uuid4().int % 1000
-    body = {
-        "name": name,
-        "ctId": ctid,
-        "pool": jail_target["pool"],
-        "type": "freebsd",
-        "bootstrapName": jail_target["bootstrap"],
-        "switchName": jail_target["switch"],
-        "dhcp": True,
-    }
     created = _json(
         run_cli(
-            ["jail", "create", "--node", jail_target["node"], "-d", json.dumps(body), "-f", "json"]
+            [
+                "jail",
+                "create",
+                name,
+                "--ctid",
+                str(ctid),
+                "--pool",
+                jail_target["pool"],
+                "--type",
+                "freebsd",
+                "--bootstrap",
+                jail_target["bootstrap"],
+                "--switch",
+                jail_target["switch"],
+                "--dhcp",
+                "--node",
+                jail_target["node"],
+                "-f",
+                "json",
+            ]
         )
     )
     try:

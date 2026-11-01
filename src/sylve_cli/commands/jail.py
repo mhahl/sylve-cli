@@ -7,11 +7,13 @@ from typing import Annotated, Any
 import typer
 
 from sylve_cli.client import SylveClient, SylveError
+from sylve_cli.commands.jail_create import register_jail_create_commands
 from sylve_cli.console_ws import attach_console
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
     console,
+    err_console,
     format_bytes,
     format_timestamp,
     print_dict,
@@ -62,6 +64,7 @@ jail_template_app = typer.Typer(
 jail_app.add_typer(jail_snapshot_app, name="snapshot")
 jail_app.add_typer(jail_bootstrap_app, name="bootstrap")
 jail_app.add_typer(jail_template_app, name="template")
+register_jail_create_commands(jail_app)
 
 
 def _run_jail_action(
@@ -70,22 +73,52 @@ def _run_jail_action(
     jails: list[str],
     node: str | None,
     wait: bool,
-) -> None:
+    fmt: OutputFormat,
+) -> list[dict[str, Any]]:
+    """Apply a power action to each jail, continuing past per-jail failures.
+
+    One unknown name must not silently skip the guests after it; every failure
+    is reported, and any failure makes the command exit non-zero. Returns one
+    result dict per jail for machine-readable output.
+    """
+    failures: list[str] = []
+    results: list[dict[str, Any]] = []
     for ident in jails:
-        ctid, host, _ = client.resolve_jail(ident, node=node)
-        resp = client.post(f"/jail/{ctid}/actions/{action}", node=host or None)
-        task_id = resp.get("taskId") if isinstance(resp, dict) else None
-        outcome = resp.get("outcome") if isinstance(resp, dict) else "queued"
-        if wait and task_id:
-            wait_for_lifecycle_task(client, int(task_id), node=host or None)
-            console.print(
-                f"[green]Jail {ctid}[/green] ({host or 'local'}): [bold]{action}[/bold] completed."
-            )
-        else:
-            task_note = f" (task #{task_id})" if task_id else ""
-            console.print(
-                f"[cyan]Jail {ctid}[/cyan] ({host or 'local'}): [bold]{action}[/bold] {outcome}{task_note}."
-            )
+        try:
+            ctid, host, summary = client.resolve_jail(ident, node=node)
+            resp = client.post(f"/jail/{ctid}/actions/{action}", node=host or None)
+            task_id = resp.get("taskId") if isinstance(resp, dict) else None
+            outcome = resp.get("outcome") if isinstance(resp, dict) else "queued"
+            entry: dict[str, Any] = {
+                "action": action,
+                "ctid": ctid,
+                "name": summary.get("name") or "",
+                "node": host or "local",
+                "outcome": outcome,
+                "taskId": task_id,
+                "status": "queued",
+            }
+            if wait and task_id:
+                wait_for_lifecycle_task(client, int(task_id), node=host or None)
+                entry["status"] = "completed"
+                if fmt == OutputFormat.table:
+                    console.print(
+                        f"[green]Jail {ctid}[/green] ({host or 'local'}): [bold]{action}[/bold] completed."
+                    )
+            elif fmt == OutputFormat.table:
+                task_note = f" (task #{task_id})" if task_id else ""
+                console.print(
+                    f"[cyan]Jail {ctid}[/cyan] ({host or 'local'}): [bold]{action}[/bold] {outcome}{task_note}."
+                )
+            results.append(entry)
+        except SylveError as exc:
+            failures.append(f"{ident}: {exc}")
+            err_console.print(f"[red]Jail {ident}:[/red] {exc}")
+    if failures:
+        raise SylveError(
+            f"{action} failed for {len(failures)} of {len(jails)} jail(s): " + "; ".join(failures)
+        )
+    return results
 
 
 @jail_app.command("list")
@@ -182,11 +215,13 @@ def jail_start(
     jails: Annotated[list[str], typer.Argument(help="One or more Jail CTIDs or names to start.")],
     node: NodeOption = None,
     wait: WaitOption = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Start one or more jails."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        _run_jail_action(client, "start", jails, node=node, wait=wait)
+        results = _run_jail_action(client, "start", jails, node=node, wait=wait, fmt=fmt)
+    print_result(results, fmt)
 
 
 @jail_app.command("stop")
@@ -195,11 +230,13 @@ def jail_stop(
     jails: Annotated[list[str], typer.Argument(help="One or more Jail CTIDs or names to stop.")],
     node: NodeOption = None,
     wait: WaitOption = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Stop one or more jails."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        _run_jail_action(client, "stop", jails, node=node, wait=wait)
+        results = _run_jail_action(client, "stop", jails, node=node, wait=wait, fmt=fmt)
+    print_result(results, fmt)
 
 
 @jail_app.command("restart")
@@ -208,11 +245,13 @@ def jail_restart(
     jails: Annotated[list[str], typer.Argument(help="One or more Jail CTIDs or names to restart.")],
     node: NodeOption = None,
     wait: WaitOption = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Restart one or more jails."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        _run_jail_action(client, "restart", jails, node=node, wait=wait)
+        results = _run_jail_action(client, "restart", jails, node=node, wait=wait, fmt=fmt)
+    print_result(results, fmt)
 
 
 @jail_app.command("migrate")
@@ -230,6 +269,7 @@ def jail_migrate(
     ] = False,
     node: NodeOption = None,
     wait: WaitOption = True,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Validate and migrate a jail to another cluster node."""
     state: CLIState = ctx.obj
@@ -248,8 +288,10 @@ def jail_migrate(
         )
         if validate_only:
             if isinstance(val_res, dict):
-                print_dict(val_res, title=f"Jail {ctid} Migration Preflight -> {target_host}")
-            else:
+                print_dict(
+                    val_res, fmt=fmt, title=f"Jail {ctid} Migration Preflight -> {target_host}"
+                )
+            elif fmt == OutputFormat.table:
                 console.print(
                     f"[green]Migration preflight passed for Jail {ctid} -> {target_host}.[/green]"
                 )
@@ -261,14 +303,27 @@ def jail_migrate(
             node=source_host or None,
         )
         task_id = resp.get("taskId") if isinstance(resp, dict) else None
+        result: dict[str, Any] = {
+            "ctid": ctid,
+            "source": source_host or "local",
+            "target": target_host,
+            "status": "queued",
+        }
+        if task_id is not None:
+            result["taskId"] = task_id
         if wait and task_id:
             wait_for_lifecycle_task(client, int(task_id), node=source_host or None)
-            console.print(
-                f"[green]Jail {ctid} successfully migrated from {source_host} to {target_host}.[/green]"
+            result["status"] = "completed"
+            print_result(
+                result,
+                fmt,
+                f"Jail {ctid} successfully migrated from {source_host} to {target_host}.",
             )
         else:
-            console.print(
-                f"[cyan]Queued migration of Jail {ctid} -> {target_host} (task #{task_id}).[/cyan]"
+            print_result(
+                result,
+                fmt,
+                f"Queued migration of Jail {ctid} -> {target_host} (task #{task_id}).",
             )
 
 
@@ -382,13 +437,18 @@ def jail_rename(
     jail: Annotated[str, typer.Argument(help="Jail CTID or current name.")],
     new_name: Annotated[str, typer.Argument(help="New jail name.")],
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Rename a jail."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         ctid, host, _ = client.resolve_jail(jail, node=node)
         client.patch(f"/jail/{ctid}/name", json_body={"name": new_name}, node=host or None)
-    console.print(f"[green]Renamed Jail {ctid} to '{new_name}'.[/green]")
+    print_result(
+        {"ctid": ctid, "name": new_name, "renamed": True},
+        fmt,
+        f"Renamed Jail {ctid} to '{new_name}'.",
+    )
 
 
 @jail_snapshot_app.command("list")
@@ -398,7 +458,10 @@ def jail_snapshot_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List ZFS snapshots for a jail."""
     state: CLIState = ctx.obj
@@ -425,6 +488,9 @@ def jail_snapshot_list(
         fmt=fmt,
         selected_columns=columns,
         title=f"Jail {ctid} Snapshots ({host or 'local'})",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -437,6 +503,7 @@ def jail_snapshot_create(
         str, typer.Option("--description", "-d", help="Snapshot description.")
     ] = "",
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a ZFS snapshot for a jail."""
     state: CLIState = ctx.obj
@@ -447,7 +514,11 @@ def jail_snapshot_create(
             json_body={"name": name, "description": description},
             node=host or None,
         )
-    console.print(f"[green]Created snapshot '{name}' for Jail {ctid}.[/green]")
+    print_result(
+        {"ctid": ctid, "name": name, "created": True},
+        fmt,
+        f"Created snapshot '{name}' for Jail {ctid}.",
+    )
 
 
 @jail_snapshot_app.command("rollback")
@@ -457,6 +528,7 @@ def jail_snapshot_rollback(
     snapshot_id: Annotated[int, typer.Argument(help="Snapshot ID to roll back to.")],
     yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Roll back a jail to a selected snapshot."""
     state: CLIState = ctx.obj
@@ -467,7 +539,11 @@ def jail_snapshot_rollback(
             yes=yes,
         )
         client.post(f"/jail/{ctid}/snapshots/{snapshot_id}/rollback", node=host or None)
-    console.print(f"[green]Rolled back Jail {ctid} to snapshot #{snapshot_id}.[/green]")
+    print_result(
+        {"ctid": ctid, "snapshotId": snapshot_id, "rolledBack": True},
+        fmt,
+        f"Rolled back Jail {ctid} to snapshot #{snapshot_id}.",
+    )
 
 
 @jail_snapshot_app.command("delete")
@@ -477,6 +553,7 @@ def jail_snapshot_delete(
     snapshot_id: Annotated[int, typer.Argument(help="Snapshot ID to delete.")],
     yes: YesOption = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a jail snapshot."""
     state: CLIState = ctx.obj
@@ -484,7 +561,11 @@ def jail_snapshot_delete(
         ctid, host, _ = client.resolve_jail(jail, node=node)
         confirm_destructive(f"Delete snapshot #{snapshot_id} for Jail {ctid}?", yes=yes)
         client.delete(f"/jail/{ctid}/snapshots/{snapshot_id}", node=host or None)
-    console.print(f"[green]Deleted snapshot #{snapshot_id} for Jail {ctid}.[/green]")
+    print_result(
+        {"ctid": ctid, "snapshotId": snapshot_id, "deleted": True},
+        fmt,
+        f"Deleted snapshot #{snapshot_id} for Jail {ctid}.",
+    )
 
 
 @jail_bootstrap_app.command("list")
@@ -494,6 +575,9 @@ def jail_bootstrap_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List pkgbase jail bootstraps on a ZFS pool."""
     state: CLIState = ctx.obj
@@ -516,7 +600,14 @@ def jail_bootstrap_list(
         ColumnSpec("Node", "node"),
     ]
     print_list(
-        rows, spec, fmt=fmt, selected_columns=columns, title=f"Jail Bootstraps (Pool: {pool})"
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title=f"Jail Bootstraps (Pool: {pool})",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -530,6 +621,7 @@ def jail_bootstrap_create(
         str, typer.Option("--type", help="Bootstrap type (e.g. base, minimal).")
     ] = "base",
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Queue a pkgbase jail bootstrap on a ZFS pool."""
     state: CLIState = ctx.obj
@@ -539,8 +631,10 @@ def jail_bootstrap_create(
             json_body={"pool": pool, "major": major, "minor": minor, "type": btype},
             node=node,
         )
-    console.print(
-        f"[green]Queued jail bootstrap ({major}.{minor} {btype}) on pool '{pool}'.[/green]"
+    print_result(
+        {"pool": pool, "version": f"{major}.{minor}", "type": btype, "status": "queued"},
+        fmt,
+        f"Queued jail bootstrap ({major}.{minor} {btype}) on pool '{pool}'.",
     )
 
 
@@ -550,6 +644,9 @@ def jail_template_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List jail templates across the cluster."""
     state: CLIState = ctx.obj
@@ -574,4 +671,13 @@ def jail_template_list(
         ColumnSpec("Node", "node"),
         ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Jail Templates")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Jail Templates",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )

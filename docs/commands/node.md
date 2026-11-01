@@ -107,12 +107,20 @@ resolves the block.
   Output format (default: `table`).
 - `-c, --column NAME`
   Select columns.
+- `--sort-column NAME`
+  Sort rows by column.
+- `--filter COLUMN=VALUE`
+  Keep only matching rows (repeatable).
+- `-l, --limit N`
+  Show at most `N` rows.
 
 ### Generic History Subcommands
 
 `cpu-history`, `ram-history`, `swap-history`, `network-history`,
-`summary-history`, and `summary-delta` accept `--data/-d`, `--param/-p`,
-`-y/--yes`, `-n/--node`, and `-f/--format`.
+`summary-history`, and `summary-delta` accept `--data/-d`, `--set/-s`,
+`--param/-p`, `--dry-run`, `-n/--node`, `-f/--format`, `-c/--column`,
+`--sort-column`, `--filter`, and `-l/--limit`. Small updates need no JSON; see
+[sylve-options(7)](../global-options.md).
 
 ## EXIT STATUS
 

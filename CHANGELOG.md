@@ -5,6 +5,36 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Typed `jail create` command with flags, `--file`, `--set`, `--dry-run`,
+  and a confirmation plan, mirroring `vm create`. Sizes like `2G` are parsed
+  to bytes and pool/switch/bootstrap names are resolved against the server.
+- `--set KEY=VALUE` (`-s`) on all generic API commands: per-field updates
+  with YAML-parsed values and dotted keys for nesting
+  (e.g. `jail hardware-cpu 201 --set cores=4`), so small updates need no JSON.
+- `--dry-run` on all generic API commands: print `method`, `path`, `params`,
+  and `body` without sending anything.
+- `examples/jail/basic.yaml` starter definition for `jail create --file`.
+
+### Changed
+- `jail create` no longer takes a raw `--data` body; use flags, `--file`
+  (the old `--data @jail.yaml` file works as `--file jail.yaml`), or `--set`.
+  Generic `--data` remains as an escape hatch for the other commands.
+
+### Fixed
+- Output conventions are now uniform: every list takes `-c/--column`,
+  `--sort-column`, `--filter`, and `-l/--limit` (server-paginated lists keep
+  their native `--limit` and add the rest); power actions (`vm/jail
+  start/stop/restart`) and snapshot/rename/capture/restore commands emit pure
+  machine output under `-f json|yaml|csv|value` instead of mixing prose into
+  stdout; `vm/jail migrate --validate-only` honors `-f`; `node drain` prints
+  no prose on non-table formats.
+- `-p` no longer means `--password` on `login` (long form only), so `-p`
+  unambiguously means `--param`/`--port`/`--pool` elsewhere and secrets stay
+  out of `ps` and shell history by default.
+
 ## [0.3.1] - 2026-10-30
 
 ### Added

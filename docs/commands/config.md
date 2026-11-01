@@ -8,7 +8,7 @@
 
 ```sh
 sylve config view [--redact | --show-token] [-f FORMAT]
-sylve config get-contexts [-f FORMAT] [-c COLUMN]
+sylve config get-contexts [-f FORMAT] [-c COLUMN] [--sort-column COLUMN] [--filter COLUMN=VALUE] [-l N]
 sylve config use-context NAME
 sylve config set-node [NODE]
 sylve config delete-context NAME

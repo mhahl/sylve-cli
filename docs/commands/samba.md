@@ -35,14 +35,20 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -73,13 +79,13 @@ Create, update, disable, and delete a share:
 
 ```sh
 sylve samba share-create \
-  --data '{"name":"media","path":"/zroot/media","readOnly":false,"guestOk":true}' \
+  --set name=media --set path=/zroot/media --set readOnly=false --set guestOk=true \
   --param validate=1 \
   --node node1.example.test \
   --format json
 
-sylve samba share-update 2 --data '{"readOnly":true}' -f json
-sylve samba share-enable 2 --data '{"enabled":false}' -f json
+sylve samba share-update 2 --set readOnly=true -f json
+sylve samba share-enable 2 --set enabled=false -f json
 sylve samba share-delete 2 --yes
 ```
 
@@ -87,7 +93,7 @@ Inspect and update global Samba settings and read audit logs:
 
 ```sh
 sylve samba config -f json
-sylve samba config-set --data '{"workgroup":"WORKGROUP","serverString":"Sylve"}' -f json
+sylve samba config-set --set workgroup=WORKGROUP --set serverString=Sylve -f json
 sylve samba audit-logs --param limit=20
 ```
 

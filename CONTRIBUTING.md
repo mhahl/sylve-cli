@@ -44,12 +44,13 @@ by default; never paste output from `sylve config view --show-token`.
 
 ## AI USAGE POLICY
 
-- AI tools may be used to draft code, tests, or documentation.
-- Every AI-assisted change must be reviewed, verified, and understood by a
-  human before submission.
+AI assistance is allowed and encouraged. Use AI tools to draft code, tests,
+documentation, and reviews — it is a normal part of contributing here.
+
 - The submitting author remains responsible for correctness, licensing, and
-  security.
-- Disclose substantial AI assistance in the pull request description.
+  security: review, verify, and understand AI-assisted changes before
+  submitting, just as you would a human colleague's draft.
+- No disclosure is required for routine AI assistance.
 
 ## LICENCE
 

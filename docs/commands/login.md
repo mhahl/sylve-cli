@@ -27,8 +27,9 @@ node, token expiration timestamp, and configuration file path.
   omitted and no active context exists.
 - `-u, --username USER`
   Username. Prompts if omitted.
-- `-p, --password PASSWORD`
-  Password. Prompts with hidden input if omitted.
+- `--password PASSWORD`
+  Password. Prompts with hidden input if omitted. Prefer the prompt (or a
+  file): a `--password` value is visible in shell history and process lists.
 - `--token JWT`
   Use an existing bearer token instead of username and password.
 - `--auth-type TYPE`

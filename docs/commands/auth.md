@@ -36,14 +36,18 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
-- `-y, --yes`
-  Accepted by the shared generic handler (no `auth` subcommand is destructive).
+- `--dry-run`
+  Print the request without sending it.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -71,7 +75,7 @@ Issue an SSE token:
 
 ```sh
 sylve auth sse-token \
-  --data '{"name":"monitoring","expiresIn":3600}' \
+  --set name=monitoring --set expiresIn=3600 \
   --param dryRun=0 \
   --node node1.example.test \
   --format json
@@ -80,7 +84,7 @@ sylve auth sse-token \
 Run passkey login and registration ceremonies:
 
 ```sh
-sylve auth passkey-login-begin --data '{"username":"admin"}' -f json
+sylve auth passkey-login-begin --set username=admin -f json
 sylve auth passkey-login-finish --data @passkey-response.json -f json
 
 sylve auth passkey-register-begin -f json

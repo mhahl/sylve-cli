@@ -33,14 +33,20 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -71,15 +77,15 @@ Create, update, and delete a record, and configure the mDNS service:
 
 ```sh
 sylve mdns record-create \
-  --data '{"name":"sylve.local","type":"A","value":"10.0.0.11","ttl":300}' \
+  --set name=sylve.local --set type=A --set value=10.0.0.11 --set ttl=300 \
   --param validate=1 \
   --node node1.example.test \
   --format json
 
-sylve mdns record-update 2 --data '{"ttl":600}' -f json
+sylve mdns record-update 2 --set ttl=600 -f json
 sylve mdns record-delete 2 --yes
 sylve mdns config -f json
-sylve mdns config-set --data '{"enabled":true,"interfaces":["em0"]}' -f json
+sylve mdns config-set --set enabled=true --set 'interfaces=[em0]' -f json
 ```
 
 ## SEE ALSO

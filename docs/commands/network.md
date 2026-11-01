@@ -34,13 +34,14 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
 ### `interface`
 
 - `list`: `-n, --node NODE`, `-f, --format`, `-c, --column`,
-  `--sort-column NAME`, `--long`.
-- `l3`: `-n, --node NODE`, `-f, --format`, `-c, --column`.
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l, --limit N`, `--long`.
+- `l3`: `-n, --node NODE`, `-f, --format`, `-c, --column`, `--sort-column NAME`,
+  `--filter COLUMN=VALUE`, `-l, --limit N`.
 
 ### `switch`
 
 - `list`: `-n, --node NODE`, `-f, --format`, `-c, --column`,
-  `--sort-column NAME`, `--long`.
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l, --limit N`, `--long`.
 - `create-standard`:
   - `--name NAME` (required): switch name.
   - `--port, -p INTERFACE`: bridge member port (repeatable).
@@ -53,38 +54,47 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
   - `--default-access-vlan N`: default access VLAN when filtering is enabled
     (default: `0`).
   - `-n, --node NODE`: target node.
+  - `-f, --format`: output format.
+  - `-f, --format`: output format.
 - `create-manual`: `--name NAME` (required), `--bridge BRIDGE` (required, e.g.
-  `bridge0`), `-n, --node NODE`.
+  `bridge0`), `-n, --node NODE`, `-f, --format`.
 - `delete SWITCH_ID`: `--type, -t {standard,manual}` (default: `standard`),
-  `-n, --node NODE`.
-- `sync`: `-n, --node NODE`.
+  `-y, --yes`, `-n, --node NODE`, `-f, --format`.
+- `sync`: `-n, --node NODE`, `-f, --format`.
 
 ### `route`, `dhcp`, `firewall`, `object`, and `wireguard`
 
-- `route list`: `-n/--node`, `-f/--format`, `-c/--column`, `--long`.
-- `route delete ROUTE_ID`: `-n/--node`.
-- `dhcp config`, `dhcp range-list`, `dhcp lease-list`: `-n/--node`,
-  `-f/--format`, `-c/--column`.
+- `route list`: `-n/--node`, `-f/--format`, `-c/--column`, `--sort-column NAME`,
+  `--filter COLUMN=VALUE`, `-l/--limit N`, `--long`.
+- `route delete ROUTE_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
+- `dhcp config`: `-n/--node`, `-f/--format`, `-c/--column`.
+- `dhcp range-list`, `dhcp lease-list`: `-n/--node`, `-f/--format`, `-c/--column`,
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
 - `firewall traffic-list`, `firewall nat-list`: `-n/--node`, `-f/--format`,
-  `-c/--column`, `--long`.
+  `-c/--column`, `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`,
+  `--long`.
 - `firewall logs`: `--limit, -l N` (default: `50`), `--cursor N` (`0` starts at
   the live stream position), `--follow, -F` (poll continuously),
   `--interval SECONDS` (default: `1.5`), `--rule-type {traffic,nat}`,
   `--rule-id ID`, `--action {pass,block,scrub,nat,binat,rdr}`,
   `--direction {in,out}`, `--interface, -i INTERFACE`, `--query, -q TEXT`,
   `-n/--node`, `-f/--format`, `-c/--column`.
-- `object list`: `-n/--node`, `-f/--format`, `-c/--column`.
+- `object list`: `-n/--node`, `-f/--format`, `-c/--column`,
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
 - `object create`: `--name NAME` (required), `--type, -t TYPE` (required, e.g.
   `Host`, `Network`, `Port`, `Mac`), `--value, -v VALUE` (required, repeatable),
-  `-n/--node`.
-- `object delete OBJECT_ID`: `-n/--node`.
-- `wireguard status`, `wireguard client-list`: `-n/--node`, `-f/--format`,
-  `-c/--column`.
+  `-n/--node`, `-f/--format`.
+- `object delete OBJECT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
+- `wireguard status`: `-n/--node`, `-f/--format`, `-c/--column`.
+- `wireguard client-list`: `-n/--node`, `-f/--format`, `-c/--column`,
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
 
 ### Generic Subcommands
 
-All remaining subcommands accept `--data/-d`, `--param/-p`, `-y/--yes`,
-`-n/--node`, and `-f/--format`:
+All remaining subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+`--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format` (reads also take
+`-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
+need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
@@ -156,7 +166,7 @@ sylve network object create \
   --node node1.example.test
 
 sylve network route create --param validate=1 --node node1.example.test \
-  --data '{"name":"lab","destinationRaw":"10.99.0.0/16","gatewayRaw":"10.0.0.1"}' \
+  --set name=lab --set destinationRaw=10.99.0.0/16 --set gatewayRaw=10.0.0.1 \
   --format json
 ```
 

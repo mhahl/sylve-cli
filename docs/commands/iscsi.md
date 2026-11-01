@@ -42,14 +42,20 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -79,13 +85,13 @@ Create a target, attach and remove a LUN and portal:
 
 ```sh
 sylve iscsi target-create \
-  --data '{"name":"iqn.2026-10.test.sylve:storage","alias":"storage","enabled":true}' \
+  --set name=iqn.2026-10.test.sylve:storage --set alias=storage --set enabled=true \
   --param validate=1 \
   --node node1.example.test \
   --format json
 
-sylve iscsi lun-add 2 --data '{"path":"/dev/zvol/zroot/iscsi/disk0","lunId":0}'
-sylve iscsi portal-add 2 --data '{"address":"10.0.0.11","port":3260}'
+sylve iscsi lun-add 2 --set path=/dev/zvol/zroot/iscsi/disk0 --set lunId=0
+sylve iscsi portal-add 2 --set address=10.0.0.11 --set port=3260
 sylve iscsi lun-remove 2 0
 sylve iscsi portal-remove 2 1 --yes
 ```
@@ -93,7 +99,7 @@ sylve iscsi portal-remove 2 1 --yes
 Create and connect an initiator and check subsystem status:
 
 ```sh
-sylve iscsi initiator-create --data '{"name":"iqn.2026-10.test.client:web-01"}'
+sylve iscsi initiator-create --set name=iqn.2026-10.test.client:web-01
 sylve iscsi initiator-connect 1
 sylve iscsi status -f json
 ```

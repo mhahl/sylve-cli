@@ -1,0 +1,25 @@
+# Example FreeBSD jail definition for `sylve jail create --file`.
+#
+# Keys may be flat (ctId, switchName, resourceLimits) or grouped under cpu,
+# network, boot, and options. Sizes accept shorthands like 2G. Flags override
+# file values:
+#
+#   sylve jail create --file jail/basic.yaml --dry-run -f json
+#   sylve jail create --file jail/basic.yaml --memory 4G --yes
+name: dns-03
+ctid: 203
+type: freebsd
+pool: zroot
+bootstrap: 15-1-Base
+description: secondary resolver
+
+cpu:
+  cores: 2
+  memory: 2G
+
+network:
+  switch: vm-switch
+  dhcp: true
+
+options:
+  resource_limits: true

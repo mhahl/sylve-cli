@@ -192,12 +192,23 @@ def download_create(
 
     with state.get_client(node_override=node) as client:
         data = client.post("/utilities/downloads", json_body=payload, node=node)
+    result: dict[str, Any] = {"url": url, "status": "queued"}
     if isinstance(data, dict) and data.get("uuid"):
+        result["uuid"] = data.get("uuid")
+        if data.get("name"):
+            result["name"] = data.get("name")
+    message = (
+        f"Queued download {result.get('name') or url} (UUID: {result['uuid']})."
+        if result.get("uuid")
+        else f"Queued download from '{url}'."
+    )
+    if fmt == OutputFormat.table:
         console.print(
-            f"[green]Queued download[/green] [bold]{data.get('name') or url}[/bold] (UUID: {data.get('uuid')})."
+            f"[green]Queued download[/green] [bold]{result.get('name') or url}[/bold]"
+            + (f" (UUID: {result['uuid']})." if result.get("uuid") else ".")
         )
     else:
-        print_result({"url": url, "status": "queued"}, fmt, f"Queued download from '{url}'.")
+        print_result(result, fmt, message)
 
 
 @download_app.command("upload")
@@ -229,6 +240,7 @@ def download_upload(
         ),
     ] = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Upload a local ISO or image file to a node's downloader storage."""
     state: CLIState = ctx.obj
@@ -254,9 +266,10 @@ def download_upload(
             node=node,
         )
     dl_uuid = result.get("uuid") if isinstance(result, dict) else ""
-    console.print(
-        f"[green]Uploaded '{file_path.name}' successfully[/green]"
-        + (f" (UUID: {dl_uuid})." if dl_uuid else ".")
+    print_result(
+        {"file": file_path.name, "uuid": dl_uuid or "", "status": "uploaded"},
+        fmt,
+        f"Uploaded '{file_path.name}' successfully" + (f" (UUID: {dl_uuid})." if dl_uuid else "."),
     )
 
 
@@ -277,7 +290,7 @@ def download_delete(
             print_result({"ids": ids, "deleted": True}, fmt, f"Deleted download #{ids[0]}.")
         else:
             client.post("/utilities/downloads/bulk-delete", json_body={"ids": ids}, node=node)
-            console.print(f"[green]Deleted {len(ids)} downloads.[/green]")
+            print_result({"ids": ids, "deleted": True}, fmt, f"Deleted {len(ids)} downloads.")
 
 
 @download_app.command("signed-url")
@@ -308,6 +321,9 @@ def download_storage(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List available download storage pools and default paths."""
     state: CLIState = ctx.obj
@@ -326,5 +342,12 @@ def download_storage(
             ColumnSpec("Free", "free", formatter=format_bytes, justify="right"),
         ]
         print_list(
-            storage, spec, fmt=fmt, selected_columns=columns, title="Download Storage Targets"
+            storage,
+            spec,
+            fmt=fmt,
+            selected_columns=columns,
+            title="Download Storage Targets",
+            sort_column=sort_column,
+            filters=filters,
+            limit=limit,
         )

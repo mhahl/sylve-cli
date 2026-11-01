@@ -70,6 +70,7 @@ def _run_vm_action(
     vms: list[str],
     node: str | None,
     wait: bool,
+    fmt: OutputFormat,
 ) -> list[dict[str, Any]]:
     """Apply a power action to each VM, continuing past per-VM failures.
 
@@ -81,13 +82,14 @@ def _run_vm_action(
     results: list[dict[str, Any]] = []
     for ident in vms:
         try:
-            rid, host, _ = client.resolve_vm(ident, node=node)
+            rid, host, summary = client.resolve_vm(ident, node=node)
             resp = client.post(f"/vm/{rid}/actions/{action}", node=host or None)
             task_id = resp.get("taskId") if isinstance(resp, dict) else None
             outcome = resp.get("outcome") if isinstance(resp, dict) else "queued"
             entry: dict[str, Any] = {
                 "action": action,
                 "rid": rid,
+                "name": summary.get("name") or "",
                 "node": host or "local",
                 "outcome": outcome,
                 "taskId": task_id,
@@ -96,10 +98,11 @@ def _run_vm_action(
             if wait and task_id:
                 wait_for_lifecycle_task(client, int(task_id), node=host or None)
                 entry["status"] = "completed"
-                console.print(
-                    f"[green]VM {rid}[/green] ({host or 'local'}): [bold]{action}[/bold] completed."
-                )
-            else:
+                if fmt == OutputFormat.table:
+                    console.print(
+                        f"[green]VM {rid}[/green] ({host or 'local'}): [bold]{action}[/bold] completed."
+                    )
+            elif fmt == OutputFormat.table:
                 task_note = f" (task #{task_id})" if task_id else ""
                 console.print(
                     f"[cyan]VM {rid}[/cyan] ({host or 'local'}): [bold]{action}[/bold] {outcome}{task_note}."
@@ -286,7 +289,7 @@ def vm_start(
     """Start one or more virtual machines."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        results = _run_vm_action(client, "start", vms, node=node, wait=wait)
+        results = _run_vm_action(client, "start", vms, node=node, wait=wait, fmt=fmt)
     print_result(results, fmt)
 
 
@@ -301,7 +304,7 @@ def vm_stop(
     """Force-stop (power off) one or more virtual machines."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        results = _run_vm_action(client, "stop", vms, node=node, wait=wait)
+        results = _run_vm_action(client, "stop", vms, node=node, wait=wait, fmt=fmt)
     print_result(results, fmt)
 
 
@@ -318,7 +321,7 @@ def vm_shutdown(
     """Gracefully shut down one or more virtual machines via ACPI."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        results = _run_vm_action(client, "shutdown", vms, node=node, wait=wait)
+        results = _run_vm_action(client, "shutdown", vms, node=node, wait=wait, fmt=fmt)
     print_result(results, fmt)
 
 
@@ -333,7 +336,7 @@ def vm_reboot(
     """Reboot one or more virtual machines."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
-        results = _run_vm_action(client, "reboot", vms, node=node, wait=wait)
+        results = _run_vm_action(client, "reboot", vms, node=node, wait=wait, fmt=fmt)
     print_result(results, fmt)
 
 
@@ -352,6 +355,7 @@ def vm_migrate(
     ] = False,
     node: NodeOption = None,
     wait: WaitOption = True,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Validate and migrate a virtual machine to another cluster node."""
     state: CLIState = ctx.obj
@@ -370,8 +374,8 @@ def vm_migrate(
         )
         if validate_only:
             if isinstance(val_res, dict):
-                print_dict(val_res, title=f"VM {rid} Migration Preflight -> {target_host}")
-            else:
+                print_dict(val_res, fmt=fmt, title=f"VM {rid} Migration Preflight -> {target_host}")
+            elif fmt == OutputFormat.table:
                 console.print(
                     f"[green]Migration preflight passed for VM {rid} -> {target_host}.[/green]"
                 )
@@ -383,14 +387,27 @@ def vm_migrate(
             node=source_host or None,
         )
         task_id = resp.get("taskId") if isinstance(resp, dict) else None
+        result: dict[str, Any] = {
+            "rid": rid,
+            "source": source_host or "local",
+            "target": target_host,
+            "status": "queued",
+        }
+        if task_id is not None:
+            result["taskId"] = task_id
         if wait and task_id:
             wait_for_lifecycle_task(client, int(task_id), node=source_host or None)
-            console.print(
-                f"[green]VM {rid} successfully migrated from {source_host} to {target_host}.[/green]"
+            result["status"] = "completed"
+            print_result(
+                result,
+                fmt,
+                f"VM {rid} successfully migrated from {source_host} to {target_host}.",
             )
         else:
-            console.print(
-                f"[cyan]Queued migration of VM {rid} -> {target_host} (task #{task_id}).[/cyan]"
+            print_result(
+                result,
+                fmt,
+                f"Queued migration of VM {rid} -> {target_host} (task #{task_id}).",
             )
 
 
@@ -619,13 +636,18 @@ def vm_rename(
     vm: Annotated[str, typer.Argument(help="VM RID or current name.")],
     new_name: Annotated[str, typer.Argument(help="New VM name.")],
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Rename a virtual machine."""
     state: CLIState = ctx.obj
     with state.get_client(node_override=node) as client:
         rid, host, _ = client.resolve_vm(vm, node=node)
         client.patch(f"/vm/{rid}/name", json_body={"name": new_name}, node=host or None)
-    console.print(f"[green]Renamed VM {rid} to '{new_name}'.[/green]")
+    print_result(
+        {"rid": rid, "name": new_name, "renamed": True},
+        fmt,
+        f"Renamed VM {rid} to '{new_name}'.",
+    )
 
 
 @vm_snapshot_app.command("list")
@@ -635,7 +657,10 @@ def vm_snapshot_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List ZFS snapshots for a virtual machine."""
     state: CLIState = ctx.obj
@@ -661,6 +686,9 @@ def vm_snapshot_list(
         fmt=fmt,
         selected_columns=columns,
         title=f"VM {rid} Snapshots ({host or 'local'})",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -673,6 +701,7 @@ def vm_snapshot_create(
         str, typer.Option("--description", "-d", help="Snapshot description.")
     ] = "",
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a crash-consistent ZFS snapshot for a virtual machine."""
     state: CLIState = ctx.obj
@@ -683,7 +712,11 @@ def vm_snapshot_create(
             json_body={"name": name, "description": description},
             node=host or None,
         )
-    console.print(f"[green]Created snapshot '{name}' for VM {rid}.[/green]")
+    print_result(
+        {"rid": rid, "name": name, "created": True},
+        fmt,
+        f"Created snapshot '{name}' for VM {rid}.",
+    )
 
 
 @vm_snapshot_app.command("rollback")
@@ -693,6 +726,7 @@ def vm_snapshot_rollback(
     snapshot_id: Annotated[int, typer.Argument(help="Snapshot ID to roll back to.")],
     yes: YesOption = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Roll back a virtual machine to a recorded snapshot."""
     state: CLIState = ctx.obj
@@ -703,7 +737,11 @@ def vm_snapshot_rollback(
             yes=yes,
         )
         client.post(f"/vm/{rid}/snapshots/{snapshot_id}/rollback", node=host or None)
-    console.print(f"[green]Rolled back VM {rid} to snapshot #{snapshot_id}.[/green]")
+    print_result(
+        {"rid": rid, "snapshotId": snapshot_id, "rolledBack": True},
+        fmt,
+        f"Rolled back VM {rid} to snapshot #{snapshot_id}.",
+    )
 
 
 @vm_snapshot_app.command("delete")
@@ -713,6 +751,7 @@ def vm_snapshot_delete(
     snapshot_id: Annotated[int, typer.Argument(help="Snapshot ID to delete.")],
     yes: YesOption = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a virtual machine snapshot."""
     state: CLIState = ctx.obj
@@ -720,7 +759,11 @@ def vm_snapshot_delete(
         rid, host, _ = client.resolve_vm(vm, node=node)
         confirm_destructive(f"Delete snapshot #{snapshot_id} for VM {rid}?", yes=yes)
         client.delete(f"/vm/{rid}/snapshots/{snapshot_id}", node=host or None)
-    console.print(f"[green]Deleted snapshot #{snapshot_id} for VM {rid}.[/green]")
+    print_result(
+        {"rid": rid, "snapshotId": snapshot_id, "deleted": True},
+        fmt,
+        f"Deleted snapshot #{snapshot_id} for VM {rid}.",
+    )
 
 
 @vm_template_app.command("list")
@@ -729,6 +772,9 @@ def vm_template_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List VM templates across the cluster (or on a specific node)."""
     state: CLIState = ctx.obj
@@ -752,7 +798,16 @@ def vm_template_list(
         ColumnSpec("Node", "node"),
         ColumnSpec("Created At", "createdAt", formatter=format_timestamp),
     ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="VM Templates")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="VM Templates",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )
 
 
 @vm_template_app.command("capture")
@@ -762,6 +817,7 @@ def vm_template_capture(
     name: Annotated[str, typer.Option("--name", help="Template name.")],
     node: NodeOption = None,
     wait: WaitOption = True,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Capture a shut-off VM as a reusable template."""
     state: CLIState = ctx.obj
@@ -775,7 +831,10 @@ def vm_template_capture(
         task_id = resp.get("taskId") if isinstance(resp, dict) else None
         if wait and task_id:
             wait_for_lifecycle_task(client, int(task_id), node=host or None)
-        console.print(f"[green]Captured VM {rid} as template '{name}'.[/green]")
+    result: dict[str, Any] = {"rid": rid, "name": name, "status": "captured"}
+    if task_id is not None:
+        result["taskId"] = task_id
+    print_result(result, fmt, f"Captured VM {rid} as template '{name}'.")
 
 
 @vm_template_app.command("delete")
@@ -784,10 +843,11 @@ def vm_template_delete(
     template_id: Annotated[int, typer.Argument(help="VM template ID.")],
     yes: YesOption = False,
     node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Delete a VM template by ID."""
     state: CLIState = ctx.obj
     confirm_destructive(f"Delete VM template #{template_id} and its stored datasets?", yes=yes)
     with state.get_client(node_override=node) as client:
         client.delete(f"/vm/templates/{template_id}", node=node)
-    console.print(f"[green]Deleted VM template #{template_id}.[/green]")
+    print_result({"id": template_id, "deleted": True}, fmt, f"Deleted VM template #{template_id}.")

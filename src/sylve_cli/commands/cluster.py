@@ -254,12 +254,20 @@ def cluster_resync(
 def cluster_create(
     ctx: typer.Context,
     ip: Annotated[str, typer.Option("--ip", help="Bootstrap Raft IP address for this node.")],
+    yes: Annotated[
+        bool,
+        typer.Option("-y", "--yes", help="Skip confirmation prompt."),
+    ] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Initialize a new Sylve cluster on the current node."""
+    confirm_destructive(f"Initialize a new cluster with bootstrap IP {ip}?", yes=yes)
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.post("/cluster", json_body={"ip": ip})
-    console.print(f"[green]Cluster created[/green] with bootstrap IP [bold]{ip}[/bold].")
+    print_result(
+        {"created": True, "bootstrapIp": ip}, fmt, f"Cluster created with bootstrap IP {ip}."
+    )
 
 
 @cluster_app.command("join-key")
@@ -288,8 +296,14 @@ def cluster_join(
     ],
     node_id: Annotated[str, typer.Option("--node-id", help="Node UUID of this joining node.")],
     cluster_key: Annotated[str, typer.Option("--cluster-key", help="Cluster join key.")],
+    yes: Annotated[
+        bool,
+        typer.Option("-y", "--yes", help="Skip confirmation prompt."),
+    ] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Join this node to an existing Sylve cluster."""
+    confirm_destructive(f"Join this node to the cluster via leader {leader_ip}?", yes=yes)
     state: CLIState = ctx.obj
     with state.get_client() as client:
         client.post(
@@ -301,7 +315,11 @@ def cluster_join(
                 "clusterKey": cluster_key,
             },
         )
-    console.print(f"[green]Node joined cluster via leader {leader_ip}.[/green]")
+    print_result(
+        {"joined": True, "leaderIp": leader_ip},
+        fmt,
+        f"Node joined cluster via leader {leader_ip}.",
+    )
 
 
 @cluster_app.command("leave")
@@ -321,6 +339,7 @@ def cluster_leave(
         bool,
         typer.Option("-y", "--yes", help="Skip confirmation prompt."),
     ] = False,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Remove the current node from the cluster and clear its cluster state."""
     confirm_destructive("Are you sure you want this node to leave the cluster?", yes=yes)
@@ -333,7 +352,7 @@ def cluster_leave(
             )
         else:
             client.delete("/cluster/reset-node", json_body={"retainGuests": retain_guests})
-    console.print("[green]Node has left the cluster.[/green]")
+    print_result({"left": True}, fmt, "Node has left the cluster.")
 
 
 @cluster_note_app.command("list")
@@ -341,7 +360,10 @@ def cluster_note_list(
     ctx: typer.Context,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List all cluster notes."""
     state: CLIState = ctx.obj
@@ -360,6 +382,9 @@ def cluster_note_list(
         fmt=fmt,
         selected_columns=columns,
         title="Cluster Notes",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 

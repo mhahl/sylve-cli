@@ -161,7 +161,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
   Wait for the lifecycle task (default: `--no-wait`).
 - `-f, --format`
   Output format. With `json`/`yaml`/`csv`/`value` each VM's result (`rid`,
-  `name`, `action`, `status`, `taskId`) is printed instead of prose. A failure
+  `name`, `node`, `outcome`, `status`, `taskId`) is printed instead of prose. A failure
   on one VM does not stop the others; the command reports every failure and
   exits `1`.
 
@@ -177,6 +177,9 @@ request unless `-y` / `--yes` or `--dry-run` is given.
   Source node.
 - `-w, --wait / --no-wait`
   Wait for migration completion (default: `--wait`).
+- `-f, --format`
+  Output format. With `json`/`yaml`/`csv`/`value` the migration result
+  (`rid`, `source`, `target`, `status`, `taskId`) is printed instead of prose.
 
 ### `vm delete`
 
@@ -207,7 +210,8 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `--takeover / --observe` (`console` only): request input control or attach
   read-only (default: `--takeover`). Press `Enter`, then type `~.` to detach.
 - `-n, --node NODE`: target node.
-- `-f, --format`, `-c, --column`: output options (`guest-agent` only).
+- `-f, --format`, `-c, --column`: output options (`guest-agent` only; `rename`
+  takes `-f/--format` and prints `{"rid","name","renamed"}` in machine modes).
 
 ### `vm vnc`
 
@@ -238,25 +242,30 @@ settings request 16- or 8-bit pixels and show a black screen.
 Enable VNC first if the VM was created without it:
 
 ```sh
-sylve vm hardware-vnc 101 --data '{"vncEnabled":true,"vncResolution":"1024x768","vncWait":false}'
+sylve vm hardware-vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --set vncWait=false
 ```
 
 ### `vm snapshot` and `vm template`
 
-- `snapshot list VM`: `-n/--node`, `-f/--format`, `-c/--column`, `--long`.
-- `snapshot create VM`: `--name, -m NAME` (required), `--description, -d TEXT`, `-n/--node`.
-- `snapshot rollback VM SNAPSHOT_ID`: `-y/--yes`, `-n/--node`.
-- `snapshot delete VM SNAPSHOT_ID`: `-n/--node`.
-- `template list`: `-n/--node`, `-f/--format`, `-c/--column`.
-- `template capture VM`: `--name NAME` (required), `-n/--node`, `-w/--wait` (default: `--wait`).
+- `snapshot list VM`: `-n/--node`, `-f/--format`, `-c/--column`,
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`, `--long`.
+- `snapshot create VM`: `--name, -m NAME` (required), `--description, -d TEXT`,
+  `-n/--node`, `-f/--format`.
+- `snapshot rollback VM SNAPSHOT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
+- `snapshot delete VM SNAPSHOT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
+- `template list`: `-n/--node`, `-f/--format`, `-c/--column`,
+  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
+- `template capture VM`: `--name NAME` (required), `-n/--node`, `-w/--wait` (default: `--wait`),
+  `-f/--format`.
 - `template delete TEMPLATE_ID`: `-y/--yes` (the template's stored datasets are
-  deleted too), `-n/--node`.
-- `snapshot delete VM SNAPSHOT_ID`: `-y/--yes`, `-n/--node`.
+  deleted too), `-n/--node`, `-f/--format`.
 
 ### Generic Subcommands
 
-All generic VM subcommands accept `--data/-d`, `--param/-p`, `-y/--yes`,
-`-n/--node`, and `-f/--format`:
+All generic VM subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+`--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format` (reads also take
+`-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
+need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
@@ -427,7 +436,7 @@ sylve vm migrate 101 --target node2.example.test --wait
 sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"
 sylve vm snapshot rollback 101 1 --yes
 sylve vm template capture 101 --name debian-web --wait
-sylve vm hardware-cpu 101 --data '{"sockets":1,"cores":4,"threads":2}' -f json
+sylve vm hardware-cpu 101 --set sockets=1 --set cores=4 --set threads=2 -f json
 sylve vm delete 101 --keep-volumes --keep-raw-disks --keep-macs --yes
 ```
 

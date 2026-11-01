@@ -31,14 +31,20 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -68,12 +74,12 @@ Create a group, replace its member list, and delete it:
 
 ```sh
 sylve group create \
-  --data '{"name":"operators","description":"VM and jail operators","permissions":["vm:write","jail:write"]}' \
+  --set name=operators --set 'description=VM and jail operators' --set 'permissions=[vm:write,jail:write]' \
   --param validate=1 \
   --node node1.example.test \
   --format json
 
-sylve group members 2 --data '{"memberIds":[1,3]}' -f json
+sylve group members 2 --set 'memberIds=[1,3]' -f json
 sylve group delete 2 --yes
 ```
 

@@ -181,6 +181,9 @@ def iface_l3(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List managed host interface Layer-3 IP configurations."""
     state: CLIState = ctx.obj
@@ -206,7 +209,14 @@ def iface_l3(
             ColumnSpec("Revision", "revision", justify="right"),
         ]
         print_list(
-            data["entries"], spec, fmt=fmt, selected_columns=columns, title="Host L3 Interfaces"
+            data["entries"],
+            spec,
+            fmt=fmt,
+            selected_columns=columns,
+            title="Host L3 Interfaces",
+            sort_column=sort_column,
+            filters=filters,
+            limit=limit,
         )
     elif isinstance(data, dict):
         print_dict(data, fmt=fmt, selected_columns=columns, title="Host L3 Configuration")
@@ -441,7 +451,10 @@ def route_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List static routes across nodes."""
     state: CLIState = ctx.obj
@@ -475,7 +488,16 @@ def route_list(
             ColumnSpec("Interface", "interface"),
             ColumnSpec("Enabled", "enabled"),
         ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Static Routes")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Static Routes",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )
 
 
 @route_app.command("delete")
@@ -518,6 +540,9 @@ def dhcp_range_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List configured DHCP address ranges."""
     state: CLIState = ctx.obj
@@ -540,7 +565,16 @@ def dhcp_range_list(
         ColumnSpec("Expiry (s)", "expiry", justify="right"),
         ColumnSpec("SLAAC", "slaac"),
     ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="DHCP Ranges")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="DHCP Ranges",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )
 
 
 @dhcp_app.command("lease-list")
@@ -549,6 +583,9 @@ def dhcp_lease_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List active and static DHCP leases."""
     state: CLIState = ctx.obj
@@ -562,7 +599,16 @@ def dhcp_lease_list(
             ColumnSpec("MAC", "mac"),
             ColumnSpec("Expiry", "expiry"),
         ]
-        print_list(data, spec, fmt=fmt, selected_columns=columns, title="DHCP Leases")
+        print_list(
+            data,
+            spec,
+            fmt=fmt,
+            selected_columns=columns,
+            title="DHCP Leases",
+            sort_column=sort_column,
+            filters=filters,
+            limit=limit,
+        )
     elif isinstance(data, dict):
         print_dict(data, fmt=fmt, selected_columns=columns, title="DHCP Leases")
 
@@ -576,7 +622,10 @@ def firewall_traffic_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List PF firewall traffic rules in evaluation order."""
     state: CLIState = ctx.obj
@@ -614,7 +663,16 @@ def firewall_traffic_list(
             ColumnSpec("Dst Ports", "dstPortsRaw"),
             ColumnSpec("Enabled", "enabled"),
         ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Firewall Traffic Rules")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Firewall Traffic Rules",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )
 
 
 @firewall_app.command("nat-list")
@@ -623,7 +681,10 @@ def firewall_nat_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List PF firewall NAT rules in evaluation order."""
     state: CLIState = ctx.obj
@@ -659,7 +720,16 @@ def firewall_nat_list(
             ColumnSpec("Dest", "destRaw"),
             ColumnSpec("Enabled", "enabled"),
         ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Firewall NAT Rules")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Firewall NAT Rules",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )
 
 
 @firewall_app.command("logs")
@@ -808,6 +878,9 @@ def object_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List configured network objects (IP/MAC/Port aliases)."""
     state: CLIState = ctx.obj
@@ -840,7 +913,16 @@ def object_list(
         ColumnSpec("In Use", "used"),
         ColumnSpec("Node", "node"),
     ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Network Objects")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Network Objects",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )
 
 
 @object_app.command("create")
@@ -911,6 +993,9 @@ def wg_client_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List outbound WireGuard clients."""
     state: CLIState = ctx.obj
@@ -936,4 +1021,13 @@ def wg_client_list(
         ColumnSpec("Endpoint", "endpoint"),
         ColumnSpec("Enabled", "enabled"),
     ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="WireGuard Clients")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="WireGuard Clients",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )

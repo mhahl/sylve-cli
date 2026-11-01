@@ -55,6 +55,8 @@ failovers, and monitors replication events.
   Failover mode (default: `manual`).
 - `--enabled / --disabled`
   Enable or disable the policy on creation (default: `--enabled`).
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
 
 ### `policy run`, `policy failover`, `policy delete`, `policy update`
 
@@ -66,13 +68,14 @@ failovers, and monitors replication events.
     node (default: `--move-pinned-source`).
   - `--confirm-data-loss`: required acknowledgement when `--mode force` is set.
 - `delete POLICY_ID`: `-y, --yes`.
-- `update POLICY_ID`: `-d, --data BODY`, `-p, --param KEY=VALUE`,
+- `update POLICY_ID`: `-d, --data BODY`, `-s, --set KEY=VALUE`,
+  `-p, --param KEY=VALUE`, `--dry-run`,
   `-n, --node NODE`, `-f, --format`.
 
 ### `event list` and `event show`
 
 - `list`: `--policy-id ID`, `--limit, -l N` (default: `50`), `-f/--format`,
-  `-c/--column`, `--long`.
+  `-c/--column`, `--sort-column NAME`, `--filter COLUMN=VALUE`, `--long`.
 - `show EVENT_ID`: `-w, --wait / --no-wait` (follow live progress; default:
   `--no-wait`), `-f/--format`, `-c/--column`.
 
@@ -132,7 +135,7 @@ sylve replication event show 9 --wait
 Disable or delete a policy:
 
 ```sh
-sylve replication policy update 1 --data '{"enabled":false}' -f json
+sylve replication policy update 1 --set enabled=false -f json
 sylve replication policy delete 1 --yes
 ```
 

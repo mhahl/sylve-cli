@@ -63,6 +63,10 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 
 - `--ip IP` (required)
   Bootstrap Raft IP address for this node.
+- `-y, --yes`
+  Skip confirmation prompt.
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
 
 ### `cluster join-key`
 
@@ -79,6 +83,10 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
   Node UUID of this joining node.
 - `--cluster-key KEY` (required)
   Cluster join key.
+- `-y, --yes`
+  Skip confirmation prompt.
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
 
 ### `cluster leave`
 
@@ -89,6 +97,8 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
   Force a local cluster state reset without contacting Raft.
 - `-y, --yes`
   Skip confirmation prompt.
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
 
 ### `cluster note list`
 
@@ -96,6 +106,12 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
   Output format (default: `table`).
 - `-c, --column NAME`
   Select columns: `id`, `title`, `content`, `updatedAt`.
+- `--sort-column NAME`
+  Sort rows by column.
+- `--filter COLUMN=VALUE`
+  Keep only matching rows (repeatable).
+- `-l, --limit N`
+  Show at most `N` rows.
 - `--long`
   Add the `Content` column.
 
@@ -123,7 +139,9 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 ### Generic Subcommands
 
 `accept-join`, `note update ID`, and `note bulk-delete` accept `--data/-d`,
-`--param/-p`, `-y/--yes`, `-n/--node`, and `-f/--format`.
+`--set/-s`, `--param/-p`, `--dry-run`, `-y/--yes`, `-n/--node`, and
+`-f/--format`. Small updates need no JSON; see
+[sylve-options(7)](../global-options.md).
 
 | Subcommand | Path Arguments |
 |---|---|
@@ -225,8 +243,8 @@ sylve cluster note delete 1
 Execute generic cluster API endpoints:
 
 ```sh
-sylve cluster accept-join --data '{"nodeId":"2b7c...","nodeIp":"10.0.0.12"}' --param dryRun=0 --node node1.example.test -f json
-sylve cluster note bulk-delete --data '{"ids":[1,2]}' --yes
+sylve cluster accept-join --set nodeId=2b7c... --set nodeIp=10.0.0.12 --param dryRun=0 --node node1.example.test -f json
+sylve cluster note bulk-delete --set 'ids=[1,2]' --yes
 ```
 
 ## SEE ALSO

@@ -390,6 +390,8 @@ def snapshot_list(
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
     sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List ZFS dataset snapshots across cluster nodes."""
     dataset_list(
@@ -399,6 +401,8 @@ def snapshot_list(
         fmt=fmt,
         columns=columns,
         sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -493,7 +497,10 @@ def periodic_list(
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List periodic ZFS snapshot schedules."""
     state: CLIState = ctx.obj
@@ -528,4 +535,13 @@ def periodic_list(
             ColumnSpec("Last Run", "lastRunAt", formatter=format_timestamp),
             ColumnSpec("Next Run", "nextRunAt", formatter=format_timestamp),
         ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Periodic ZFS Snapshot Jobs")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Periodic ZFS Snapshot Jobs",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )

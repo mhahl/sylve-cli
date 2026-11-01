@@ -25,7 +25,14 @@ from sylve_cli.formatter import (
     print_dict,
     print_list,
 )
-from sylve_cli.state import CLIState, ColumnsOption, FormatOption
+from sylve_cli.state import (
+    CLIState,
+    ColumnsOption,
+    FilterOption,
+    FormatOption,
+    LimitOption,
+    SortColumnOption,
+)
 
 config_app = typer.Typer(
     name="config",
@@ -55,7 +62,7 @@ def login_command(
     ] = None,
     password: Annotated[
         str | None,
-        typer.Option("-p", "--password", help="Password for authentication."),
+        typer.Option("--password", help="Password for authentication (prefer the prompt)."),
     ] = None,
     token: Annotated[
         str | None,
@@ -274,6 +281,9 @@ def config_get_contexts(
     ctx: typer.Context,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List all saved login contexts."""
     state: CLIState = ctx.obj
@@ -302,7 +312,16 @@ def config_get_contexts(
         ColumnSpec("Default Node", "default_node"),
         ColumnSpec("Status", "status"),
     ]
-    print_list(rows, spec, fmt=fmt, selected_columns=columns, title="Contexts")
+    print_list(
+        rows,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title="Contexts",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
+    )
 
 
 @config_app.command("use-context")

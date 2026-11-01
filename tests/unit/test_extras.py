@@ -13,8 +13,10 @@ import yaml
 
 from sylve_cli.client import SylveError
 from sylve_cli.commands.extras import (
+    _merge_body,
     _parse_data,
     _parse_params,
+    _parse_set,
     _path_for,
     _print_result,
 )
@@ -60,6 +62,44 @@ def test_parse_params_falls_back_to_raw_string_on_bad_yaml() -> None:
 def test_parse_params_rejects_missing_equals() -> None:
     with pytest.raises(SylveError, match="KEY=VALUE"):
         _parse_params(["nokey"])
+
+
+# ---------------------------------------------------------------------------
+# --set parsing: YAML coercion, dotted nesting, and body merging.
+# ---------------------------------------------------------------------------
+def test_parse_set_coerces_scalars_and_nests_dotted_keys() -> None:
+    assert _parse_set(None) == {}
+    assert _parse_set([]) == {}
+    assert _parse_set(["cores=4", "dhcp=true"]) == {"cores": 4, "dhcp": True}
+    assert _parse_set(["vlanPolicy.mode=tagged"]) == {"vlanPolicy": {"mode": "tagged"}}
+    # Later entries win; unquoted values fall back to raw strings when not YAML.
+    assert _parse_set(["a=1", "a=2"]) == {"a": 2}
+    assert _parse_set(["note=hello world"]) == {"note": "hello world"}
+
+
+def test_parse_set_rejects_bad_format() -> None:
+    with pytest.raises(SylveError, match="KEY=VALUE"):
+        _parse_set(["nokey"])
+    with pytest.raises(SylveError, match="KEY=VALUE"):
+        _parse_set([".a=1"])
+    with pytest.raises(SylveError, match="KEY=VALUE"):
+        _parse_set(["a..b=1"])
+
+
+def test_merge_body_combines_data_and_set() -> None:
+    assert _merge_body(None, None) is None
+    assert _merge_body(None, ["cores=4"]) == {"cores": 4}
+    assert _merge_body('{"cores": 2}', None) == {"cores": 2}
+    assert _merge_body('{"a": 1, "nested": {"x": 1, "y": 2}}', ["b=3", "nested.x=9"]) == {
+        "a": 1,
+        "b": 3,
+        "nested": {"x": 9, "y": 2},
+    }
+
+
+def test_merge_body_rejects_set_without_object_body() -> None:
+    with pytest.raises(SylveError, match="JSON object body"):
+        _merge_body("[1, 2]", ["a=1"])
 
 
 # ---------------------------------------------------------------------------

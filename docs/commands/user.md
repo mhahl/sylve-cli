@@ -37,14 +37,20 @@ All subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ## EXIT STATUS
 
@@ -54,12 +60,23 @@ All subcommands accept:
 
 ## EXAMPLES
 
-List users and create a local account:
+List users and create a local account (the password stays out of shell
+history in a file):
+
+```json
+{
+  "username": "ops",
+  "password": "secret",
+  "authType": "sylve",
+  "uid": 1001,
+  "groups": [1]
+}
+```
 
 ```sh
 sylve user list -f json
 sylve user create \
-  --data '{"username":"ops","password":"secret","authType":"sylve","uid":1001,"groups":[1]}' \
+  --data @ops-user.json \
   --param sendWelcome=0 \
   --node node1.example.test \
   --format json
@@ -69,15 +86,15 @@ Import a Unix user, create a PAM account, and query the next UID:
 
 ```sh
 sylve user importable -f json
-sylve user import --data '{"username":"mark","uid":1000}'
-sylve user pam-create --data '{"username":"ops-pam"}'
+sylve user import --set username=mark --set uid=1000
+sylve user pam-create --set username=ops-pam
 sylve user next-uid
 ```
 
 Update a user, manage passkeys, and delete an account:
 
 ```sh
-sylve user update 2 --data '{"fullName":"Operations"}' -f json
+sylve user update 2 --set fullName=Operations -f json
 sylve user passkeys 2
 sylve user passkey-delete 2 cred-abc
 sylve user delete 2 --yes

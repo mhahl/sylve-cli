@@ -43,14 +43,20 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE`.
+- `-s, --set KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data`.
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
+- `--dry-run`
+  Print the request without sending it.
 - `-y, --yes`
   Skip destructive-request confirmation.
 - `-n, --node NODE`
   Target node.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
+- `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
+  Output selection (reads only).
 
 ### `file-upload`, `file-download`, `cert-archive`, `events`, `terminal`, and `notes-show`
 
@@ -98,7 +104,7 @@ Set a kernel tunable:
 
 ```sh
 sylve system tunable-set \
-  --data '{"name":"kern.maxfiles","value":"200000","comment":"raised for jails"}' \
+  --set name=kern.maxfiles --set 'value="200000"' --set comment='raised for jails' \
   --param dryRun=0 \
   --node node1.example.test \
   --format json
@@ -107,7 +113,7 @@ sylve system tunable-set \
 Create, list, show, and delete host notes:
 
 ```sh
-sylve system notes-create --data '{"title":"Maintenance","content":"Disk replacement 22:00"}'
+sylve system notes-create --set title=Maintenance --set 'content=Disk replacement 22:00'
 sylve system notes-list -f json
 sylve system notes-show 3 -f json
 sylve system notes-delete 3 --yes

@@ -43,32 +43,35 @@ backup execution events.
 - `list`: `-f, --format`, `-c, --column`, `--sort-column NAME`, `--long`
   (adds `Port`, `Backup Root`, and `Description`).
 - `show TARGET_ID`: `-f/--format`, `-c/--column`.
-- `datasets TARGET_ID`: `-f/--format`, `-c/--column`, `--long`.
-- `validate TARGET_ID`: takes no additional options.
-- `delete TARGET_ID`: `-y, --yes`.
+- `datasets TARGET_ID`: `-f/--format`, `-c/--column`, `--sort-column NAME`,
+  `--filter COLUMN=VALUE`, `-l/--limit N`, `--long`.
+- `validate TARGET_ID`: `-f/--format`.
+- `delete TARGET_ID`: `-y, --yes`, `-f/--format`.
 
 ### `job`
 
 - `list`: `--target-id ID`, `--guest-type {vm,jail}`, `--guest-id ID`,
   `-f/--format`, `-c/--column`, `--sort-column`, `--long`.
-- `run JOB_ID`: takes no additional options.
+- `run JOB_ID`: queue an immediate run (`-f/--format`).
 - `snapshots JOB_ID`: `--limit, -l N` (default: `100`), `-f/--format`,
-  `-c/--column`, `--long`.
+  `-c/--column`, `--sort-column NAME`, `--filter COLUMN=VALUE`, `--long`.
 - `restore JOB_ID`: `--snapshot, -s NAME` (required),
-  `--encryption-key KEY` (for encrypted backups).
+  `--encryption-key KEY` (for encrypted backups), `-f/--format`.
 - `delete JOB_ID`: `-y, --yes`.
 
 ### `event`
 
 - `list`: `--job-id ID`, `--limit, -l N` (default: `50`), `-f/--format`,
-  `-c/--column`, `--long`.
+  `-c/--column`, `--sort-column NAME`, `--filter COLUMN=VALUE`, `--long`.
 - `show EVENT_ID`: `-w, --wait / --no-wait` (default: `--no-wait`),
   `-f/--format`, `-c/--column`.
 
 ### Generic Subcommands
 
-All generic backup subcommands accept `--data/-d`, `--param/-p`, `-y/--yes`,
-`-n/--node`, and `-f/--format`:
+All generic backup subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+`--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format` (reads also take
+`-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
+need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|

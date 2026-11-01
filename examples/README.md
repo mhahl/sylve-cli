@@ -36,6 +36,15 @@ sylve vm create --file vm/fedora-cloud.yaml --dry-run -f yaml
 sylve vm create --file vm/fedora-cloud.yaml --start --wait --yes
 ```
 
+## Jail YAML
+
+`jail/basic.yaml` defines a FreeBSD jail on a DHCP switch:
+
+```sh
+sylve jail create --file jail/basic.yaml --dry-run -f json
+sylve jail create --file jail/basic.yaml --yes
+```
+
 ## Scripts
 
 - `scripts/create-fedora-vm.sh` — creates the same VM with explicit flags.

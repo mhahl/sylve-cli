@@ -122,6 +122,10 @@ READ_CASES: list[tuple[tuple[str, ...], tuple[str, ...]]] = [
         ("vm", "create", "live-check", "--pool", "$pool", "--no-vnc", "--dry-run", "-f", "json"),
         ("pool",),
     ),
+    (
+        ("jail", "create", "live-check", "--pool", "$pool", "--dry-run", "-f", "json"),
+        ("pool",),
+    ),
 ]
 
 

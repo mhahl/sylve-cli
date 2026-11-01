@@ -10,7 +10,6 @@ from sylve_cli.client import ResourceNotFoundError
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
-    console,
     format_timestamp,
     print_dict,
     print_list,
@@ -129,7 +128,10 @@ def target_datasets(
     target_id: Annotated[int, typer.Argument(help="Backup target ID.")],
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
+    limit: LimitOption = None,
 ) -> None:
     """List restorable datasets on a backup target."""
     state: CLIState = ctx.obj
@@ -157,6 +159,9 @@ def target_datasets(
         fmt=fmt,
         selected_columns=columns,
         title=f"Backup Target #{target_id} Datasets",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -275,7 +280,9 @@ def job_snapshots(
     limit: Annotated[int, typer.Option("--limit", "-l", help="Max snapshots to return.")] = 100,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
 ) -> None:
     """List restorable snapshots produced by a backup job."""
     state: CLIState = ctx.obj
@@ -300,7 +307,14 @@ def job_snapshots(
             ColumnSpec("Created At", "creation", formatter=format_timestamp),
         ]
     print_list(
-        items, spec, fmt=fmt, selected_columns=columns, title=f"Backup Job #{job_id} Snapshots"
+        items,
+        spec,
+        fmt=fmt,
+        selected_columns=columns,
+        title=f"Backup Job #{job_id} Snapshots",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 
@@ -312,6 +326,7 @@ def job_restore(
     encryption_key: Annotated[
         str | None, typer.Option("--encryption-key", help="Decryption key if encrypted.")
     ] = None,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Queue restoration of a snapshot from a backup job."""
     state: CLIState = ctx.obj
@@ -319,10 +334,11 @@ def job_restore(
     if encryption_key:
         body["encryptionKey"] = encryption_key
     with state.get_client() as client:
-        client.post(f"/cluster/backups/jobs/{job_id}/restore", json_body=body)
-    console.print(
-        f"[green]Queued restore of snapshot '{snapshot}' from backup job #{job_id}.[/green]"
-    )
+        resp = client.post(f"/cluster/backups/jobs/{job_id}/restore", json_body=body)
+    result: dict[str, Any] = {"id": job_id, "snapshot": snapshot, "status": "queued"}
+    if isinstance(resp, dict) and resp.get("taskId") is not None:
+        result["taskId"] = resp["taskId"]
+    print_result(result, fmt, f"Queued restore of snapshot '{snapshot}' from backup job #{job_id}.")
 
 
 @job_app.command("delete")
@@ -350,7 +366,9 @@ def backup_event_list(
     limit: Annotated[int, typer.Option("--limit", "-l", help="Maximum events.")] = 50,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
 ) -> None:
     """List recent backup events."""
     state: CLIState = ctx.obj
@@ -386,6 +404,9 @@ def backup_event_list(
         fmt=fmt,
         selected_columns=columns,
         title="Backup Events",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 

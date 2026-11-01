@@ -10,7 +10,6 @@ from sylve_cli.client import ResourceNotFoundError
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
-    console,
     format_timestamp,
     print_dict,
     print_list,
@@ -156,6 +155,7 @@ def policy_create(
         str, typer.Option("--failover-mode", help="Failover mode (manual or auto).")
     ] = "manual",
     enabled: Annotated[bool, typer.Option("--enabled/--disabled", help="Enable policy.")] = True,
+    fmt: FormatOption = OutputFormat.table,
 ) -> None:
     """Create a cluster replication policy for a VM or jail."""
     state: CLIState = ctx.obj
@@ -182,8 +182,10 @@ def policy_create(
                 "enabled": enabled,
             },
         )
-    console.print(
-        f"[green]Created replication policy '{name}' for {guest_type} {guest_id}.[/green]"
+    print_result(
+        {"name": name, "guestType": guest_type, "guestId": guest_id, "created": True},
+        fmt,
+        f"Created replication policy '{name}' for {guest_type} {guest_id}.",
     )
 
 
@@ -280,7 +282,9 @@ def event_list(
     limit: Annotated[int, typer.Option("--limit", "-l", help="Maximum events to return.")] = 50,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
+    sort_column: SortColumnOption = None,
     long: LongOption = False,
+    filters: FilterOption = None,
 ) -> None:
     """List recent replication events."""
     state: CLIState = ctx.obj
@@ -319,6 +323,9 @@ def event_list(
         fmt=fmt,
         selected_columns=columns,
         title="Replication Events",
+        sort_column=sort_column,
+        filters=filters,
+        limit=limit,
     )
 
 

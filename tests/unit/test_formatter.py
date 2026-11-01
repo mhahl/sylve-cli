@@ -22,6 +22,7 @@ from sylve_cli.formatter import (
     format_vm_state,
     print_dict,
     print_list,
+    print_result,
     state_text,
 )
 
@@ -276,3 +277,33 @@ def test_apply_row_filters_by_column_text_and_limit() -> None:
     assert apply_row_filters(rows, ["state=RUNNING", "web"], limit=1) == [rows[0]]
     # An unknown column filters everything out rather than silently passing.
     assert apply_row_filters(rows, ["nope=x"]) == []
+
+
+# ---------------------------------------------------------------------------
+# print_result: table prose vs pure machine output for row lists and scalars.
+# ---------------------------------------------------------------------------
+def test_print_result_list_is_pure_json(capsys: pytest.CaptureFixture[str]) -> None:
+    rows = [{"rid": 101, "status": "queued"}]
+    print_result(rows, OutputFormat.json)
+    assert json.loads(capsys.readouterr().out) == rows
+
+
+def test_print_result_list_table_prints_message(capsys: pytest.CaptureFixture[str]) -> None:
+    print_result([{"rid": 101}], OutputFormat.table, "did it")
+    assert "did it" in capsys.readouterr().out
+
+
+def test_print_result_scalar_does_not_crash(capsys: pytest.CaptureFixture[str]) -> None:
+    print_result("queued", OutputFormat.json)
+    assert json.loads(capsys.readouterr().out) == "queued"
+    print_result("queued", OutputFormat.table, "done")
+    assert "done" in capsys.readouterr().out
+
+
+def test_print_result_empty_is_ok_in_table_and_silent_in_json(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    print_result([], OutputFormat.table)
+    assert "OK" in capsys.readouterr().out
+    print_result([], OutputFormat.json)
+    assert capsys.readouterr().out == ""

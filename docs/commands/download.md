@@ -67,6 +67,8 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
   Skip TLS certificate verification on the remote download URL.
 - `-n, --node NODE`
   Target node.
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
 
 ### `download upload`
 
@@ -82,13 +84,19 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
   Convert disk images to RAW format (default: `--no-raw-convert`).
 - `-n, --node NODE`
   Target node.
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
 
 ### `download delete`
 
 - `IDS...` (required)
   One or more download IDs.
+- `-y, --yes`
+  Skip confirmation prompt.
 - `-n, --node NODE`
   Target node.
+- `-f, --format {table,json,yaml,value,csv}`
+  Output format (default: `table`).
 
 ### `download signed-url`
 
@@ -101,15 +109,18 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
 
 ### `download storage`
 
-- `-n, --node NODE`, `-f, --format`, `-c, --column`
+- `-n, --node NODE`, `-f, --format`, `-c, --column`, `--sort-column NAME`,
+  `--filter COLUMN=VALUE`, `-l, --limit N`
   Standard node and output options.
 
 ### `download file`, `download file-with-name`, and Generic Subcommands
 
 - `file UUID` and `file-with-name UUID FILENAME` require `--output, -o PATH` and
   accept `--param, -p KEY=VALUE` and `-n, --node NODE`.
-- `update ID`, `utype`, and `abort-upload ID` accept `--data/-d`, `--param/-p`,
-  `-y/--yes`, `-n/--node`, and `-f/--format`.
+- `update ID`, `utype`, and `abort-upload ID` accept `--data/-d`, `--set/-s`,
+  `--param/-p`, `--dry-run`, `-y/--yes`, `-n/--node`, and `-f/--format`
+  (reads also take `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`).
+  Small updates need no JSON; see [sylve-options(7)](../global-options.md).
 
 ## EXIT STATUS
 
@@ -165,7 +176,7 @@ sylve download file 8f14... --param token=... --output ./debian-13.iso
 Update download metadata via the generic endpoint:
 
 ```sh
-sylve download update 1 --data '{"name":"debian-13-cloudinit.iso"}' --param validate=1 --node node1.example.test -f json
+sylve download update 1 --set name=debian-13-cloudinit.iso --param validate=1 --node node1.example.test -f json
 ```
 
 ## SEE ALSO
