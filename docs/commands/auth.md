@@ -16,7 +16,7 @@ sylve auth COMMAND [ARGS ...]
 event (`SSE`) tokens, and executes WebAuthn passkey login and registration
 handshakes via generic Sylve API bindings.
 
-`login-config`, `passkey-login-begin`, and `passkey-login-finish` are public
+`login-config`, `passkey login-begin`, and `passkey login-finish` are public
 endpoints; the CLI does not send a bearer token when calling them.
 
 ## SUBCOMMANDS
@@ -25,19 +25,19 @@ endpoints; the CLI does not send a bearer token when calling them.
 |---|---|
 | `login-config` | Show enabled authentication realms and passkey support |
 | `sse-token` | Create a short-lived token for SSE streams |
-| `passkey-login-begin` | Begin a WebAuthn passkey login challenge |
-| `passkey-login-finish` | Complete a WebAuthn passkey login challenge |
-| `passkey-register-begin` | Begin a WebAuthn passkey registration ceremony |
-| `passkey-register-finish` | Complete a WebAuthn passkey registration ceremony |
+| `passkey login-begin` | Begin a WebAuthn passkey login challenge |
+| `passkey login-finish` | Complete a WebAuthn passkey login challenge |
+| `passkey register-begin` | Begin a WebAuthn passkey registration ceremony |
+| `passkey register-finish` | Complete a WebAuthn passkey registration ceremony |
 
 ## OPTIONS
 
-All subcommands accept:
+Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
-  JSON or YAML request body, or `@FILE`.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable, dotted keys nest); overrides `--data`.
+  JSON or YAML request body, or `@FILE` (write commands).
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
 - `--dry-run`
@@ -81,11 +81,11 @@ sylve auth sse-token --node node1.example.test --format json
 Run passkey login and registration ceremonies:
 
 ```sh
-sylve auth passkey-login-begin -f json
-sylve auth passkey-login-finish --data @passkey-response.json -f json
+sylve auth passkey login-begin -f json
+sylve auth passkey login-finish --data @passkey-response.json -f json
 
-sylve auth passkey-register-begin -f json
-sylve auth passkey-register-finish --data @passkey-registration.json -f json
+sylve auth passkey register-begin -f json
+sylve auth passkey register-finish --data @passkey-registration.json -f json
 ```
 
 Preview the SSE token request without sending it (the endpoint takes no
@@ -99,10 +99,10 @@ Preview the passkey registration and login finish requests (the real
 ceremonies need a live server and a WebAuthn response):
 
 ```sh
-sylve auth passkey-login-begin --dry-run -f json
-sylve auth passkey-login-finish --set requestId=example-request --dry-run -f json
-sylve auth passkey-register-begin --set userId=2 --dry-run -f json
-sylve auth passkey-register-finish \
+sylve auth passkey login-begin --dry-run -f json
+sylve auth passkey login-finish --set requestId=example-request --dry-run -f json
+sylve auth passkey register-begin --set userId=2 --dry-run -f json
+sylve auth passkey register-finish \
   --set requestId=example-request --set label=example-key --dry-run -f json
 ```
 

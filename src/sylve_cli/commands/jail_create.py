@@ -181,25 +181,16 @@ def _config_to_payload(cfg: dict[str, Any]) -> dict[str, Any]:
 
 def _apply_set_overrides(payload: dict[str, Any], values: list[str] | None) -> None:
     """Deep-merge ``--set KEY=VALUE`` overrides so exotic fields need no JSON."""
-    for item in values or []:
-        if "=" not in item:
-            raise SylveError("--set must use KEY=VALUE format.")
-        key, raw = item.split("=", 1)
-        parts = [part.strip() for part in key.split(".")]
-        if not key.strip() or any(not part for part in parts):
-            raise SylveError("--set must use KEY=VALUE format with a non-empty key.")
-        try:
-            parsed: Any = yaml.safe_load(raw)
-        except yaml.YAMLError:
-            parsed = raw
-        target = payload
-        for part in parts[:-1]:
-            existing = target.get(part)
-            if not isinstance(existing, dict):
-                existing = {}
-                target[part] = existing
-            target = existing
-        target[parts[-1]] = parsed
+    from sylve_cli.commands.extras import _parse_set
+
+    def _merge(target: dict[str, Any], overrides: dict[str, Any]) -> None:
+        for key, value in overrides.items():
+            if isinstance(value, dict) and isinstance(target.get(key), dict):
+                _merge(target[key], value)
+            else:
+                target[key] = value
+
+    _merge(payload, _parse_set(values))
 
 
 def _resolve_bootstrap(client: SylveClient, host: str, pool: str, requested: Any) -> str:
@@ -588,6 +579,7 @@ def register_jail_create_commands(app: typer.Typer) -> None:
             list[str] | None,
             typer.Option(
                 "--set",
+                "--property",
                 "-s",
                 help="Set any other API field KEY=VALUE (repeatable, dotted keys nest).",
             ),

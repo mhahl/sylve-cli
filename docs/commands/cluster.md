@@ -30,7 +30,7 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 | `note show NOTE_ID` | Display full details of a cluster note |
 | `note create` | Create a cluster note |
 | `note delete NOTE_ID` | Delete a cluster note |
-| `note update ID`, `note bulk-delete`, `accept-join` | Generic API commands |
+| `note set ID`, `note bulk-delete`, `accept-join` | Generic API commands |
 
 ## OPTIONS
 
@@ -138,15 +138,15 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 
 ### Generic Subcommands
 
-`accept-join`, `note update ID`, and `note bulk-delete` accept `--data/-d`,
-`--set/-s`, `--param/-p`, `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and
+`accept-join`, `note set ID`, and `note bulk-delete` accept `--data/-d`,
+`--set/--property/-s`, `--param/-p`, `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and
 `-f/--format`. Small updates need no JSON; see
 [sylve-options(7)](../global-options.md).
 
 | Subcommand | Path Arguments |
 |---|---|
 | `accept-join` | none |
-| `note update` | `id` |
+| `note set` | `id` |
 | `note bulk-delete` | none |
 
 ## EXIT STATUS
@@ -244,13 +244,13 @@ Execute generic cluster API endpoints:
 
 ```sh
 sylve cluster accept-join --set nodeId=2b7c... --set nodeIp=10.0.0.12 --set nodeVersion=0.3.1 --param dryRun=0 --node node1.example.test -f json
-sylve cluster note bulk-delete --set 'ids=[1,2]' --yes
+sylve cluster note bulk-delete --set ids=1,2 --yes
 ```
 
 Preview a note update without sending it:
 
 ```sh
-sylve cluster note update 1 --set title=Maintenance --set content="node2 drains at 22:00" --dry-run
+sylve cluster note set 1 --set title=Maintenance --set content="node2 drains at 22:00" --dry-run
 ```
 
 ```text
@@ -265,8 +265,8 @@ Dry run: PUT /cluster/notes/1
 Preview a bulk delete before confirming it:
 
 ```sh
-sylve cluster note bulk-delete --set 'ids=[1,2]' --dry-run
-sylve cluster note bulk-delete --set 'ids=[1,2]' --yes
+sylve cluster note bulk-delete --set ids=1,2 --dry-run
+sylve cluster note bulk-delete --set ids=1,2 --yes
 # Deleted 2 cluster note(s).
 ```
 

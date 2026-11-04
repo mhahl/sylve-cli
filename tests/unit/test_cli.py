@@ -264,7 +264,8 @@ def test_generic_set_replaces_inline_json() -> None:
         app,
         [
             "system",
-            "tunable-set",
+            "tunable",
+            "set",
             "--set",
             "name=kern.maxfiles",
             "--set",
@@ -278,7 +279,8 @@ def test_generic_set_replaces_inline_json() -> None:
     payload = json.loads(result.stdout)
     assert payload["method"] == "PUT"
     assert payload["path"] == "/system/tunables"
-    assert payload["body"] == {"name": "kern.maxfiles", "value": 200000}
+    # 'value' is a string in BODY_SCHEMAS, so numeric strings stay strings.
+    assert payload["body"] == {"name": "kern.maxfiles", "value": "200000"}
 
 
 def test_generic_set_merges_over_data() -> None:
@@ -286,54 +288,111 @@ def test_generic_set_merges_over_data() -> None:
         app,
         [
             "vm",
-            "hardware-cpu",
+            "hardware",
+            "cpu",
             "101",
             "--data",
-            '{"sockets": 1}',
-            "--set",
-            "cores=4",
+            '{"cpuSockets": 1}',
+            "--property",
+            "cpuCores=4",
             "--dry-run",
             "-f",
             "json",
         ],
     )
     assert result.exit_code == 0, result.stdout
-    assert json.loads(result.stdout)["body"] == {"sockets": 1, "cores": 4}
+    assert json.loads(result.stdout)["body"] == {"cpuSockets": 1, "cpuCores": 4}
+
+
+def test_generic_set_openstack_lists_and_objects() -> None:
+    switch = runner.invoke(
+        app,
+        [
+            "network",
+            "switch",
+            "set-standard",
+            "1",
+            "--set",
+            "private=false",
+            "--set",
+            "addresses4=cidr=10.0.0.1/24,objectId=0",
+            "--set",
+            "addresses4=cidr=10.0.1.1/24,objectId=0",
+            "--dry-run",
+            "-f",
+            "json",
+        ],
+    )
+    assert switch.exit_code == 0, switch.stdout
+    assert json.loads(switch.stdout)["body"] == {
+        "private": False,
+        "addresses4": [
+            {"cidr": "10.0.0.1/24", "objectId": 0},
+            {"cidr": "10.0.1.1/24", "objectId": 0},
+        ],
+    }
+
+    pci = runner.invoke(
+        app,
+        [
+            "vm",
+            "hardware",
+            "pci",
+            "101",
+            "--set",
+            "pciDevices=1,2",
+            "--set",
+            "pciDevices=3",
+            "--dry-run",
+            "-f",
+            "json",
+        ],
+    )
+    assert pci.exit_code == 0, pci.stdout
+    assert json.loads(pci.stdout)["body"] == {"pciDevices": [1, 2, 3]}
 
 
 def test_generic_help_lists_settable_fields(cli_env: Path) -> None:
     """--help must show the settable body fields so users never guess keys."""
-    cpu = runner.invoke(app, ["vm", "hardware-cpu", "--help"])
+    cpu = runner.invoke(app, ["vm", "hardware", "cpu", "--help"])
     assert cpu.exit_code == 0
     assert "Settable body fields (--set):" in cpu.stdout
     flat = " ".join(cpu.stdout.split())
     assert "cpuCores (integer, required)" in flat
-    # Required fields sort first; nested objects render indented below.
-    assert cpu.stdout.index("cpuCores") < cpu.stdout.index("cpuPinning")
+    # Required fields sort first; nested array of objects renders with [] and indented children.
+    assert cpu.stdout.index("cpuCores") < cpu.stdout.index("cpuPinning[]")
     assert "cores (array of integer, required)" in flat
 
-    tunable = runner.invoke(app, ["system", "tunable-set", "--help"])
+    tunable = runner.invoke(app, ["system", "tunable", "set", "--help"])
     assert tunable.exit_code == 0
     flat = " ".join(tunable.stdout.split())
     assert "name (string, required)" in flat
     assert "value (string, required)" in flat
 
-    # Reads advertise query parameters instead of body fields.
-    tunables = runner.invoke(app, ["system", "tunables", "--help"])
+    # Reads advertise query parameters instead of body fields or --data/--set.
+    tunables = runner.invoke(app, ["system", "tunable", "list", "--help"])
     assert tunables.exit_code == 0
     assert "Query parameters (--param):" in tunables.stdout
     assert "Settable body fields" not in tunables.stdout
+    assert "--set" not in tunables.stdout
+    assert "--data" not in tunables.stdout
 
 
 def test_generic_bare_command_shows_help(cli_env: Path) -> None:
     """A generic command with nothing supplied prints help, like bare groups."""
-    bare = runner.invoke(app, ["vm", "hardware-cpu"])
+    bare = runner.invoke(app, ["vm", "hardware", "cpu"])
     assert bare.exit_code == 0
     assert "Usage:" in bare.stdout
     assert "Settable body fields" in bare.stdout
 
+    # Bare body-requiring commands without path placeholders also print help.
+    bare_tunable = runner.invoke(app, ["system", "tunable", "set"])
+    assert bare_tunable.exit_code == 0
+    assert "Usage:" in bare_tunable.stdout
+    assert "Settable body fields" in bare_tunable.stdout
+
     # Options but no path argument is a usage error, not an API failure.
-    partial = runner.invoke(app, ["vm", "hardware-cpu", "--set", "cores=4"])
+    partial = runner.invoke(app, ["vm", "hardware", "cpu", "--set", "cpuCores=4"])
     assert partial.exit_code == 2
 
     # Read commands without path placeholders still execute when bare.
@@ -344,13 +403,13 @@ def test_generic_bare_command_shows_help(cli_env: Path) -> None:
 
 def test_generic_set_rejects_bad_input() -> None:
     missing_equals = runner.invoke(
-        app, ["vm", "hardware-cpu", "101", "--set", "oops", "--dry-run", "-f", "json"]
+        app, ["vm", "hardware", "cpu", "101", "--set", "oops", "--dry-run", "-f", "json"]
     )
     assert missing_equals.exit_code == 1
 
     non_object = runner.invoke(
         app,
-        ["vm", "hardware-cpu", "101", "--data", "[1, 2]", "--set", "a=1", "--dry-run"],
+        ["vm", "hardware", "cpu", "101", "--data", "[1, 2]", "--set", "a=1", "--dry-run"],
     )
     assert non_object.exit_code == 1
 
@@ -367,6 +426,8 @@ def test_every_leaf_command_renders_help() -> None:
         children = getattr(command, "commands", None)
         if children:
             for name, child in children.items():
+                if getattr(child, "hidden", False):
+                    continue
                 walk(child, (*prefix, name))
         else:
             leafs.append((prefix, command))
@@ -443,7 +504,7 @@ def test_yes_flag_only_on_destructive_generic_commands(cli_env: Path) -> None:
     assert readonly.exit_code == 0
     assert "--yes" not in readonly.stdout
 
-    destructive = runner.invoke(app, ["system", "notes-delete", "--help"])
+    destructive = runner.invoke(app, ["system", "note", "delete", "--help"])
     assert destructive.exit_code == 0
     assert "--yes" in destructive.stdout
 
@@ -456,11 +517,11 @@ def test_note_show_commands(cli_env: Path) -> None:
     missing = runner.invoke(app, ["cluster", "note", "show", "9", "-f", "json"])
     assert missing.exit_code == 1
 
-    host = runner.invoke(app, ["system", "notes-show", "1", "-f", "json"])
+    host = runner.invoke(app, ["system", "note", "show", "1", "-f", "json"])
     assert host.exit_code == 0
     assert json.loads(host.stdout)["title"] == "Maintenance"
 
-    host_missing = runner.invoke(app, ["system", "notes-show", "9", "-f", "json"])
+    host_missing = runner.invoke(app, ["system", "note", "show", "9", "-f", "json"])
     assert host_missing.exit_code == 1
 
 
@@ -546,7 +607,7 @@ def test_console_ws_auth_and_protocol() -> None:
         b'{"status":"error","message":"vm_serial_console_disabled","error":"disabled"}',
         "/vm/101/console",
     )
-    assert "options-serial-console" in str(err_409)
+    assert "options serial-console" in str(err_409)
 
     err_401 = format_console_http_error(401, b"", "/info/terminal")
     assert "sylve login" in str(err_401)

@@ -24,25 +24,32 @@ from sylve_cli.client import ResourceNotFoundError, SylveError
 from sylve_cli.commands.backup import backup_event_app, job_app, target_app
 from sylve_cli.commands.cluster import cluster_app, cluster_note_app
 from sylve_cli.commands.download import download_app
-from sylve_cli.commands.jail import jail_app
+from sylve_cli.commands.jail import jail_app, jail_bootstrap_app, jail_template_app
 from sylve_cli.commands.network import (
     dhcp_app,
-    firewall_app,
+    dhcp_lease_app,
+    dhcp_range_app,
+    firewall_advanced_app,
+    firewall_nat_app,
+    firewall_traffic_app,
     object_app,
     route_app,
     switch_app,
-    wg_app,
+    wg_client_app,
+    wg_peer_app,
+    wg_server_app,
 )
 from sylve_cli.commands.node import node_app
 from sylve_cli.commands.replication import policy_app
 from sylve_cli.commands.task import task_app
-from sylve_cli.commands.vm import vm_app
+from sylve_cli.commands.vm import vm_app, vm_template_app
 from sylve_cli.commands.zfs import dataset_app, periodic_app, pool_app, zfs_app
 from sylve_cli.console_ws import attach_console
 from sylve_cli.formatter import (
     ColumnSpec,
     OutputFormat,
     console,
+    err_console,
     print_dict,
     print_list,
     print_result,
@@ -119,6 +126,47 @@ cloud_init_app = typer.Typer(
     rich_markup_mode=None,
 )
 
+
+def _subapp(parent: typer.Typer, name: str, help_text: str) -> typer.Typer:
+    sub = typer.Typer(name=name, help=help_text, no_args_is_help=True, rich_markup_mode=None)
+    parent.add_typer(sub, name=name)
+    return sub
+
+
+vm_hardware_app = _subapp(vm_app, "hardware", "Configure VM CPU, RAM, PCI, and VNC hardware.")
+vm_network_app = _subapp(vm_app, "network", "Attach, detach, and configure VM networks.")
+vm_storage_app = _subapp(vm_app, "storage", "Attach, configure, and delete VM storage.")
+vm_options_app = _subapp(vm_app, "options", "Configure VM boot, clock, cloud-init, and options.")
+
+jail_hardware_app = _subapp(jail_app, "hardware", "Configure Jail CPU, RAM, and resource limits.")
+jail_network_app = _subapp(jail_app, "network", "Attach, detach, and configure Jail networks.")
+jail_options_app = _subapp(jail_app, "options", "Configure Jail fstab, DevFS, hooks, and options.")
+
+system_note_app = _subapp(system_app, "note", "Manage host notes.")
+system_disk_app = _subapp(
+    system_app, "disk", "List disks and manage GPT partitions and SMART tests."
+)
+system_ppt_app = _subapp(system_app, "ppt", "Manage PCI passthrough (PPT) devices.")
+system_tunable_app = _subapp(system_app, "tunable", "List and set sysctl tunables.")
+system_file_app = _subapp(system_app, "file", "Browse, upload, download, and manage host files.")
+system_cert_app = _subapp(system_app, "cert", "Manage TLS certificates.")
+
+samba_share_app = _subapp(samba_app, "share", "Manage Samba shares.")
+iscsi_initiator_app = _subapp(iscsi_app, "initiator", "Manage iSCSI initiators.")
+iscsi_target_app = _subapp(iscsi_app, "target", "Manage iSCSI targets, portals, and LUNs.")
+mdns_record_app = _subapp(mdns_app, "record", "Manage mDNS records.")
+notifications_rule_app = _subapp(notifications_app, "rule", "Manage notification rules.")
+notifications_transport_app = _subapp(
+    notifications_app, "transport", "Manage notification transports."
+)
+user_passkey_app = _subapp(user_app, "passkey", "List and delete user passkeys.")
+auth_passkey_app = _subapp(
+    auth_app, "passkey", "Run WebAuthn passkey login and registration flows."
+)
+cloud_init_template_app = _subapp(
+    cloud_init_app, "template", "Manage reusable cloud-init templates."
+)
+
 _PUBLIC_PATHS = {
     "/auth/login/config",
     "/auth/passkeys/login/begin",
@@ -161,25 +209,183 @@ def _parse_params(values: list[str] | None) -> dict[str, Any] | None:
     return result
 
 
-def _parse_set(values: list[str] | None) -> dict[str, Any]:
+def _split_csv_items(text: str) -> list[str]:
+    """Split on top-level commas, respecting quotes and bracket/brace nesting."""
+    items: list[str] = []
+    buf: list[str] = []
+    depth = 0
+    quote: str | None = None
+    for ch in text:
+        if quote:
+            buf.append(ch)
+            if ch == quote:
+                quote = None
+        elif ch in ('"', "'"):
+            quote = ch
+            buf.append(ch)
+        elif ch in ("[", "{"):
+            depth += 1
+            buf.append(ch)
+        elif ch in ("]", "}"):
+            depth = max(0, depth - 1)
+            buf.append(ch)
+        elif ch == "," and depth == 0:
+            items.append("".join(buf).strip())
+            buf = []
+        else:
+            buf.append(ch)
+    if buf or text.endswith(","):
+        items.append("".join(buf).strip())
+    return [item for item in items if item != ""]
+
+
+def _coerce_scalar(raw: str, field_type: str | None) -> Any:
+    """Coerce a raw string according to its BODY_SCHEMAS type."""
+    if field_type == "string":
+        if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ('"', "'"):
+            try:
+                loaded = yaml.safe_load(raw)
+                if isinstance(loaded, str):
+                    return loaded
+            except yaml.YAMLError:
+                pass
+        return raw
+    try:
+        return yaml.safe_load(raw)
+    except yaml.YAMLError:
+        return raw
+
+
+def _parse_kv_object(raw: str, children_map: dict[str, str]) -> dict[str, Any]:
+    """Parse OpenStack-style ``k1=v1,k2=v2`` into a dict using child schema types."""
+    obj: dict[str, Any] = {}
+    for pair in _split_csv_items(raw):
+        if "=" not in pair:
+            raise SylveError(f"--set object entry '{pair}' must use KEY=VALUE format.")
+        sub_k, sub_v = pair.split("=", 1)
+        sub_k = sub_k.strip()
+        if not sub_k:
+            raise SylveError("--set must use KEY=VALUE format with a non-empty key.")
+        sub_type = children_map.get(sub_k)
+        if sub_type and sub_type.startswith("array of ") and not sub_v.lstrip().startswith("["):
+            elem_type = sub_type.removeprefix("array of ")
+            obj[sub_k] = [_coerce_scalar(x, elem_type) for x in _split_csv_items(sub_v)]
+        else:
+            obj[sub_k] = _coerce_scalar(sub_v, sub_type)
+    return obj
+
+
+def _parse_bracketed_list(raw: str, elem_type: str | None = None) -> list[Any]:
+    """Parse a bracketed ``[...]`` value and verify it is a list."""
+    try:
+        parsed = yaml.safe_load(raw)
+    except yaml.YAMLError as exc:
+        raise SylveError(f"Invalid --set list '{raw}': {exc}") from exc
+    if not isinstance(parsed, list):
+        raise SylveError(f"--set list value '{raw}' must be a YAML/JSON list.")
+    if elem_type == "string":
+        return [str(x) for x in parsed]
+    return parsed
+
+
+def _lookup_schema(fields: tuple[Any, ...], parts: list[str]) -> tuple[str | None, dict[str, str]]:
+    """Walk ``BODY_SCHEMAS`` tuples along ``parts`` to return ``(type, child_types)``."""
+    current = fields
+    field_type: str | None = None
+    children_map: dict[str, str] = {}
+    for part in parts:
+        matched = None
+        for entry in current or ():
+            if isinstance(entry, (list, tuple)) and len(entry) == 4 and entry[0] == part:
+                matched = entry
+                break
+        if matched is None:
+            return None, {}
+        _, field_type, _req, current = matched
+        children_map = {
+            c[0]: c[1] for c in (current or ()) if isinstance(c, (list, tuple)) and len(c) >= 2
+        }
+    return field_type, children_map
+
+
+def _parse_set(
+    values: list[str] | None,
+    schema_fields: tuple[Any, ...] = (),
+    label: str = "",
+) -> dict[str, Any]:
     """Parse ``--set KEY=VALUE`` overrides into a (possibly nested) dict.
 
-    Dotted keys address nested objects (``vlanPolicy.mode=tagged``) and
-    values are parsed as YAML scalars so ``--set cores=4`` sends an int,
-    not a string. Later entries win.
+    Dotted keys address nested objects (``vlanPolicy.mode=tagged``),
+    OpenStack-style repeatable ``k1=v1,k2=v2`` builds ``array of object``
+    or nested ``object`` fields, and ``BODY_SCHEMAS`` types preserve
+    ``string`` fields while coercing numbers, booleans, and lists.
     """
+    top_names = [
+        entry[0] for entry in schema_fields if isinstance(entry, (list, tuple)) and len(entry) == 4
+    ]
     result: dict[str, Any] = {}
+    warned: set[str] = set()
     for item in values or []:
         if "=" not in item:
             raise SylveError("--set must use KEY=VALUE format.")
         key, value = item.split("=", 1)
-        parts = [part.strip() for part in key.split(".")]
-        if not key.strip() or any(not part for part in parts):
+        raw_parts = [part.strip() for part in key.split(".")]
+        if not key.strip() or any(not part or part == "[]" for part in raw_parts):
             raise SylveError("--set must use KEY=VALUE format with a non-empty key.")
-        try:
-            parsed: Any = yaml.safe_load(value)
-        except yaml.YAMLError:
-            parsed = value
+        explicit_list = raw_parts[-1].endswith("[]")
+        parts = [part[:-2] if part.endswith("[]") else part for part in raw_parts]
+        top = parts[0]
+        if top_names and top not in top_names and top not in warned:
+            warned.add(top)
+            target_label = f" for {label}" if label else ""
+            err_console.print(
+                f"warning: unknown field '{top}'{target_label} (expected: {', '.join(top_names)})",
+                style="yellow",
+                markup=False,
+            )
+
+        leaf_type, children_map = _lookup_schema(schema_fields, parts)
+        if len(parts) == 1:
+            stripped = value.lstrip()
+            if leaf_type == "array of object" or (
+                explicit_list and "=" in value and not stripped.startswith("[")
+            ):
+                if stripped.startswith("["):
+                    result[top] = _parse_bracketed_list(value)
+                else:
+                    existing_list = result.get(top)
+                    if not isinstance(existing_list, list):
+                        existing_list = []
+                        result[top] = existing_list
+                    if stripped.startswith("{"):
+                        existing_list.append(_coerce_scalar(value, None))
+                    else:
+                        existing_list.append(_parse_kv_object(value, children_map))
+                continue
+            if (leaf_type and leaf_type.startswith("array of ")) or explicit_list:
+                elem_type = (
+                    leaf_type.removeprefix("array of ")
+                    if (leaf_type and leaf_type.startswith("array of "))
+                    else None
+                )
+                if stripped.startswith("["):
+                    result[top] = _parse_bracketed_list(value, elem_type)
+                else:
+                    existing_list = result.get(top)
+                    if not isinstance(existing_list, list):
+                        existing_list = []
+                        result[top] = existing_list
+                    for elem in _split_csv_items(value):
+                        existing_list.append(_coerce_scalar(elem, elem_type))
+                continue
+            if leaf_type == "object" and "=" in value and not stripped.startswith("{"):
+                existing_obj = result.get(top)
+                if not isinstance(existing_obj, dict):
+                    existing_obj = {}
+                    result[top] = existing_obj
+                existing_obj.update(_parse_kv_object(value, children_map))
+                continue
+
         target = result
         for part in parts[:-1]:
             existing = target.get(part)
@@ -187,11 +393,30 @@ def _parse_set(values: list[str] | None) -> dict[str, Any]:
                 existing = {}
                 target[part] = existing
             target = existing
-        target[parts[-1]] = parsed
+
+        last = parts[-1]
+        if leaf_type and leaf_type.startswith("array of "):
+            elem_type = leaf_type.removeprefix("array of ")
+            if value.lstrip().startswith("["):
+                target[last] = _parse_bracketed_list(value, elem_type)
+            else:
+                existing_list = target.get(last)
+                if not isinstance(existing_list, list):
+                    existing_list = []
+                    target[last] = existing_list
+                for elem in _split_csv_items(value):
+                    existing_list.append(_coerce_scalar(elem, elem_type))
+        else:
+            target[last] = _coerce_scalar(value, leaf_type)
     return result
 
 
-def _merge_body(data: str | None, set_values: list[str] | None) -> Any:
+def _merge_body(
+    data: str | None,
+    set_values: list[str] | None,
+    schema_fields: tuple[Any, ...] = (),
+    label: str = "",
+) -> Any:
     """Combine ``--data`` with ``--set`` overrides.
 
     ``--set`` wins field by field; nested dicts merge instead of replacing.
@@ -207,7 +432,7 @@ def _merge_body(data: str | None, set_values: list[str] | None) -> Any:
         return base
 
     base = _parse_data(data)
-    overrides = _parse_set(set_values)
+    overrides = _parse_set(set_values, schema_fields=schema_fields, label=label)
     if not overrides:
         return base
     if base is None:
@@ -258,11 +483,12 @@ def _render_field_lines(fields: object, indent: str) -> list[str]:
             continue
         name, field_type, required, children = field
         marker = ", required" if required else ""
+        display_name = f"{name}[]" if field_type == "array of object" else name
         if isinstance(children, (list, tuple)) and children:
-            lines.append(f"{indent}{name} ({field_type}{marker}):")
+            lines.append(f"{indent}{display_name} ({field_type}{marker}):")
             lines.extend(_render_field_lines(children, indent + "  "))
         else:
-            lines.append(f"{indent}{name} ({field_type}{marker})")
+            lines.append(f"{indent}{display_name} ({field_type}{marker})")
     return lines
 
 
@@ -326,6 +552,8 @@ def _execute_generic(
     limit: int | None = None,
 ) -> None:
     """Run one generic API request and print the result."""
+    schema_entry = BODY_SCHEMAS.get((method, path), {})
+    body_schema: tuple[Any, ...] = schema_entry.get("body") or ()
     try:
         target_path = _path_for(path, args)
     except SylveError as exc:
@@ -347,8 +575,18 @@ def _execute_generic(
             typer.echo(ctx.get_help())
             raise typer.Exit(0)
         ctx.fail(str(exc))
+    if (
+        not args
+        and (body_schema or method == "PUT")
+        and not data
+        and not set_values
+        and not param
+        and not dry_run
+    ):
+        typer.echo(ctx.get_help())
+        raise typer.Exit(0)
     state: CLIState = ctx.obj
-    body = _merge_body(data, set_values)
+    body = _merge_body(data, set_values, schema_fields=body_schema, label=f"{method} {path}")
     params = _parse_params(param)
     if dry_run:
         _print_result(
@@ -374,6 +612,39 @@ def _execute_generic(
     _print_result(result, fmt, title, selected, sort_column, filters, limit)
 
 
+PathArgs = Annotated[list[str] | None, typer.Argument(help="Path arguments in URL order.")]
+DataOption = Annotated[
+    str | None,
+    typer.Option(
+        "--data",
+        "-d",
+        help="Base JSON or YAML request body, or @FILE to read it from disk.",
+    ),
+]
+SetOption = Annotated[
+    list[str] | None,
+    typer.Option(
+        "--set",
+        "--property",
+        "-s",
+        help="Set a body field KEY=VALUE (repeatable; dotted keys nest; "
+        "repeat or comma-separate for lists). Overrides --data.",
+    ),
+]
+ParamOption = Annotated[
+    list[str] | None,
+    typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+]
+DryRunOption = Annotated[
+    bool,
+    typer.Option("--dry-run", help="Print the request without sending it."),
+]
+YesPromptOption = Annotated[
+    bool,
+    typer.Option("-y", "--yes", help="Skip confirmation prompt."),
+]
+
+
 def _add(
     app: typer.Typer,
     name: str,
@@ -389,18 +660,16 @@ def _add(
     help_text = description if not args_help else f"{description} Arguments: {args_help}."
     epilog = _schema_epilog(method, path)
     destructive = method == "DELETE" or "delete" in path.lower()
+    has_body = method in ("POST", "PUT", "PATCH") or bool(
+        BODY_SCHEMAS.get((method, path), {}).get("body")
+    )
 
     if binary:
 
         def command(
             ctx: typer.Context,
-            args: Annotated[
-                list[str] | None, typer.Argument(help="Path arguments in URL order.")
-            ] = None,
-            param: Annotated[
-                list[str] | None,
-                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
-            ] = None,
+            args: PathArgs = None,
+            param: ParamOption = None,
             output: Annotated[Path, typer.Option("--output", "-o")] = ...,  # type: ignore[assignment]
             node: NodeOption = None,
         ) -> None:
@@ -415,9 +684,7 @@ def _add(
 
         def command(  # type: ignore[misc]
             ctx: typer.Context,
-            args: Annotated[
-                list[str] | None, typer.Argument(help="Path arguments in URL order.")
-            ] = None,
+            args: PathArgs = None,
             file: Annotated[
                 Path,
                 typer.Option(
@@ -428,10 +695,7 @@ def _add(
                     help="Local file to upload.",
                 ),
             ] = ...,  # type: ignore[assignment]
-            param: Annotated[
-                list[str] | None,
-                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
-            ] = None,
+            param: ParamOption = None,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
         ) -> None:
@@ -445,42 +709,31 @@ def _add(
                 )
             _print_result(result, fmt, title)
 
+    elif destructive and not has_body:
+
+        def command(  # type: ignore[misc]
+            ctx: typer.Context,
+            args: PathArgs = None,
+            param: ParamOption = None,
+            yes: YesPromptOption = False,
+            dry_run: DryRunOption = False,
+            node: NodeOption = None,
+            fmt: FormatOption = OutputFormat.table,
+        ) -> None:
+            _execute_generic(
+                ctx, method, path, args, None, param, yes, node, fmt, title, None, dry_run
+            )
+
     elif destructive:
 
         def command(  # type: ignore[misc]
             ctx: typer.Context,
-            args: Annotated[
-                list[str] | None, typer.Argument(help="Path arguments in URL order.")
-            ] = None,
-            data: Annotated[
-                str | None,
-                typer.Option(
-                    "--data",
-                    "-d",
-                    help="Base JSON or YAML request body, or @FILE to read it from disk.",
-                ),
-            ] = None,
-            set_value: Annotated[
-                list[str] | None,
-                typer.Option(
-                    "--set",
-                    "-s",
-                    help="Set a body field KEY=VALUE (repeatable, dotted keys nest). "
-                    "Values are parsed as YAML; overrides --data.",
-                ),
-            ] = None,
-            param: Annotated[
-                list[str] | None,
-                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
-            ] = None,
-            yes: Annotated[
-                bool,
-                typer.Option("-y", "--yes", help="Skip confirmation prompt."),
-            ] = False,
-            dry_run: Annotated[
-                bool,
-                typer.Option("--dry-run", help="Print the request without sending it."),
-            ] = False,
+            args: PathArgs = None,
+            data: DataOption = None,
+            set_value: SetOption = None,
+            param: ParamOption = None,
+            yes: YesPromptOption = False,
+            dry_run: DryRunOption = False,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
         ) -> None:
@@ -492,34 +745,9 @@ def _add(
 
         def command(  # type: ignore[misc]
             ctx: typer.Context,
-            args: Annotated[
-                list[str] | None, typer.Argument(help="Path arguments in URL order.")
-            ] = None,
-            data: Annotated[
-                str | None,
-                typer.Option(
-                    "--data",
-                    "-d",
-                    help="Base JSON or YAML request body, or @FILE to read it from disk.",
-                ),
-            ] = None,
-            set_value: Annotated[
-                list[str] | None,
-                typer.Option(
-                    "--set",
-                    "-s",
-                    help="Set a body field KEY=VALUE (repeatable, dotted keys nest). "
-                    "Values are parsed as YAML; overrides --data.",
-                ),
-            ] = None,
-            param: Annotated[
-                list[str] | None,
-                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
-            ] = None,
-            dry_run: Annotated[
-                bool,
-                typer.Option("--dry-run", help="Print the request without sending it."),
-            ] = False,
+            args: PathArgs = None,
+            param: ParamOption = None,
+            dry_run: DryRunOption = False,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
             columns: ColumnsOption = None,
@@ -532,13 +760,13 @@ def _add(
                 method,
                 path,
                 args,
-                data,
+                None,
                 param,
                 False,
                 node,
                 fmt,
                 title,
-                set_value,
+                None,
                 dry_run,
                 columns,
                 sort_column,
@@ -550,34 +778,11 @@ def _add(
 
         def command(  # type: ignore[misc]
             ctx: typer.Context,
-            args: Annotated[
-                list[str] | None, typer.Argument(help="Path arguments in URL order.")
-            ] = None,
-            data: Annotated[
-                str | None,
-                typer.Option(
-                    "--data",
-                    "-d",
-                    help="Base JSON or YAML request body, or @FILE to read it from disk.",
-                ),
-            ] = None,
-            set_value: Annotated[
-                list[str] | None,
-                typer.Option(
-                    "--set",
-                    "-s",
-                    help="Set a body field KEY=VALUE (repeatable, dotted keys nest). "
-                    "Values are parsed as YAML; overrides --data.",
-                ),
-            ] = None,
-            param: Annotated[
-                list[str] | None,
-                typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
-            ] = None,
-            dry_run: Annotated[
-                bool,
-                typer.Option("--dry-run", help="Print the request without sending it."),
-            ] = False,
+            args: PathArgs = None,
+            data: DataOption = None,
+            set_value: SetOption = None,
+            param: ParamOption = None,
+            dry_run: DryRunOption = False,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
         ) -> None:
@@ -595,8 +800,8 @@ def _add(
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
     (
-        vm_app,
-        "template-show",
+        vm_template_app,
+        "show",
         "GET",
         "/vm/templates/{templateId}",
         "Show a VM template.",
@@ -614,162 +819,162 @@ for spec in [  # type: ignore[assignment]
         "rid step",
     ),
     (
-        vm_app,
-        "hardware-cpu",
+        vm_hardware_app,
+        "cpu",
         "PUT",
         "/vm/{rid}/hardware/cpu",
         "Replace VM CPU configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "hardware-ram",
+        vm_hardware_app,
+        "ram",
         "PUT",
         "/vm/{rid}/hardware/ram",
         "Replace VM RAM configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "hardware-pci",
+        vm_hardware_app,
+        "pci",
         "PUT",
         "/vm/{rid}/hardware/pci-devices",
         "Replace VM PCI passthrough devices.",
         "rid",
     ),
     (
-        vm_app,
-        "hardware-vnc",
+        vm_hardware_app,
+        "vnc",
         "PUT",
         "/vm/{rid}/hardware/vnc",
         "Replace VM VNC configuration.",
         "rid",
     ),
-    (vm_app, "network-attach", "POST", "/vm/{rid}/networks", "Attach a network to a VM.", "rid"),
+    (vm_network_app, "attach", "POST", "/vm/{rid}/networks", "Attach a network to a VM.", "rid"),
     (
-        vm_app,
-        "network-detach",
+        vm_network_app,
+        "detach",
         "DELETE",
         "/vm/{rid}/networks/{networkId}",
         "Detach a VM network.",
         "rid networkId",
     ),
     (
-        vm_app,
-        "network-update",
+        vm_network_app,
+        "set",
         "PATCH",
         "/vm/{rid}/networks/{networkId}",
         "Update a VM network.",
         "rid networkId",
     ),
-    (vm_app, "storage-attach", "POST", "/vm/{rid}/storage", "Attach storage to a VM.", "rid"),
+    (vm_storage_app, "attach", "POST", "/vm/{rid}/storage", "Attach storage to a VM.", "rid"),
     (
-        vm_app,
-        "storage-from-image",
+        vm_storage_app,
+        "from-image",
         "POST",
         "/vm/{rid}/storage/from-image",
         "Create VM storage from an image.",
         "rid",
     ),
     (
-        vm_app,
-        "storage-update",
+        vm_storage_app,
+        "set",
         "PATCH",
         "/vm/{rid}/storage/{storageId}",
         "Update VM storage.",
         "rid storageId",
     ),
     (
-        vm_app,
-        "storage-delete",
+        vm_storage_app,
+        "delete",
         "DELETE",
         "/vm/{rid}/storage/{storageId}",
         "Delete VM storage.",
         "rid storageId",
     ),
     (
-        vm_app,
-        "options-boot-order",
+        vm_options_app,
+        "boot-order",
         "PUT",
         "/vm/{rid}/options/boot-order",
         "Replace VM autostart configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "options-boot-rom",
+        vm_options_app,
+        "boot-rom",
         "PUT",
         "/vm/{rid}/options/boot-rom",
         "Replace VM boot ROM configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "options-clock",
+        vm_options_app,
+        "clock",
         "PUT",
         "/vm/{rid}/options/clock",
         "Replace VM clock configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "options-cloud-init",
+        vm_options_app,
+        "cloud-init",
         "PUT",
         "/vm/{rid}/options/cloud-init",
         "Replace VM cloud-init configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "options-extra-bhyve",
+        vm_options_app,
+        "extra-bhyve",
         "PUT",
         "/vm/{rid}/options/extra-bhyve-options",
         "Replace extra bhyve options.",
         "rid",
     ),
     (
-        vm_app,
-        "options-ignore-umsrs",
+        vm_options_app,
+        "ignore-umsrs",
         "PUT",
         "/vm/{rid}/options/ignore-umsrs",
         "Replace unknown-MSR handling.",
         "rid",
     ),
     (
-        vm_app,
-        "options-qemu-guest-agent",
+        vm_options_app,
+        "qemu-guest-agent",
         "PUT",
         "/vm/{rid}/options/qemu-guest-agent",
         "Replace QEMU guest-agent configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "options-serial-console",
+        vm_options_app,
+        "serial-console",
         "PUT",
         "/vm/{rid}/options/serial-console",
         "Replace serial-console configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "options-shutdown-wait-time",
+        vm_options_app,
+        "shutdown-wait-time",
         "PUT",
         "/vm/{rid}/options/shutdown-wait-time",
         "Replace shutdown wait time.",
         "rid",
     ),
     (
-        vm_app,
-        "options-tpm",
+        vm_options_app,
+        "tpm",
         "PUT",
         "/vm/{rid}/options/tpm",
         "Replace TPM emulation configuration.",
         "rid",
     ),
     (
-        vm_app,
-        "options-wol",
+        vm_options_app,
+        "wol",
         "PUT",
         "/vm/{rid}/options/wol",
         "Replace Wake-on-LAN configuration.",
@@ -799,136 +1004,136 @@ for spec in [  # type: ignore[assignment]
         "ctid",
     ),
     (
-        jail_app,
-        "hardware-cpu",
+        jail_hardware_app,
+        "cpu",
         "PUT",
         "/jail/{ctid}/hardware/cpu",
         "Update a Jail CPU limit.",
         "ctid",
     ),
     (
-        jail_app,
-        "hardware-ram",
+        jail_hardware_app,
+        "ram",
         "PUT",
         "/jail/{ctid}/hardware/ram",
         "Update a Jail RAM limit.",
         "ctid",
     ),
     (
-        jail_app,
-        "hardware-resource-limits",
+        jail_hardware_app,
+        "resource-limits",
         "PUT",
         "/jail/{ctid}/hardware/resource-limits",
         "Set Jail resource limits.",
         "ctid",
     ),
     (
-        jail_app,
-        "network-inheritance",
+        jail_network_app,
+        "inheritance",
         "PUT",
         "/jail/{ctid}/network/inheritance",
         "Set Jail network inheritance.",
         "ctid",
     ),
     (
-        jail_app,
-        "network-attach",
+        jail_network_app,
+        "attach",
         "POST",
         "/jail/{ctid}/networks",
         "Attach a network to a Jail.",
         "ctid",
     ),
     (
-        jail_app,
-        "network-detach",
+        jail_network_app,
+        "detach",
         "DELETE",
         "/jail/{ctid}/networks/{networkId}",
         "Detach a Jail network.",
         "ctid networkId",
     ),
     (
-        jail_app,
-        "network-update",
+        jail_network_app,
+        "set",
         "PATCH",
         "/jail/{ctid}/networks/{networkId}",
         "Update a Jail network.",
         "ctid networkId",
     ),
     (
-        jail_app,
-        "options-additional",
+        jail_options_app,
+        "additional",
         "PUT",
         "/jail/{ctid}/options/additional-options",
         "Replace additional jail.conf options.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-allowed",
+        jail_options_app,
+        "allowed",
         "PUT",
         "/jail/{ctid}/options/allowed-options",
         "Replace allowed jail options.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-boot-order",
+        jail_options_app,
+        "boot-order",
         "PUT",
         "/jail/{ctid}/options/boot-order",
         "Replace Jail autostart configuration.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-devfs-rules",
+        jail_options_app,
+        "devfs-rules",
         "PUT",
         "/jail/{ctid}/options/devfs-rules",
         "Replace Jail DevFS rules.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-execution-timeout",
+        jail_options_app,
+        "execution-timeout",
         "PUT",
         "/jail/{ctid}/options/execution-timeout",
         "Replace Jail execution timeout.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-fstab",
+        jail_options_app,
+        "fstab",
         "PUT",
         "/jail/{ctid}/options/fstab",
         "Replace Jail fstab configuration.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-lifecycle-hooks",
+        jail_options_app,
+        "lifecycle-hooks",
         "PUT",
         "/jail/{ctid}/options/lifecycle-hooks",
         "Replace Jail lifecycle hooks.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-metadata",
+        jail_options_app,
+        "metadata",
         "PUT",
         "/jail/{ctid}/options/metadata",
         "Replace Jail metadata.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-resolv-conf",
+        jail_options_app,
+        "resolv-conf",
         "PUT",
         "/jail/{ctid}/options/resolv-conf",
         "Replace Jail resolv.conf configuration.",
         "ctid",
     ),
     (
-        jail_app,
-        "options-wol",
+        jail_options_app,
+        "wol",
         "PUT",
         "/jail/{ctid}/options/wol",
         "Replace Jail Wake-on-LAN configuration.",
@@ -945,40 +1150,40 @@ for spec in [  # type: ignore[assignment]
     (jail_app, "state", "GET", "/jail/{ctid}/state", "Show Jail state.", "ctid"),
     (jail_app, "stats", "GET", "/jail/{ctid}/stats", "Show Jail statistics.", "ctid"),
     (
-        jail_app,
-        "template-show",
+        jail_template_app,
+        "show",
         "GET",
         "/jail/templates/{templateId}",
         "Show a Jail template.",
         "templateId",
     ),
     (
-        jail_app,
-        "template-delete",
+        jail_template_app,
+        "delete",
         "DELETE",
         "/jail/templates/{templateId}",
         "Delete a Jail template.",
         "templateId",
     ),
     (
-        jail_app,
-        "template-capture",
+        jail_template_app,
+        "capture",
         "POST",
         "/jail/{ctid}/templates",
         "Capture a Jail as a template.",
         "ctid",
     ),
     (
-        jail_app,
-        "template-deploy",
+        jail_template_app,
+        "deploy",
         "POST",
         "/jail/templates/{templateId}/jails",
         "Create Jails from a template.",
         "templateId",
     ),
     (
-        jail_app,
-        "bootstrap-delete",
+        jail_bootstrap_app,
+        "delete",
         "DELETE",
         "/jail/bootstraps/{name}",
         "Delete a pkgbase Jail bootstrap.",
@@ -991,229 +1196,247 @@ for spec in [  # type: ignore[assignment]
 # Network writes
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
-    (dhcp_app, "config-update", "PUT", "/network/dhcp/config", "Update DHCP configuration."),
-    (dhcp_app, "range-create", "POST", "/network/dhcp/range", "Create a DHCP range."),
-    (dhcp_app, "range-update", "PUT", "/network/dhcp/range/{id}", "Update a DHCP range.", "id"),
-    (dhcp_app, "range-delete", "DELETE", "/network/dhcp/range/{id}", "Delete a DHCP range.", "id"),
-    (dhcp_app, "lease-create", "POST", "/network/dhcp/lease", "Create a static DHCP lease."),
+    (dhcp_app, "config-set", "PUT", "/network/dhcp/config", "Update DHCP configuration."),
+    (dhcp_range_app, "create", "POST", "/network/dhcp/range", "Create a DHCP range."),
+    (dhcp_range_app, "set", "PUT", "/network/dhcp/range/{id}", "Update a DHCP range.", "id"),
+    (dhcp_range_app, "delete", "DELETE", "/network/dhcp/range/{id}", "Delete a DHCP range.", "id"),
+    (dhcp_lease_app, "create", "POST", "/network/dhcp/lease", "Create a static DHCP lease."),
     (
-        dhcp_app,
-        "lease-update",
+        dhcp_lease_app,
+        "set",
         "PUT",
         "/network/dhcp/lease/{id}",
         "Update a static DHCP lease.",
         "id",
     ),
     (
-        dhcp_app,
-        "lease-delete",
+        dhcp_lease_app,
+        "delete",
         "DELETE",
         "/network/dhcp/lease/{id}",
         "Delete a static DHCP lease.",
         "id",
     ),
     (
-        dhcp_app,
-        "lease-delete-dynamic",
+        dhcp_lease_app,
+        "delete-dynamic",
         "DELETE",
         "/network/dhcp/lease/dynamic",
         "Delete a dynamic DHCP lease.",
     ),
     (
-        firewall_app,
-        "advanced-show",
+        firewall_advanced_app,
+        "show",
         "GET",
         "/network/firewall/advanced",
         "Show advanced firewall settings.",
     ),
     (
-        firewall_app,
-        "advanced-update",
+        firewall_advanced_app,
+        "set",
         "PUT",
         "/network/firewall/advanced",
         "Update advanced firewall settings.",
     ),
     (
-        firewall_app,
-        "advanced-preview",
+        firewall_advanced_app,
+        "preview",
         "POST",
         "/network/firewall/advanced/preview",
         "Preview rendered firewall configuration.",
     ),
     (
-        firewall_app,
-        "advanced-rendered",
+        firewall_advanced_app,
+        "rendered",
         "GET",
         "/network/firewall/advanced/rendered",
         "Show rendered firewall configuration.",
     ),
     (
-        firewall_app,
-        "traffic-create",
+        firewall_traffic_app,
+        "create",
         "POST",
         "/network/firewall/traffic",
         "Create a firewall traffic rule.",
     ),
     (
-        firewall_app,
-        "traffic-update",
+        firewall_traffic_app,
+        "set",
         "PUT",
         "/network/firewall/traffic/{id}",
         "Update a firewall traffic rule.",
         "id",
     ),
     (
-        firewall_app,
-        "traffic-delete",
+        firewall_traffic_app,
+        "delete",
         "DELETE",
         "/network/firewall/traffic/{id}",
         "Delete a firewall traffic rule.",
         "id",
     ),
     (
-        firewall_app,
-        "traffic-bulk-delete",
+        firewall_traffic_app,
+        "bulk-delete",
         "DELETE",
         "/network/firewall/traffic",
         "Bulk-delete firewall traffic rules.",
     ),
     (
-        firewall_app,
-        "traffic-reorder",
+        firewall_traffic_app,
+        "reorder",
         "PUT",
         "/network/firewall/traffic/reorder",
         "Reorder firewall traffic rules.",
     ),
     (
-        firewall_app,
-        "traffic-counters",
+        firewall_traffic_app,
+        "counters",
         "GET",
         "/network/firewall/traffic/counters",
         "Show firewall traffic rule counters.",
     ),
-    (firewall_app, "nat-create", "POST", "/network/firewall/nat", "Create a firewall NAT rule."),
     (
-        firewall_app,
-        "nat-update",
+        firewall_nat_app,
+        "create",
+        "POST",
+        "/network/firewall/nat",
+        "Create a firewall NAT rule.",
+    ),
+    (
+        firewall_nat_app,
+        "set",
         "PUT",
         "/network/firewall/nat/{id}",
         "Update a firewall NAT rule.",
         "id",
     ),
     (
-        firewall_app,
-        "nat-delete",
+        firewall_nat_app,
+        "delete",
         "DELETE",
         "/network/firewall/nat/{id}",
         "Delete a firewall NAT rule.",
         "id",
     ),
     (
-        firewall_app,
-        "nat-bulk-delete",
+        firewall_nat_app,
+        "bulk-delete",
         "DELETE",
         "/network/firewall/nat",
         "Bulk-delete firewall NAT rules.",
     ),
     (
-        firewall_app,
-        "nat-reorder",
+        firewall_nat_app,
+        "reorder",
         "PUT",
         "/network/firewall/nat/reorder",
         "Reorder firewall NAT rules.",
     ),
     (
-        firewall_app,
-        "nat-counters",
+        firewall_nat_app,
+        "counters",
         "GET",
         "/network/firewall/nat/counters",
         "Show firewall NAT rule counters.",
     ),
     (
-        firewall_app,
-        "nat-route-suggestions",
+        firewall_nat_app,
+        "route-suggestions",
         "GET",
         "/network/firewall/nat/{id}/route-suggestions",
         "Suggest routes for a NAT rule.",
         "id",
     ),
     (
-        wg_app,
-        "server-init",
+        wg_server_app,
+        "init",
         "POST",
         "/network/wireguard/server",
         "Initialize the WireGuard server.",
     ),
-    (wg_app, "server-update", "PUT", "/network/wireguard/server", "Update the WireGuard server."),
+    (wg_server_app, "set", "PUT", "/network/wireguard/server", "Update the WireGuard server."),
     (
-        wg_app,
-        "server-delete",
+        wg_server_app,
+        "delete",
         "DELETE",
         "/network/wireguard/server",
         "Deinitialize the WireGuard server.",
     ),
-    (wg_app, "server-state", "PATCH", "/network/wireguard/server", "Set WireGuard server state."),
-    (wg_app, "peer-add", "POST", "/network/wireguard/server/peer", "Add a WireGuard server peer."),
+    (wg_server_app, "state", "PATCH", "/network/wireguard/server", "Set WireGuard server state."),
     (
-        wg_app,
-        "peer-update",
+        wg_peer_app,
+        "add",
+        "POST",
+        "/network/wireguard/server/peer",
+        "Add a WireGuard server peer.",
+    ),
+    (
+        wg_peer_app,
+        "set",
         "PUT",
         "/network/wireguard/server/peer/{peerId}",
         "Update a WireGuard peer.",
         "peerId",
     ),
     (
-        wg_app,
-        "peer-remove",
+        wg_peer_app,
+        "remove",
         "DELETE",
         "/network/wireguard/server/peer/{peerId}",
         "Remove a WireGuard peer.",
         "peerId",
     ),
     (
-        wg_app,
-        "peer-state",
+        wg_peer_app,
+        "state",
         "PATCH",
         "/network/wireguard/server/peer/{peerId}",
         "Set WireGuard peer state.",
         "peerId",
     ),
-    (wg_app, "client-create", "POST", "/network/wireguard/clients", "Create a WireGuard client."),
     (
-        wg_app,
-        "client-update",
+        wg_client_app,
+        "create",
+        "POST",
+        "/network/wireguard/clients",
+        "Create a WireGuard client.",
+    ),
+    (
+        wg_client_app,
+        "set",
         "PUT",
         "/network/wireguard/clients/{clientId}",
         "Update a WireGuard client.",
         "clientId",
     ),
     (
-        wg_app,
-        "client-delete",
+        wg_client_app,
+        "delete",
         "DELETE",
         "/network/wireguard/clients/{clientId}",
         "Delete a WireGuard client.",
         "clientId",
     ),
     (
-        wg_app,
-        "client-state",
+        wg_client_app,
+        "state",
         "PATCH",
         "/network/wireguard/clients/{clientId}",
         "Set WireGuard client state.",
         "clientId",
     ),
     (route_app, "create", "POST", "/network/route", "Create a static route."),
-    (route_app, "update", "PUT", "/network/route/{id}", "Update a static route.", "id"),
+    (route_app, "set", "PUT", "/network/route/{id}", "Update a static route.", "id"),
     (
         switch_app,
-        "update-standard",
+        "set-standard",
         "PUT",
         "/network/switch/standard/{id}",
         "Update a standard switch.",
         "id",
     ),
-    (object_app, "update", "PUT", "/network/object/{id}", "Update a network object.", "id"),
+    (object_app, "set", "PUT", "/network/object/{id}", "Update a network object.", "id"),
     (object_app, "bulk-delete", "DELETE", "/network/object", "Bulk-delete network objects."),
 ]:
     _add(*spec)
@@ -1264,7 +1487,7 @@ for spec in [  # type: ignore[assignment]
 for spec in [  # type: ignore[assignment]
     (pool_app, "create", "POST", "/zfs/pools", "Create a ZFS pool."),
     (pool_app, "delete", "DELETE", "/zfs/pools/{guid}", "Delete a ZFS pool.", "guid"),
-    (pool_app, "edit", "PATCH", "/zfs/pools/{guid}", "Edit a ZFS pool.", "guid"),
+    (pool_app, "set", "PATCH", "/zfs/pools/{guid}", "Edit a ZFS pool.", "guid"),
     (pool_app, "detach", "POST", "/zfs/pools/{guid}/detach", "Detach a pool device.", "guid"),
     (
         pool_app,
@@ -1277,7 +1500,7 @@ for spec in [  # type: ignore[assignment]
     (pool_app, "disks-usage", "GET", "/zfs/pools/disks-usage", "Show disk usage."),
     (
         dataset_app,
-        "edit",
+        "set",
         "PATCH",
         "/zfs/datasets/filesystem/{guid}",
         "Edit a ZFS filesystem.",
@@ -1287,7 +1510,7 @@ for spec in [  # type: ignore[assignment]
     (dataset_app, "paginated", "GET", "/zfs/datasets/paginated", "List paginated ZFS datasets."),
     (
         dataset_app,
-        "volume-edit",
+        "volume-set",
         "PATCH",
         "/zfs/datasets/volume/{guid}",
         "Edit a ZFS volume.",
@@ -1310,7 +1533,7 @@ for spec in [  # type: ignore[assignment]
     ),
     (
         periodic_app,
-        "update",
+        "set",
         "PATCH",
         "/zfs/datasets/snapshot/periodic/{id}",
         "Update a periodic snapshot job.",
@@ -1348,7 +1571,7 @@ for spec in [  # type: ignore[assignment]
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
     (target_app, "create", "POST", "/cluster/backups/targets", "Create a backup target."),
-    (target_app, "update", "PUT", "/cluster/backups/targets/{id}", "Update a backup target.", "id"),
+    (target_app, "set", "PUT", "/cluster/backups/targets/{id}", "Update a backup target.", "id"),
     (
         target_app,
         "running-jobs",
@@ -1390,7 +1613,7 @@ for spec in [  # type: ignore[assignment]
         "id",
     ),
     (job_app, "create", "POST", "/cluster/backups/jobs", "Create a backup job."),
-    (job_app, "update", "PUT", "/cluster/backups/jobs/{id}", "Update a backup job.", "id"),
+    (job_app, "set", "PUT", "/cluster/backups/jobs/{id}", "Update a backup job.", "id"),
     (
         backup_event_app,
         "remote-list",
@@ -1400,7 +1623,7 @@ for spec in [  # type: ignore[assignment]
     ),
     (
         policy_app,
-        "update",
+        "set",
         "PUT",
         "/cluster/replication/policies/{id}",
         "Update a replication policy.",
@@ -1415,7 +1638,7 @@ for spec in [  # type: ignore[assignment]
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
     (cluster_app, "accept-join", "POST", "/cluster/accept-join", "Accept a pending cluster join."),
-    (cluster_note_app, "update", "PUT", "/cluster/notes/{id}", "Update a cluster note.", "id"),
+    (cluster_note_app, "set", "PUT", "/cluster/notes/{id}", "Update a cluster note.", "id"),
     (
         cluster_note_app,
         "bulk-delete",
@@ -1433,7 +1656,7 @@ for spec in [  # type: ignore[assignment]
 for spec in [  # type: ignore[assignment]
     (
         download_app,
-        "update",
+        "set",
         "PATCH",
         "/utilities/downloads/{id}",
         "Update download metadata.",
@@ -1511,166 +1734,192 @@ for spec in [  # type: ignore[assignment]
         "Set a service state.",
         "service",
     ),
-    (system_app, "notes-list", "GET", "/info/notes", "List host notes."),
-    (system_app, "notes-create", "POST", "/info/notes", "Create a host note."),
-    (system_app, "notes-update", "PUT", "/info/notes/{id}", "Update a host note.", "id"),
-    (system_app, "notes-delete", "DELETE", "/info/notes/{id}", "Delete a host note.", "id"),
-    (system_app, "notes-bulk-delete", "DELETE", "/info/notes", "Bulk-delete host notes."),
-    (system_app, "disk-list", "GET", "/disk", "List disk devices."),
+    (system_note_app, "list", "GET", "/info/notes", "List host notes."),
+    (system_note_app, "create", "POST", "/info/notes", "Create a host note."),
+    (system_note_app, "set", "PUT", "/info/notes/{id}", "Update a host note.", "id"),
+    (system_note_app, "delete", "DELETE", "/info/notes/{id}", "Delete a host note.", "id"),
+    (system_note_app, "bulk-delete", "DELETE", "/info/notes", "Bulk-delete host notes."),
+    (system_disk_app, "list", "GET", "/disk", "List disk devices."),
     (
-        system_app,
-        "disk-partition-delete",
+        system_disk_app,
+        "partition-delete",
         "DELETE",
         "/disk/partitions/{partition}",
         "Delete a partition.",
         "partition",
     ),
     (
-        system_app,
-        "disk-gpt-init",
+        system_disk_app,
+        "gpt-init",
         "POST",
         "/disk/{device}/partition-table",
         "Initialize a GPT partition table.",
         "device",
     ),
     (
-        system_app,
-        "disk-gpt-clear",
+        system_disk_app,
+        "gpt-clear",
         "DELETE",
         "/disk/{device}/partition-table",
         "Clear a disk partition table.",
         "device",
     ),
     (
-        system_app,
-        "disk-partition-create",
+        system_disk_app,
+        "partition-create",
         "POST",
         "/disk/{device}/partitions",
         "Create disk partitions.",
         "device",
     ),
     (
-        system_app,
-        "disk-smart-info",
+        system_disk_app,
+        "smart-info",
         "GET",
         "/disk/smart/self-test",
         "Show SMART self-test information.",
     ),
-    (system_app, "disk-smart-start", "POST", "/disk/smart/self-test", "Start a SMART self-test."),
+    (system_disk_app, "smart-start", "POST", "/disk/smart/self-test", "Start a SMART self-test."),
     (
-        system_app,
-        "disk-smart-abort",
+        system_disk_app,
+        "smart-abort",
         "POST",
         "/disk/smart/self-test/abort",
         "Abort a SMART self-test.",
     ),
     (
-        system_app,
-        "disk-smart-schedules",
+        system_disk_app,
+        "smart-schedules",
         "GET",
         "/disk/smart/self-test/schedules",
         "List SMART test schedules.",
     ),
     (
-        system_app,
-        "disk-smart-schedule-create",
+        system_disk_app,
+        "smart-schedule-create",
         "POST",
         "/disk/smart/self-test/schedules",
         "Create a SMART test schedule.",
     ),
     (
-        system_app,
-        "disk-smart-schedule-update",
+        system_disk_app,
+        "smart-schedule-set",
         "PUT",
         "/disk/smart/self-test/schedules/{id}",
         "Update a SMART test schedule.",
         "id",
     ),
     (
-        system_app,
-        "disk-smart-schedule-delete",
+        system_disk_app,
+        "smart-schedule-delete",
         "DELETE",
         "/disk/smart/self-test/schedules/{id}",
         "Delete a SMART test schedule.",
         "id",
     ),
     (system_app, "pci-list", "GET", "/system/pci-devices", "List PCI devices."),
-    (system_app, "ppt-list", "GET", "/system/ppt-devices", "List managed PCI passthrough devices."),
-    (system_app, "ppt-enable", "POST", "/system/ppt-devices", "Enable PCI passthrough."),
+    (system_ppt_app, "list", "GET", "/system/ppt-devices", "List managed PCI passthrough devices."),
+    (system_ppt_app, "enable", "POST", "/system/ppt-devices", "Enable PCI passthrough."),
     (
-        system_app,
-        "ppt-import",
+        system_ppt_app,
+        "import",
         "POST",
         "/system/ppt-devices/import",
         "Import a PCI passthrough device.",
     ),
-    (system_app, "ppt-prepare", "POST", "/system/ppt-devices/prepare", "Prepare PCI passthrough."),
+    (system_ppt_app, "prepare", "POST", "/system/ppt-devices/prepare", "Prepare PCI passthrough."),
     (
-        system_app,
-        "ppt-disable",
+        system_ppt_app,
+        "disable",
         "DELETE",
         "/system/ppt-devices/{id}",
         "Disable PCI passthrough.",
         "id",
     ),
-    (system_app, "tunables", "GET", "/system/tunables/remote", "List sysctl tunables."),
-    (system_app, "tunable-set", "PUT", "/system/tunables", "Set a sysctl tunable."),
-    (system_app, "file-list", "GET", "/system/file-explorer", "Browse files and folders."),
-    (system_app, "file-create", "POST", "/system/file-explorer", "Create a file or folder."),
+    (system_tunable_app, "list", "GET", "/system/tunables/remote", "List sysctl tunables."),
+    (system_tunable_app, "set", "PUT", "/system/tunables", "Set a sysctl tunable."),
+    (system_file_app, "list", "GET", "/system/file-explorer", "Browse files and folders."),
+    (system_file_app, "create", "POST", "/system/file-explorer", "Create a file or folder."),
     (
-        system_app,
-        "file-copy-move",
+        system_file_app,
+        "copy-move",
         "POST",
         "/system/file-explorer/copy-or-move-batch",
         "Copy or move files.",
     ),
-    (system_app, "file-delete", "POST", "/system/file-explorer/delete", "Delete files or folders."),
-    (system_app, "file-rename", "POST", "/system/file-explorer/rename", "Rename a file or folder."),
     (
-        system_app,
-        "file-upload-revert",
+        system_file_app,
+        "delete",
+        "POST",
+        "/system/file-explorer/delete",
+        "Delete files or folders.",
+    ),
+    (
+        system_file_app,
+        "rename",
+        "POST",
+        "/system/file-explorer/rename",
+        "Rename a file or folder.",
+    ),
+    (
+        system_file_app,
+        "upload-revert",
         "DELETE",
         "/system/file-explorer/upload",
         "Revert an uploaded file.",
     ),
-    (system_app, "cert-list", "GET", "/certificates", "List TLS certificates."),
-    (system_app, "cert-create", "POST", "/certificates", "Create a TLS certificate."),
+    (system_cert_app, "list", "GET", "/certificates", "List TLS certificates."),
+    (system_cert_app, "create", "POST", "/certificates", "Create a TLS certificate."),
     (
-        system_app,
-        "cert-domain-check",
+        system_cert_app,
+        "domain-check",
         "GET",
         "/certificates/domain-check",
         "Check certificate domain resolution.",
     ),
-    (system_app, "cert-update", "PATCH", "/certificates/{id}", "Update a TLS certificate.", "id"),
-    (system_app, "cert-delete", "DELETE", "/certificates/{id}", "Delete a TLS certificate.", "id"),
     (
-        system_app,
-        "cert-activate",
+        system_cert_app,
+        "set",
+        "PATCH",
+        "/certificates/{id}",
+        "Update a TLS certificate.",
+        "id",
+    ),
+    (
+        system_cert_app,
+        "delete",
+        "DELETE",
+        "/certificates/{id}",
+        "Delete a TLS certificate.",
+        "id",
+    ),
+    (
+        system_cert_app,
+        "activate",
         "POST",
         "/certificates/{id}/activate",
         "Schedule certificate activation.",
         "id",
     ),
     (
-        system_app,
-        "cert-activate-cancel",
+        system_cert_app,
+        "activate-cancel",
         "DELETE",
         "/certificates/{id}/activate",
         "Cancel certificate activation.",
         "id",
     ),
     (
-        system_app,
-        "cert-renew",
+        system_cert_app,
+        "renew",
         "POST",
         "/certificates/{id}/renew",
         "Renew a TLS certificate.",
         "id",
     ),
     (
-        system_app,
-        "cert-retry",
+        system_cert_app,
+        "retry",
         "POST",
         "/certificates/{id}/retry",
         "Retry certificate issuance.",
@@ -1682,7 +1931,7 @@ for spec in [  # type: ignore[assignment]
     _add(*spec)
 
 
-@system_app.command("notes-show")
+@system_note_app.command("show")
 def system_notes_show(
     ctx: typer.Context,
     note_id: Annotated[str, typer.Argument(help="Host note ID to display.")],
@@ -1703,24 +1952,24 @@ def system_notes_show(
 
 
 _add(
-    system_app,
-    "file-upload",
+    system_file_app,
+    "upload",
     "POST",
     "/system/file-explorer/upload",
     "Upload a file. Use --param path=/destination.",
     upload=True,
 )
 _add(
-    system_app,
-    "file-download",
+    system_file_app,
+    "download",
     "GET",
     "/system/file-explorer/download",
     "Download a file. Use --param id=/absolute/path.",
     binary=True,
 )
 _add(
-    system_app,
-    "cert-archive",
+    system_cert_app,
+    "archive",
     "GET",
     "/certificates/{id}/archive",
     "Download a certificate archive.",
@@ -1809,13 +2058,13 @@ def system_terminal(
 for spec in [  # type: ignore[assignment]
     (samba_app, "config", "GET", "/samba/config", "Show Samba global configuration."),
     (samba_app, "config-set", "PUT", "/samba/config", "Update Samba global configuration."),
-    (samba_app, "shares", "GET", "/samba/shares", "List Samba shares."),
-    (samba_app, "share-create", "POST", "/samba/shares", "Create a Samba share."),
-    (samba_app, "share-update", "PUT", "/samba/shares/{id}", "Update a Samba share.", "id"),
-    (samba_app, "share-delete", "DELETE", "/samba/shares/{id}", "Delete a Samba share.", "id"),
+    (samba_share_app, "list", "GET", "/samba/shares", "List Samba shares."),
+    (samba_share_app, "create", "POST", "/samba/shares", "Create a Samba share."),
+    (samba_share_app, "set", "PUT", "/samba/shares/{id}", "Update a Samba share.", "id"),
+    (samba_share_app, "delete", "DELETE", "/samba/shares/{id}", "Delete a Samba share.", "id"),
     (
-        samba_app,
-        "share-enable",
+        samba_share_app,
+        "enable",
         "PUT",
         "/samba/shares/{id}/enabled",
         "Enable or disable a Samba share.",
@@ -1830,27 +2079,27 @@ for spec in [  # type: ignore[assignment]
 # iSCSI
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
-    (iscsi_app, "initiators", "GET", "/iscsi/initiators", "List iSCSI initiators."),
-    (iscsi_app, "initiator-create", "POST", "/iscsi/initiators", "Create an iSCSI initiator."),
+    (iscsi_initiator_app, "list", "GET", "/iscsi/initiators", "List iSCSI initiators."),
+    (iscsi_initiator_app, "create", "POST", "/iscsi/initiators", "Create an iSCSI initiator."),
     (
-        iscsi_app,
-        "initiator-update",
+        iscsi_initiator_app,
+        "set",
         "PUT",
         "/iscsi/initiators/{id}",
         "Update an iSCSI initiator.",
         "id",
     ),
     (
-        iscsi_app,
-        "initiator-delete",
+        iscsi_initiator_app,
+        "delete",
         "DELETE",
         "/iscsi/initiators/{id}",
         "Delete an iSCSI initiator.",
         "id",
     ),
     (
-        iscsi_app,
-        "initiator-connect",
+        iscsi_initiator_app,
+        "connect",
         "POST",
         "/iscsi/initiators/{id}/connect",
         "Connect an iSCSI initiator.",
@@ -1858,26 +2107,26 @@ for spec in [  # type: ignore[assignment]
     ),
     (iscsi_app, "status", "GET", "/iscsi/status", "Show iSCSI initiator status."),
     (iscsi_app, "sessions", "GET", "/iscsi/target-sessions", "List iSCSI target sessions."),
-    (iscsi_app, "targets", "GET", "/iscsi/targets", "List iSCSI targets."),
-    (iscsi_app, "target-create", "POST", "/iscsi/targets", "Create an iSCSI target."),
+    (iscsi_target_app, "list", "GET", "/iscsi/targets", "List iSCSI targets."),
+    (iscsi_target_app, "create", "POST", "/iscsi/targets", "Create an iSCSI target."),
     (
-        iscsi_app,
-        "target-update",
+        iscsi_target_app,
+        "set",
         "PUT",
         "/iscsi/targets/{targetId}",
         "Update an iSCSI target.",
         "targetId",
     ),
     (
-        iscsi_app,
-        "target-delete",
+        iscsi_target_app,
+        "delete",
         "DELETE",
         "/iscsi/targets/{targetId}",
         "Delete an iSCSI target.",
         "targetId",
     ),
     (
-        iscsi_app,
+        iscsi_target_app,
         "lun-add",
         "POST",
         "/iscsi/targets/{targetId}/luns",
@@ -1885,7 +2134,7 @@ for spec in [  # type: ignore[assignment]
         "targetId",
     ),
     (
-        iscsi_app,
+        iscsi_target_app,
         "lun-remove",
         "DELETE",
         "/iscsi/targets/{targetId}/luns/{lunId}",
@@ -1893,7 +2142,7 @@ for spec in [  # type: ignore[assignment]
         "targetId lunId",
     ),
     (
-        iscsi_app,
+        iscsi_target_app,
         "portal-add",
         "POST",
         "/iscsi/targets/{targetId}/portals",
@@ -1901,7 +2150,7 @@ for spec in [  # type: ignore[assignment]
         "targetId",
     ),
     (
-        iscsi_app,
+        iscsi_target_app,
         "portal-remove",
         "DELETE",
         "/iscsi/targets/{targetId}/portals/{portalId}",
@@ -1918,7 +2167,7 @@ for spec in [  # type: ignore[assignment]
 for spec in [  # type: ignore[assignment]
     (ddns_app, "list", "GET", "/dynamic-dns/entries", "List dynamic DNS entries."),
     (ddns_app, "create", "POST", "/dynamic-dns/entries", "Create a dynamic DNS entry."),
-    (ddns_app, "update", "PUT", "/dynamic-dns/entries/{id}", "Update a dynamic DNS entry.", "id"),
+    (ddns_app, "set", "PUT", "/dynamic-dns/entries/{id}", "Update a dynamic DNS entry.", "id"),
     (
         ddns_app,
         "delete",
@@ -1937,10 +2186,10 @@ for spec in [  # type: ignore[assignment]
     ),
     (mdns_app, "config", "GET", "/mdns/config", "Show mDNS settings."),
     (mdns_app, "config-set", "PUT", "/mdns/config", "Update mDNS settings."),
-    (mdns_app, "records", "GET", "/mdns/records", "List mDNS records."),
-    (mdns_app, "record-create", "POST", "/mdns/records", "Create an mDNS record."),
-    (mdns_app, "record-update", "PUT", "/mdns/records/{id}", "Update an mDNS record.", "id"),
-    (mdns_app, "record-delete", "DELETE", "/mdns/records/{id}", "Delete an mDNS record.", "id"),
+    (mdns_record_app, "list", "GET", "/mdns/records", "List mDNS records."),
+    (mdns_record_app, "create", "POST", "/mdns/records", "Create an mDNS record."),
+    (mdns_record_app, "set", "PUT", "/mdns/records/{id}", "Update an mDNS record.", "id"),
+    (mdns_record_app, "delete", "DELETE", "/mdns/records/{id}", "Delete an mDNS record.", "id"),
 ]:
     _add(*spec)
 
@@ -1966,91 +2215,91 @@ for spec in [  # type: ignore[assignment]
         "Dismiss a notification.",
         "id",
     ),
-    (notifications_app, "rules", "GET", "/notifications/rules", "List notification rules."),
+    (notifications_rule_app, "list", "GET", "/notifications/rules", "List notification rules."),
     (
-        notifications_app,
-        "rules-update",
+        notifications_rule_app,
+        "set-all",
         "PUT",
         "/notifications/rules",
         "Update notification rules.",
     ),
     (
-        notifications_app,
-        "rule-create",
+        notifications_rule_app,
+        "create",
         "POST",
         "/notifications/rules",
         "Create a notification rule.",
     ),
     (
-        notifications_app,
-        "rule-update",
+        notifications_rule_app,
+        "set",
         "PUT",
         "/notifications/rules/{id}",
         "Update a notification rule.",
         "id",
     ),
     (
-        notifications_app,
-        "rule-delete",
+        notifications_rule_app,
+        "delete",
         "DELETE",
         "/notifications/rules/{id}",
         "Delete a notification rule.",
         "id",
     ),
     (
-        notifications_app,
-        "rules-bulk-delete",
+        notifications_rule_app,
+        "bulk-delete",
         "POST",
         "/notifications/rules/bulk-delete",
         "Bulk-delete notification rules.",
     ),
     (
-        notifications_app,
-        "rules-bulk-update",
+        notifications_rule_app,
+        "bulk-set",
         "POST",
         "/notifications/rules/bulk-update",
         "Bulk-update notification rules.",
     ),
     (
-        notifications_app,
-        "rule-test",
+        notifications_rule_app,
+        "test",
         "POST",
         "/notifications/rules/test",
         "Test a notification rule.",
     ),
     (
-        notifications_app,
-        "transports",
+        notifications_transport_app,
+        "list",
         "GET",
         "/notifications/transports",
         "List notification transports.",
     ),
     (
-        notifications_app,
-        "transport-create",
+        notifications_transport_app,
+        "create",
         "POST",
         "/notifications/transports",
         "Create a notification transport.",
     ),
     (
-        notifications_app,
-        "transport-update",
+        notifications_transport_app,
+        "set",
         "PUT",
         "/notifications/transports/{id}",
         "Update a notification transport.",
         "id",
     ),
     (
-        notifications_app,
-        "transport-delete",
+        notifications_transport_app,
+        "delete",
         "DELETE",
         "/notifications/transports/{id}",
         "Delete a notification transport.",
         "id",
     ),
     (
-        notifications_app,
-        "transport-test",
+        notifications_transport_app,
+        "test",
         "POST",
         "/notifications/transports/{id}/test",
         "Test a notification transport.",
@@ -2077,12 +2326,19 @@ for spec in [  # type: ignore[assignment]
     (user_app, "importable", "GET", "/auth/users/importable", "List importable Unix users."),
     (user_app, "pam-create", "POST", "/auth/users/pam", "Create a PAM user."),
     (user_app, "next-uid", "GET", "/auth/users/uid/next", "Show the next Unix UID."),
-    (user_app, "update", "PUT", "/auth/users/{userId}", "Update a user.", "userId"),
+    (user_app, "set", "PUT", "/auth/users/{userId}", "Update a user.", "userId"),
     (user_app, "delete", "DELETE", "/auth/users/{userId}", "Delete a user.", "userId"),
-    (user_app, "passkeys", "GET", "/auth/users/{userId}/passkeys", "List user passkeys.", "userId"),
     (
-        user_app,
-        "passkey-delete",
+        user_passkey_app,
+        "list",
+        "GET",
+        "/auth/users/{userId}/passkeys",
+        "List user passkeys.",
+        "userId",
+    ),
+    (
+        user_passkey_app,
+        "delete",
         "DELETE",
         "/auth/users/{userId}/passkeys/{credentialId}",
         "Delete a user passkey.",
@@ -2101,53 +2357,59 @@ for spec in [  # type: ignore[assignment]
     ),
     (auth_app, "login-config", "GET", "/auth/login/config", "Show login configuration."),
     (auth_app, "sse-token", "POST", "/auth/sse-tokens", "Create an SSE token."),
-    (auth_app, "passkey-login-begin", "POST", "/auth/passkeys/login/begin", "Begin passkey login."),
     (
-        auth_app,
-        "passkey-login-finish",
+        auth_passkey_app,
+        "login-begin",
+        "POST",
+        "/auth/passkeys/login/begin",
+        "Begin passkey login.",
+    ),
+    (
+        auth_passkey_app,
+        "login-finish",
         "POST",
         "/auth/passkeys/login/finish",
         "Finish passkey login.",
     ),
     (
-        auth_app,
-        "passkey-register-begin",
+        auth_passkey_app,
+        "register-begin",
         "POST",
         "/auth/passkeys/register/begin",
         "Begin passkey registration.",
     ),
     (
-        auth_app,
-        "passkey-register-finish",
+        auth_passkey_app,
+        "register-finish",
         "POST",
         "/auth/passkeys/register/finish",
         "Finish passkey registration.",
     ),
     (
-        cloud_init_app,
-        "templates",
+        cloud_init_template_app,
+        "list",
         "GET",
         "/utilities/cloud-init/templates",
         "List cloud-init templates.",
     ),
     (
-        cloud_init_app,
-        "template-create",
+        cloud_init_template_app,
+        "create",
         "POST",
         "/utilities/cloud-init/templates",
         "Create a cloud-init template.",
     ),
     (
-        cloud_init_app,
-        "template-update",
+        cloud_init_template_app,
+        "set",
         "PUT",
         "/utilities/cloud-init/templates/{templateId}",
         "Update a cloud-init template.",
         "templateId",
     ),
     (
-        cloud_init_app,
-        "template-delete",
+        cloud_init_template_app,
+        "delete",
         "DELETE",
         "/utilities/cloud-init/templates/{templateId}",
         "Delete a cloud-init template.",

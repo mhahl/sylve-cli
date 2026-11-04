@@ -19,10 +19,10 @@ manual snapshots, and scheduled periodic snapshot jobs across Sylve nodes.
 
 | Group | Subcommands |
 |---|---|
-| `pool` | `list`, `show`, `status`, `scrub`, `create`, `delete`, `edit`, `detach`, `replace-device`, `disks-usage` |
-| `dataset` | `list`, `create-fs`, `create-vol`, `delete`, `edit`, `bulk-delete`, `paginated`, `volume-edit`, `volume-flash` |
+| `pool` | `list`, `show`, `status`, `scrub`, `create`, `delete`, `set`, `detach`, `replace-device`, `disks-usage` |
+| `dataset` | `list`, `create-fs`, `create-vol`, `delete`, `set`, `bulk-delete`, `paginated`, `volume-set`, `volume-flash` |
 | `snapshot` | `list`, `create`, `rollback`, `delete` |
-| `periodic` | `list`, `create`, `update`, `delete` |
+| `periodic` | `list`, `create`, `set`, `delete` |
 | top-level | `dashboard-snapshot`, `dashboard-history`, `dashboard-delta` |
 
 ## OPTIONS
@@ -67,16 +67,16 @@ manual snapshots, and scheduled periodic snapshot jobs across Sylve nodes.
 
 ### Generic Subcommands
 
-All remaining subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+All remaining write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
-| `pool delete`, `pool edit`, `pool detach`, `pool replace-device` | `guid` |
-| `dataset edit`, `dataset volume-edit`, `dataset volume-flash` | `guid` |
-| `periodic update`, `periodic delete` | `id` |
+| `pool delete`, `pool set`, `pool detach`, `pool replace-device` | `guid` |
+| `dataset set`, `dataset volume-set`, `dataset volume-flash` | `guid` |
+| `periodic set`, `periodic delete` | `id` |
 | `pool create`, `pool disks-usage`, `dataset bulk-delete`, `dataset paginated`, `periodic create`, `dashboard-*` | none |
 
 ## EXIT STATUS
@@ -162,9 +162,9 @@ Tune a dataset or volume without JSON, previewing the exact request
 first. Dotted `--set` keys nest into the `properties` object:
 
 ```sh
-sylve zfs dataset edit <guid> --set properties.compression=lz4 --dry-run -f json
-sylve zfs dataset edit <guid> --set properties.compression=lz4
-sylve zfs dataset volume-edit <guid> --set properties.volsize=10737418240 --dry-run -f json
+sylve zfs dataset set <guid> --set properties.compression=lz4 --dry-run -f json
+sylve zfs dataset set <guid> --set properties.compression=lz4
+sylve zfs dataset volume-set <guid> --set properties.volsize=10737418240 --dry-run -f json
 # 10737418240 bytes = 10 GiB
 sylve zfs pool detach <guid> --set device=/dev/da1 --dry-run -f json
 ```

@@ -26,7 +26,7 @@ failovers, and monitors replication events.
 | `policy run POLICY_ID` | Queue an immediate replication run |
 | `policy failover POLICY_ID` | Queue a safe or forced failover |
 | `policy delete POLICY_ID` | Delete a replication policy |
-| `policy update POLICY_ID` | Update a policy (generic API command) |
+| `policy set POLICY_ID` | Update a policy (generic API command) |
 | `event list` | List recent replication events |
 | `event show EVENT_ID` | Show event details or follow live progress |
 
@@ -58,7 +58,7 @@ failovers, and monitors replication events.
 - `-f, --format {table,json,yaml,value,csv}`
   Output format (default: `table`).
 
-### `policy run`, `policy failover`, `policy delete`, `policy update`
+### `policy run`, `policy failover`, `policy delete`, `policy set`
 
 - `run POLICY_ID`: queue an immediate run.
 - `failover POLICY_ID`:
@@ -68,7 +68,7 @@ failovers, and monitors replication events.
     node (default: `--move-pinned-source`).
   - `--confirm-data-loss`: required acknowledgement when you set `--mode force`.
 - `delete POLICY_ID`: `-y, --yes`.
-- `update POLICY_ID`: `-d, --data BODY`, `-s, --set KEY=VALUE`,
+- `set POLICY_ID`: `-d, --data BODY`, `-s, --set, --property KEY=VALUE`,
   `-p, --param KEY=VALUE`, `--dry-run`,
   `-n, --node NODE`, `-f, --format`.
 
@@ -135,14 +135,14 @@ sylve replication event show 9 --wait
 Disable or delete a policy:
 
 ```sh
-sylve replication policy update 1 --set enabled=false -f json
+sylve replication policy set 1 --set enabled=false -f json
 sylve replication policy delete 1 --yes
 ```
 
 Preview a policy rename before sending it:
 
 ```sh
-sylve replication policy update 1 \
+sylve replication policy set 1 \
   --set name=web-ha \
   --set guestType=vm \
   --set guestId=101 \
@@ -150,13 +150,12 @@ sylve replication policy update 1 \
   --dry-run -f json
 ```
 
-Remap a policy's target nodes with an array of objects (single-quote the
-whole value; a `--set` on a list replaces it):
+Remap a policy's target nodes with repeatable `--set` object entries or inline YAML:
 
 ```sh
-sylve replication policy update 1 \
+sylve replication policy set 1 \
   --set name=web-ha \
-  --set 'targets=[{nodeId: 2b7c-uuid, weight: 100}]' \
+  --set targets=nodeId=2b7c-uuid,weight=100 \
   --dry-run -f json
 # body: {"name":"web-ha","targets":[{"nodeId":"2b7c-uuid","weight":100}]}
 ```

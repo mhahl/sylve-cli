@@ -44,12 +44,12 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 | `guest-agent VM` | Query QEMU Guest Agent OS and network information |
 | `rename VM NEW_NAME` | Rename a VM |
 | `snapshot list/create/rollback/delete` | Manage VM ZFS snapshots |
-| `template list/capture/delete` | Manage VM templates |
-| `template-show`, `description`, `domain`, `stats`, `stats-step` | Generic read/update API commands |
-| `hardware-cpu`, `hardware-ram`, `hardware-pci`, `hardware-vnc` | Generic hardware update commands |
-| `network-attach`, `network-detach`, `network-update` | Generic NIC management commands |
-| `storage-attach`, `storage-from-image`, `storage-update`, `storage-delete` | Generic storage management commands |
-| `options-boot-order`, `options-boot-rom`, `options-clock`, `options-cloud-init`, `options-extra-bhyve`, `options-ignore-umsrs`, `options-qemu-guest-agent`, `options-serial-console`, `options-shutdown-wait-time`, `options-tpm`, `options-wol` | Generic VM option update commands |
+| `template list/show/capture/delete` | Manage VM templates |
+| `description`, `domain`, `stats`, `stats-step` | Generic read/update API commands |
+| `hardware cpu/ram/pci/vnc` | Generic hardware update commands |
+| `network attach/detach/set` | Generic NIC management commands |
+| `storage attach/from-image/set/delete` | Generic storage management commands |
+| `options boot-order/boot-rom/clock/cloud-init/extra-bhyve/ignore-umsrs/qemu-guest-agent/serial-console/shutdown-wait-time/tpm/wol` | Generic VM option update commands |
 | `registration-purge` | Purge an orphaned VM registration |
 
 ## OPTIONS
@@ -242,7 +242,7 @@ settings request 16- or 8-bit pixels and show a black screen.
 Enable VNC first if you created the VM without it:
 
 ```sh
-sylve vm hardware-vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --set vncWait=false
+sylve vm hardware vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --set vncWait=false
 ```
 
 ### `vm snapshot` and `vm template`
@@ -255,6 +255,7 @@ sylve vm hardware-vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --s
 - `snapshot delete VM SNAPSHOT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
 - `template list`: `-n/--node`, `-f/--format`, `-c/--column`,
   `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
+- `template show TEMPLATE_ID`: `-n/--node`, `-f/--format`, `-c/--column`.
 - `template capture VM`: `--name NAME` (required), `-n/--node`, `-w/--wait` (default: `--wait`),
   `-f/--format`.
 - `template delete TEMPLATE_ID`: `-y/--yes` (the command also deletes the
@@ -262,21 +263,21 @@ sylve vm hardware-vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --s
 
 ### Generic Subcommands
 
-All generic VM subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+All generic VM write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
-| `template-show` | `templateId` |
+| `template show` | `templateId` |
 | `description`, `domain`, `stats` | `rid` |
 | `stats-step` | `rid step` |
-| `hardware-cpu`, `hardware-ram`, `hardware-pci`, `hardware-vnc` | `rid` |
-| `network-attach`, `storage-attach`, `storage-from-image` | `rid` |
-| `network-detach`, `network-update` | `rid networkId` |
-| `storage-update`, `storage-delete` | `rid storageId` |
-| `options-*`, `registration-purge` | `rid` |
+| `hardware cpu`, `hardware ram`, `hardware pci`, `hardware vnc` | `rid` |
+| `network attach`, `storage attach`, `storage from-image` | `rid` |
+| `network detach`, `network set` | `rid networkId` |
+| `storage set`, `storage delete` | `rid storageId` |
+| `options *`, `registration-purge` | `rid` |
 
 ## EXIT STATUS
 
@@ -436,7 +437,7 @@ sylve vm migrate 101 --target node2.example.test --wait
 sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"
 sylve vm snapshot rollback 101 1 --yes
 sylve vm template capture 101 --name debian-web --wait
-sylve vm hardware-cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2 -f json
+sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2 -f json
 sylve vm delete 101 --keep-volumes --keep-raw-disks --keep-macs --yes
 ```
 
@@ -444,24 +445,25 @@ Resize RAM or CPU without JSON, previewing the exact request first.
 Integer byte fields take raw byte counts, so `4294967296` means 4 GiB:
 
 ```sh
-sylve vm hardware-ram 101 --set ram=4294967296 --dry-run -f json
+sylve vm hardware ram 101 --set ram=4294967296 --dry-run -f json
 # {"method":"PUT","path":"/vm/101/hardware/ram","body":{"ram":4294967296}}
 
-sylve vm hardware-ram 101 --set ram=4294967296        # 4 GiB
-sylve vm hardware-cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2
-sylve vm options-boot-order 101 --set bootOrder=10 --set startAtBoot=true
-sylve vm options-shutdown-wait-time 101 --set waitTime=60
+sylve vm hardware ram 101 --set ram=4294967296        # 4 GiB
+sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2
+sylve vm options boot-order 101 --set bootOrder=10 --set startAtBoot=true
+sylve vm options shutdown-wait-time 101 --set waitTime=60
 ```
 
-Arrays and arrays of objects go in one `--set` as YAML (single-quote it).
-A `--set` on a list field replaces the whole list:
+Arrays and arrays of objects accept repeatable `--set` flags (with `k=v` pairs for objects) or inline YAML:
 
 ```sh
-sylve vm hardware-cpu 101 --set 'cpuPinning=[{cores: [0, 1], socket: 0}]' --dry-run -f json
-# body: {"cpuPinning":[{"cores":[0,1],"socket":0}]}
+sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=1 \
+  --set 'cpuPinning=cores=[0, 1],socket=0' --dry-run -f json
+# body: {"cpuSockets":1,"cpuCores":4,"cpuThreads":1,"cpuPinning":[{"cores":[0,1],"socket":0}]}
 
-sylve vm options-extra-bhyve 101 --set 'extraBhyveOptions=[-A, -H]'
-sylve vm hardware-cpu 101 --set 'cpuPinning=[{cores: [0, 1], socket: 0}]'
+sylve vm options extra-bhyve 101 --set extraBhyveOptions=-A,-H
+sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=1 \
+  --set 'cpuPinning=[{cores: [0, 1], socket: 0}]'
 ```
 
 Slice list output to the rows and columns you need. `vm list` and

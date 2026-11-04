@@ -24,28 +24,28 @@ generic Sylve API bindings.
 | `count` | none | Show active notification count |
 | `dismiss` | `ID` | Dismiss notification `ID` |
 | `dismiss-all` | none | Dismiss all active notifications |
-| `rules` | none | List notification rules |
-| `rules-update` | none | Replace or update notification rules |
-| `rule-create` | none | Create a notification rule |
-| `rule-update` | `ID` | Update rule `ID` |
-| `rule-delete` | `ID` | Delete rule `ID` |
-| `rules-bulk-delete` | none | Delete multiple rules |
-| `rules-bulk-update` | none | Update multiple rules |
-| `rule-test` | none | Send a test notification using a `--data` payload (not tied to one rule) |
-| `transports` | none | List notification transports |
-| `transport-create` | none | Create a notification transport |
-| `transport-update` | `ID` | Update transport `ID` |
-| `transport-delete` | `ID` | Delete transport `ID` |
-| `transport-test` | `ID` | Test delivery on transport `ID` |
+| `rule list` | none | List notification rules |
+| `rule set-all` | none | Replace or update notification rules |
+| `rule create` | none | Create a notification rule |
+| `rule set` | `ID` | Update rule `ID` |
+| `rule delete` | `ID` | Delete rule `ID` |
+| `rule bulk-delete` | none | Delete multiple rules |
+| `rule bulk-set` | none | Update multiple rules |
+| `rule test` | none | Send a test notification using a `--data` or `--set` payload |
+| `transport list` | none | List notification transports |
+| `transport create` | none | Create a notification transport |
+| `transport set` | `ID` | Update transport `ID` |
+| `transport delete` | `ID` | Delete transport `ID` |
+| `transport test` | `ID` | Test delivery on transport `ID` |
 
 ## OPTIONS
 
-All subcommands accept:
+Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
-  JSON or YAML request body, or `@FILE`.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable, dotted keys nest); overrides `--data`.
+  JSON or YAML request body, or `@FILE` (write commands).
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
 - `--dry-run`
@@ -84,36 +84,36 @@ sylve notifications dismiss-all
 Create, update, test, and delete rules and transports:
 
 ```sh
-sylve notifications rule-create \
+sylve notifications rule create \
   --set templateKey=node-offline --set targetKey=mail --set uiEnabled=true --set emailEnabled=true
-sylve notifications rule-update 2 --set emailEnabled=false --set uiEnabled=true -f json
-sylve notifications rule-test \
+sylve notifications rule set 2 --set emailEnabled=false --set uiEnabled=true -f json
+sylve notifications rule test \
   --set templateKey=node-offline --set targetKey=mail --set severity=warning
 
-sylve notifications transport-create \
+sylve notifications transport create \
   --set name=mail --set type=email --set enabled=true
-sylve notifications transport-test 1
-sylve notifications transport-delete 1 --yes
+sylve notifications transport test 1
+sylve notifications transport delete 1 --yes
 ```
 
 Preview rule and transport creates and updates with `--set`:
 
 ```sh
-sylve notifications rule-create \
+sylve notifications rule create \
   --set templateKey=node-offline --set targetKey=mail \
   --set uiEnabled=true --set emailEnabled=true \
   --dry-run -f json
-sylve notifications rule-update 2 --set emailEnabled=false --set uiEnabled=true --dry-run -f json
-sylve notifications transport-create \
+sylve notifications rule set 2 --set emailEnabled=false --set uiEnabled=true --dry-run -f json
+sylve notifications transport create \
   --set name=example-mail --set type=email --set enabled=true \
   --dry-run -f json
-sylve notifications transport-update 1 --set enabled=false --dry-run -f json
+sylve notifications transport set 1 --set enabled=false --dry-run -f json
 ```
 
 Configure a nested object with dotted keys, one field at a time:
 
 ```sh
-sylve notifications transport-create \
+sylve notifications transport create \
   --set name=mail --set type=email \
   --set email.smtpHost=mail.example.test --set email.smtpPort=587 \
   --dry-run -f json
@@ -123,15 +123,15 @@ sylve notifications transport-create \
 Test delivery, bulk-update rules, and clean up:
 
 ```sh
-sylve notifications rule-test \
+sylve notifications rule test \
   --set templateKey=node-offline --set targetKey=mail --set severity=warning \
   --dry-run -f json
-sylve notifications transport-test 1 --dry-run -f json
-sylve notifications rules -c id -c templateKey -c targetKey -l 10
-sylve notifications rules-bulk-update --set 'ids=[1,2]' --set emailEnabled=false --dry-run -f json
-sylve notifications rules-bulk-delete --set 'ids=[3,4]' --dry-run -f json
-sylve notifications rule-delete 2 --yes
-sylve notifications transport-delete 1 --yes
+sylve notifications transport test 1 --dry-run -f json
+sylve notifications rule list -c id -c templateKey -c targetKey -l 10
+sylve notifications rule bulk-set --set ids=1,2 --set emailEnabled=false --dry-run -f json
+sylve notifications rule bulk-delete --set ids=3,4 --dry-run -f json
+sylve notifications rule delete 2 --yes
+sylve notifications transport delete 1 --yes
 ```
 
 Preview dismissing notifications without sending anything:

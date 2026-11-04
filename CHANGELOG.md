@@ -11,9 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Typed `jail create` command with flags, `--file`, `--set`, `--dry-run`,
   and a confirmation plan, mirroring `vm create`. The CLI parses sizes like
   `2G` to bytes and resolves pool/switch/bootstrap names against the server.
-- `--set KEY=VALUE` (`-s`) on all generic API commands: per-field updates
-  with YAML-parsed values and dotted keys for nesting
-  (e.g. `jail hardware-cpu 201 --set cores=4`), so small updates need no JSON.
+- `--set KEY=VALUE` (`-s`, `--property`) on all generic write commands:
+  schema-aware per-field updates with dotted keys for nesting, repeatable or
+  comma-separated `k=v` pairs for lists and nested objects, and string-preserving
+  type coercion (e.g. `jail hardware cpu 201 --set cores=4`), so small updates
+  need no JSON.
+- Unified `<noun> <verb>` sub-groups (`vm hardware|network|storage|options|template`,
+  `jail hardware|network|options|template|bootstrap`, `network dhcp range|lease`,
+  `network firewall traffic|nat|advanced`, `network wireguard server|peer|client`,
+  `system note|disk|ppt|tunable|file|cert`, `samba share`, `iscsi initiator|target`,
+  `mdns record`, `notifications rule|transport`, `user passkey`, `auth passkey`,
+  `cloud-init template`) with `list`/`show`/`create`/`set`/`delete` verbs.
 - `--dry-run` on all generic API commands: print `method`, `path`, `params`,
   and `body` without sending anything.
 - Every generic command's `--help` now lists its settable `--set` body fields

@@ -25,13 +25,13 @@ backup execution events.
 | `target datasets TARGET_ID` | List restorable datasets on a target |
 | `target validate TARGET_ID` | Validate SSH/storage connectivity to a target |
 | `target delete TARGET_ID` | Delete a disabled backup target |
-| `target create`, `target update ID`, `target running-jobs ID`, `target dataset-snapshots ID`, `target vm-metadata ID`, `target jail-metadata ID`, `target restore ID` | Generic target API commands |
+| `target create`, `target set ID`, `target running-jobs ID`, `target dataset-snapshots ID`, `target vm-metadata ID`, `target jail-metadata ID`, `target restore ID` | Generic target API commands |
 | `job list` | List scheduled backup jobs |
 | `job run JOB_ID` | Queue an immediate backup job run |
 | `job snapshots JOB_ID` | List restorable snapshots for a job |
 | `job restore JOB_ID` | Queue a snapshot restore from a job |
 | `job delete JOB_ID` | Delete a backup job |
-| `job create`, `job update ID` | Generic job API commands |
+| `job create`, `job set ID` | Generic job API commands |
 | `event list` | List recent backup events |
 | `event show EVENT_ID` | Show event details or follow live progress |
 | `event remote-list` | Generic remote backup event list |
@@ -68,15 +68,15 @@ backup execution events.
 
 ### Generic Subcommands
 
-All generic backup subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+All generic backup write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
-| `target update`, `target running-jobs`, `target dataset-snapshots`, `target vm-metadata`, `target jail-metadata`, `target restore` | `id` |
-| `job update` | `id` |
+| `target set`, `target running-jobs`, `target dataset-snapshots`, `target vm-metadata`, `target jail-metadata`, `target restore` | `id` |
+| `job set` | `id` |
 | `target create`, `job create`, `event remote-list` | none |
 
 ## EXIT STATUS
@@ -179,8 +179,8 @@ sylve backup job create \
 Disable a job and rename a target with small `--set` updates:
 
 ```sh
-sylve backup job update 3 --set mode=vm --set name=vm101-nightly --set targetId=1 --set enabled=false --dry-run -f json
-sylve backup target update 1 --set 'description=Nightly offsite' --set enabled=true --dry-run -f json
+sylve backup job set 3 --set mode=vm --set name=vm101-nightly --set targetId=1 --set enabled=false --dry-run -f json
+sylve backup target set 1 --set 'description=Nightly offsite' --set enabled=true --dry-run -f json
 ```
 
 Run the full validate -> run -> follow-progress flow for one job:

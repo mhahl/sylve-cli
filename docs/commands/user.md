@@ -26,19 +26,19 @@ accounts, and user WebAuthn passkeys via generic Sylve API bindings.
 | `importable` | none | List importable host Unix users |
 | `pam-create` | none | Register a PAM user |
 | `next-uid` | none | Show the next available Unix UID |
-| `update` | `USER_ID` | Update user `USER_ID` |
+| `set` | `USER_ID` | Update user `USER_ID` |
 | `delete` | `USER_ID` | Delete user `USER_ID` |
-| `passkeys` | `USER_ID` | List passkeys for user `USER_ID` |
-| `passkey-delete` | `USER_ID CREDENTIAL_ID` | Delete passkey `CREDENTIAL_ID` for `USER_ID` |
+| `passkey list` | `USER_ID` | List passkeys for user `USER_ID` |
+| `passkey delete` | `USER_ID CREDENTIAL_ID` | Delete passkey `CREDENTIAL_ID` for `USER_ID` |
 
 ## OPTIONS
 
-All subcommands accept:
+Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
-  JSON or YAML request body, or `@FILE`.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable, dotted keys nest); overrides `--data`.
+  JSON or YAML request body, or `@FILE` (write commands).
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
 - `--dry-run`
@@ -93,9 +93,9 @@ sylve user next-uid
 Update a user, manage passkeys, and delete an account:
 
 ```sh
-sylve user update 2 --set fullName=Operations -f json
-sylve user passkeys 2
-sylve user passkey-delete 2 cred-abc
+sylve user set 2 --set fullName=Operations -f json
+sylve user passkey list 2
+sylve user passkey delete 2 cred-abc
 sylve user delete 2 --yes
 ```
 
@@ -118,7 +118,7 @@ sylve user list -c id -c username -c admin --sort-column username -l 10
 Preview an update, import a host user, and register a PAM account:
 
 ```sh
-sylve user update 2 --set fullName=Operations --set admin=false --dry-run -f json
+sylve user set 2 --set fullName=Operations --set admin=false --dry-run -f json
 sylve user import --set username=ops --set admin=false --dry-run -f json
 sylve user pam-create \
   --set username=ops-pam --set admin=false --set uid=1001 --set homeDirPerms=755 \
@@ -129,15 +129,15 @@ sylve user importable -c username -c uid --filter username=ops -l 5
 Group memberships take an array of IDs:
 
 ```sh
-sylve user update 2 --set admin=false --set 'auxGroupIds=[1001,1002]' --dry-run -f json
+sylve user set 2 --set admin=false --set auxGroupIds=1001,1002 --dry-run -f json
 # body: {"admin":false,"auxGroupIds":[1001,1002]}
 ```
 
 List passkeys for a user and delete one with confirmation skipped:
 
 ```sh
-sylve user passkeys 2 -c credentialId -c label -l 10
-sylve user passkey-delete 2 cred-abc --yes --dry-run -f json
+sylve user passkey list 2 -c credentialId -c label -l 10
+sylve user passkey delete 2 cred-abc --yes --dry-run -f json
 sylve user delete 2 --yes
 ```
 

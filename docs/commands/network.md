@@ -22,12 +22,12 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
 | Group | Subcommands |
 |---|---|
 | `interface` | `list`, `l3` |
-| `switch` | `list`, `create-standard`, `create-manual`, `delete`, `sync`, `update-standard` |
-| `route` | `list`, `create`, `update`, `delete` |
-| `dhcp` | `config`, `config-update`, `range-list`, `range-create`, `range-update`, `range-delete`, `lease-list`, `lease-create`, `lease-update`, `lease-delete`, `lease-delete-dynamic` |
-| `firewall` | `traffic-list`, `nat-list`, `logs`, `advanced-show`, `advanced-update`, `advanced-preview`, `advanced-rendered`, `traffic-create`, `traffic-update`, `traffic-delete`, `traffic-bulk-delete`, `traffic-reorder`, `traffic-counters`, `nat-create`, `nat-update`, `nat-delete`, `nat-bulk-delete`, `nat-reorder`, `nat-counters`, `nat-route-suggestions` |
-| `object` | `list`, `create`, `update`, `delete`, `bulk-delete` |
-| `wireguard` | `status`, `client-list`, `server-init`, `server-update`, `server-delete`, `server-state`, `peer-add`, `peer-update`, `peer-remove`, `peer-state`, `client-create`, `client-update`, `client-delete`, `client-state` |
+| `switch` | `list`, `create-standard`, `create-manual`, `set-standard`, `delete`, `sync` |
+| `route` | `list`, `create`, `set`, `delete` |
+| `dhcp` | `config`, `config-set`, `range list/create/set/delete`, `lease list/create/set/delete/delete-dynamic` |
+| `firewall` | `logs`, `traffic list/create/set/delete/bulk-delete/reorder/counters`, `nat list/create/set/delete/bulk-delete/reorder/counters/route-suggestions`, `advanced show/set/preview/rendered` |
+| `object` | `list`, `create`, `set`, `delete`, `bulk-delete` |
+| `wireguard` | `status`, `server init/set/state/delete`, `peer add/set/state/remove`, `client list/create/set/state/delete` |
 
 ## OPTIONS
 
@@ -67,9 +67,9 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
   `--filter COLUMN=VALUE`, `-l/--limit N`, `--long`.
 - `route delete ROUTE_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
 - `dhcp config`: `-n/--node`, `-f/--format`, `-c/--column`.
-- `dhcp range-list`, `dhcp lease-list`: `-n/--node`, `-f/--format`, `-c/--column`,
+- `dhcp range list`, `dhcp lease list`: `-n/--node`, `-f/--format`, `-c/--column`,
   `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
-- `firewall traffic-list`, `firewall nat-list`: `-n/--node`, `-f/--format`,
+- `firewall traffic list`, `firewall nat list`: `-n/--node`, `-f/--format`,
   `-c/--column`, `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`,
   `--long`.
 - `firewall logs`: `--limit, -l N` (default: `50`), `--cursor N` (`0` starts at
@@ -85,23 +85,23 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
   `-n/--node`, `-f/--format`.
 - `object delete OBJECT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
 - `wireguard status`: `-n/--node`, `-f/--format`, `-c/--column`.
-- `wireguard client-list`: `-n/--node`, `-f/--format`, `-c/--column`,
+- `wireguard client list`: `-n/--node`, `-f/--format`, `-c/--column`,
   `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
 
 ### Generic Subcommands
 
-All remaining subcommands accept `--data/-d`, `--set/-s`, `--param/-p`,
+All remaining write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
-| `switch update-standard`, `route update`, `object update` | `id` |
-| `dhcp range-update`, `range-delete`, `lease-update`, `lease-delete` | `id` |
-| `firewall traffic-update`, `traffic-delete`, `nat-update`, `nat-delete`, `nat-route-suggestions` | `id` |
-| `wireguard peer-update`, `peer-remove`, `peer-state` | `peerId` |
-| `wireguard client-update`, `client-delete`, `client-state` | `clientId` |
+| `switch set-standard`, `route set`, `object set` | `id` |
+| `dhcp range set`, `range delete`, `lease set`, `lease delete` | `id` |
+| `firewall traffic set`, `traffic delete`, `nat set`, `nat delete`, `nat route-suggestions` | `id` |
+| `wireguard peer set`, `peer remove`, `peer state` | `peerId` |
+| `wireguard client set`, `client delete`, `client state` | `clientId` |
 | all other generic subcommands | none |
 
 ## EXIT STATUS
@@ -178,51 +178,51 @@ all take `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`:
 sylve network interface list -c Name,Node,IPv4 --filter Node=node1 -l 5
 sylve network switch list --long --sort-column Name
 sylve network route list --filter Name=lab -c Name,Destination,Gateway
-sylve network firewall traffic-list --long --filter Name=allow --sort-column Name -l 10
-sylve network firewall nat-list --filter Name=guest -l 10
-sylve network dhcp range-list --sort-column Type -c ID,Type,Start,End
+sylve network firewall traffic list --long --filter Name=allow --sort-column Name -l 10
+sylve network firewall nat list --filter Name=guest -l 10
+sylve network dhcp range list --sort-column Type -c ID,Type,Start,End
 ```
 
 Build a DHCP scope and pin a lease to it, previewing each request first:
 
 ```sh
-sylve network dhcp range-create --node node1.example.test \
+sylve network dhcp range create --node node1.example.test \
   --set type=ipv4 --set expiry=86400 \
   --set startIp=10.0.10.100 --set endIp=10.0.10.200 --dry-run -f json
-sylve network dhcp range-create --node node1.example.test \
+sylve network dhcp range create --node node1.example.test \
   --set type=ipv4 --set expiry=86400 \
   --set startIp=10.0.10.100 --set endIp=10.0.10.200
-sylve network dhcp lease-create --node node1.example.test \
+sylve network dhcp lease create --node node1.example.test \
   --set dhcpRangeId=1 --set hostname=web-01 --set ipRaw=10.0.10.21
-sylve network dhcp lease-list --filter Hostname=web-01
+sylve network dhcp lease list --filter Hostname=web-01
 ```
 
-Add PF firewall rules without JSON. `traffic-create` needs `name`,
-`ingressInterfaces`, `egressInterfaces`, and `icmpTypes`; `nat-create`
+Add PF firewall rules without JSON. `traffic create` needs `name`,
+`ingressInterfaces`, `egressInterfaces`, and `icmpTypes`; `nat create`
 also needs `family`, `natType`, and `protocol`:
 
 ```sh
-sylve network firewall traffic-create --node node1.example.test \
-  --set name=allow-web --set 'ingressInterfaces=["vm-public"]' \
-  --set 'egressInterfaces=["em0"]' --set 'icmpTypes=[]' --dry-run -f json
-sylve network firewall nat-create --node node1.example.test \
-  --set name=guest-nat --set 'ingressInterfaces=["vm-public"]' \
-  --set 'egressInterfaces=["em0"]' --set family=inet \
+sylve network firewall traffic create --node node1.example.test \
+  --set name=allow-web --set ingressInterfaces=vm-public \
+  --set egressInterfaces=em0 --set 'icmpTypes=[]' --dry-run -f json
+sylve network firewall nat create --node node1.example.test \
+  --set name=guest-nat --set ingressInterfaces=vm-public \
+  --set egressInterfaces=em0 --set family=inet \
   --set natType=snat --set protocol=any --dry-run -f json
 ```
 
 Bring up WireGuard and tune DHCP or PF advanced rules:
 
 ```sh
-sylve network wireguard server-init --node node1.example.test --set port=51820 --dry-run -f json
-sylve network wireguard server-init --node node1.example.test --set port=51820
-sylve network wireguard peer-add --node node1.example.test \
-  --set name=laptop --set 'clientIPs=["10.99.0.2/32"]'
-sylve network wireguard peer-update peer1 --node node1.example.test \
-  --set 'clientIPs=[10.99.0.2/32]' --set 'routableIPs=[10.99.0.0/24]' --dry-run -f json
-# body: {"clientIPs":["10.99.0.2/32"],"routableIPs":["10.99.0.0/24"]}
-sylve network dhcp config-update --node node1.example.test --set domain=example.test
-sylve network firewall advanced-update --node node1.example.test --set preRules="pass all" --dry-run -f json
+sylve network wireguard server init --node node1.example.test --set port=51820 --dry-run -f json
+sylve network wireguard server init --node node1.example.test --set port=51820
+sylve network wireguard peer add --node node1.example.test \
+  --set name=laptop --set clientIPs=10.99.0.2/32
+sylve network wireguard peer set peer1 --node node1.example.test \
+  --set name=laptop --set clientIPs=10.99.0.2/32 --set routableIPs=10.99.0.0/24 --dry-run -f json
+# body: {"name":"laptop","clientIPs":["10.99.0.2/32"],"routableIPs":["10.99.0.0/24"]}
+sylve network dhcp config-set --node node1.example.test --set domain=example.test
+sylve network firewall advanced set --node node1.example.test --set preRules="pass all" --dry-run -f json
 ```
 
 ## SEE ALSO

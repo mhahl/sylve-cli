@@ -20,19 +20,19 @@ templates via generic Sylve API bindings. Supply request payloads with
 
 | Subcommand | Path Arguments | Description |
 |---|---|---|
-| `templates` | none | List cloud-init templates |
-| `template-create` | none | Create a cloud-init template |
-| `template-update` | `TEMPLATE_ID` | Update template `TEMPLATE_ID` |
-| `template-delete` | `TEMPLATE_ID` | Delete template `TEMPLATE_ID` |
+| `template list` | none | List cloud-init templates |
+| `template create` | none | Create a cloud-init template |
+| `template set` | `TEMPLATE_ID` | Update template `TEMPLATE_ID` |
+| `template delete` | `TEMPLATE_ID` | Delete template `TEMPLATE_ID` |
 
 ## OPTIONS
 
-All subcommands accept:
+Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
-  JSON or YAML request body, or `@FILE`.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable, dotted keys nest); overrides `--data`.
+  JSON or YAML request body, or `@FILE` (write commands).
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
 - `--dry-run`
@@ -57,7 +57,7 @@ All subcommands accept:
 List cloud-init templates as JSON:
 
 ```sh
-sylve cloud-init templates -f json
+sylve cloud-init template list -f json
 ```
 
 ```json
@@ -90,18 +90,18 @@ networkConfig: |
 ```
 
 ```sh
-sylve cloud-init template-create \
+sylve cloud-init template create \
   --data @template.yaml \
   --node node1.example.test \
   --format json
 
-sylve cloud-init template-delete 2 --yes
+sylve cloud-init template delete 2 --yes
 ```
 
 Preview a create with `--set` fields and show the request:
 
 ```sh
-sylve cloud-init template-create \
+sylve cloud-init template create \
   --set name=example-base --set user=example-user \
   --set meta=example-meta --set networkConfig=example-net \
   --dry-run -f json
@@ -110,12 +110,12 @@ sylve cloud-init template-create \
 Update a template, narrow the list to a few columns, and delete:
 
 ```sh
-sylve cloud-init template-update 1 \
+sylve cloud-init template set 1 \
   --set name=example-base-v2 --set user=example-user \
   --set meta=example-meta --set networkConfig=example-net \
   --dry-run -f json
-sylve cloud-init templates -c id -c name --sort-column name -l 5
-sylve cloud-init template-delete 1 --yes
+sylve cloud-init template list -c id -c name --sort-column name -l 5
+sylve cloud-init template delete 1 --yes
 ```
 
 ## SEE ALSO

@@ -77,6 +77,67 @@ def test_parse_set_coerces_scalars_and_nests_dotted_keys() -> None:
     assert _parse_set(["note=hello world"]) == {"note": "hello world"}
 
 
+def test_parse_set_schema_preserves_strings_and_builds_lists(capsys) -> None:
+    schema = (
+        ("name", "string", True, ()),
+        ("value", "string", True, ()),
+        ("ids", "array of integer", False, ()),
+        (
+            "guest",
+            "object",
+            False,
+            (("enabled", "boolean", False, ()), ("writeable", "boolean", False, ())),
+        ),
+        (
+            "addresses4",
+            "array of object",
+            False,
+            (("cidr", "string", False, ()), ("objectId", "integer", False, ())),
+        ),
+        (
+            "hooks",
+            "object",
+            False,
+            (
+                (
+                    "prestart",
+                    "object",
+                    False,
+                    (("enabled", "boolean", False, ()), ("script", "string", False, ())),
+                ),
+            ),
+        ),
+    )
+    parsed = _parse_set(
+        [
+            "name=yes",
+            "value=200000",
+            "ids=1,2",
+            "ids=3",
+            "guest=enabled=true,writeable=false",
+            "addresses4=cidr=10.0.0.1/24,objectId=0",
+            "addresses4=cidr=10.0.1.1/24,objectId=0",
+            "hooks.prestart.script=true",
+            "typo=1",
+        ],
+        schema_fields=schema,
+        label="PUT /test",
+    )
+    assert parsed == {
+        "name": "yes",
+        "value": "200000",
+        "ids": [1, 2, 3],
+        "guest": {"enabled": True, "writeable": False},
+        "addresses4": [
+            {"cidr": "10.0.0.1/24", "objectId": 0},
+            {"cidr": "10.0.1.1/24", "objectId": 0},
+        ],
+        "hooks": {"prestart": {"script": "true"}},
+        "typo": 1,
+    }
+    assert "unknown field 'typo'" in capsys.readouterr().err
+
+
 def test_parse_set_rejects_bad_format() -> None:
     with pytest.raises(SylveError, match="KEY=VALUE"):
         _parse_set(["nokey"])
@@ -84,6 +145,8 @@ def test_parse_set_rejects_bad_format() -> None:
         _parse_set([".a=1"])
     with pytest.raises(SylveError, match="KEY=VALUE"):
         _parse_set(["a..b=1"])
+    with pytest.raises(SylveError, match="Invalid --set list"):
+        _parse_set(["ids=[1, 2"], schema_fields=(("ids", "array of integer", False, ()),))
 
 
 def test_merge_body_combines_data_and_set() -> None:

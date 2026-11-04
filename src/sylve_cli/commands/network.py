@@ -81,6 +81,63 @@ wg_app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode=None,
 )
+dhcp_range_app = typer.Typer(
+    name="range",
+    help="Query and manage DHCP address ranges.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+dhcp_lease_app = typer.Typer(
+    name="lease",
+    help="Query and manage static and dynamic DHCP leases.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+firewall_traffic_app = typer.Typer(
+    name="traffic",
+    help="Query and manage PF firewall traffic rules.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+firewall_nat_app = typer.Typer(
+    name="nat",
+    help="Query and manage PF firewall NAT rules.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+firewall_advanced_app = typer.Typer(
+    name="advanced",
+    help="Query and manage advanced PF firewall settings.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+wg_server_app = typer.Typer(
+    name="server",
+    help="Initialize and manage the WireGuard server.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+wg_peer_app = typer.Typer(
+    name="peer",
+    help="Manage WireGuard server peers.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+wg_client_app = typer.Typer(
+    name="client",
+    help="Query and manage outbound WireGuard clients.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+
+dhcp_app.add_typer(dhcp_range_app, name="range")
+dhcp_app.add_typer(dhcp_lease_app, name="lease")
+firewall_app.add_typer(firewall_traffic_app, name="traffic")
+firewall_app.add_typer(firewall_nat_app, name="nat")
+firewall_app.add_typer(firewall_advanced_app, name="advanced")
+wg_app.add_typer(wg_server_app, name="server")
+wg_app.add_typer(wg_peer_app, name="peer")
+wg_app.add_typer(wg_client_app, name="client")
 
 network_app.add_typer(iface_app, name="interface")
 network_app.add_typer(switch_app, name="switch")
@@ -534,7 +591,7 @@ def dhcp_config(
         print_dict(data, fmt=fmt, selected_columns=columns, title="DHCP Configuration")
 
 
-@dhcp_app.command("range-list")
+@dhcp_range_app.command("list")
 def dhcp_range_list(
     ctx: typer.Context,
     node: NodeOption = None,
@@ -577,7 +634,7 @@ def dhcp_range_list(
     )
 
 
-@dhcp_app.command("lease-list")
+@dhcp_lease_app.command("list")
 def dhcp_lease_list(
     ctx: typer.Context,
     node: NodeOption = None,
@@ -616,7 +673,7 @@ def dhcp_lease_list(
 # ------------------------------------------------------------------
 # Firewall
 # ------------------------------------------------------------------
-@firewall_app.command("traffic-list")
+@firewall_traffic_app.command("list")
 def firewall_traffic_list(
     ctx: typer.Context,
     node: NodeOption = None,
@@ -675,7 +732,7 @@ def firewall_traffic_list(
     )
 
 
-@firewall_app.command("nat-list")
+@firewall_nat_app.command("list")
 def firewall_nat_list(
     ctx: typer.Context,
     node: NodeOption = None,
@@ -987,7 +1044,7 @@ def wg_status(
         print_dict(data, fmt=fmt, selected_columns=columns, title="WireGuard Server")
 
 
-@wg_app.command("client-list")
+@wg_client_app.command("list")
 def wg_client_list(
     ctx: typer.Context,
     node: NodeOption = None,

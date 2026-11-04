@@ -25,26 +25,25 @@ Most subcommands are generic API bindings that take their request payloads from
 | Category | Subcommands |
 |---|---|
 | Initialization & settings | `init`, `basic-settings` (from `/basic/settings`), `settings` (from `/system/basic-settings`), `settings-pools`, `service SERVICE` |
-| Host notes | `notes-list`, `notes-show ID`, `notes-create`, `notes-update ID`, `notes-delete ID`, `notes-bulk-delete` |
-| Disks | `disk-list`, `disk-partition-delete PARTITION`, `disk-gpt-init DEVICE`, `disk-gpt-clear DEVICE`, `disk-partition-create DEVICE` |
-| SMART | `disk-smart-info`, `disk-smart-start`, `disk-smart-abort`, `disk-smart-schedules`, `disk-smart-schedule-create`, `disk-smart-schedule-update ID`, `disk-smart-schedule-delete ID` |
-| PCI passthrough | `pci-list`, `ppt-list`, `ppt-enable`, `ppt-import`, `ppt-prepare`, `ppt-disable ID` |
-| Tunables | `tunables`, `tunable-set` |
-| Files | `file-list`, `file-create`, `file-copy-move`, `file-delete`, `file-rename`, `file-upload-revert`, `file-upload`, `file-download` |
-| Certificates | `cert-list`, `cert-create`, `cert-domain-check`, `cert-update ID`, `cert-delete ID`, `cert-activate ID`, `cert-activate-cancel ID`, `cert-renew ID`, `cert-retry ID`, `cert-archive ID` |
+| Host notes | `note list`, `note show ID`, `note create`, `note set ID`, `note delete ID`, `note bulk-delete` |
+| Disks | `disk list`, `disk partition-delete PARTITION`, `disk gpt-init DEVICE`, `disk gpt-clear DEVICE`, `disk partition-create DEVICE` |
+| SMART | `disk smart-info`, `disk smart-start`, `disk smart-abort`, `disk smart-schedules`, `disk smart-schedule-create`, `disk smart-schedule-set ID`, `disk smart-schedule-delete ID` |
+| PCI passthrough | `pci-list`, `ppt list`, `ppt enable`, `ppt import`, `ppt prepare`, `ppt disable ID` |
+| Tunables | `tunable list`, `tunable set` |
+| Files | `file list`, `file create`, `file copy-move`, `file delete`, `file rename`, `file upload-revert`, `file upload`, `file download` |
+| Certificates | `cert list`, `cert create`, `cert domain-check`, `cert set ID`, `cert delete ID`, `cert activate ID`, `cert activate-cancel ID`, `cert renew ID`, `cert retry ID`, `cert archive ID` |
 | Health, events & terminal | `health-basic`, `health-http`, `events`, `terminal` |
 
 ## OPTIONS
 
 ### Generic Subcommands
 
-All subcommands except `file-upload`, `file-download`, `cert-archive`,
-`events`, `terminal`, and `notes-show` accept:
+All write subcommands accept `--data/-d` and `--set/--property/-s`, and all generic subcommands except `file upload`, `file download`, `cert archive`, `events`, `terminal`, and `note show` accept:
 
 - `-d, --data BODY`
-  JSON or YAML request body, or `@FILE`.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable, dotted keys nest); overrides `--data`.
+  JSON or YAML request body, or `@FILE` (write commands).
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
 - `--dry-run`
@@ -58,13 +57,13 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
 - `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
   Output selection (reads only).
 
-### `file-upload`, `file-download`, `cert-archive`, `events`, `terminal`, and `notes-show`
+### `file upload`, `file download`, `cert archive`, `events`, `terminal`, and `note show`
 
-- `file-upload`: `--file FILE` (required), `-p, --param KEY=VALUE` (e.g.
+- `file upload`: `--file FILE` (required), `-p, --param KEY=VALUE` (e.g.
   `path=/destination`), `-n, --node NODE`, `-f, --format`.
-- `file-download`: `--output, -o PATH` (required), `-p, --param KEY=VALUE` (e.g.
+- `file download`: `--output, -o PATH` (required), `-p, --param KEY=VALUE` (e.g.
   `id=/absolute/path`), `-n, --node NODE`.
-- `cert-archive ID`: `ID` (required), `--output, -o PATH` (required),
+- `cert archive ID`: `ID` (required), `--output, -o PATH` (required),
   `-p, --param KEY=VALUE`, `-n, --node NODE`.
 - `events`: `--lines, -l N` (stop after `N` non-empty lines),
   `--reconnect / --no-reconnect` (default: `--reconnect`),
@@ -73,7 +72,7 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
 - `terminal`: `--kill-on-exit / --keep-alive` (default: `--kill-on-exit`),
   `-n, --node NODE`. Opens an interactive host shell over WebSocket. Press
   `Enter`, then type `~.` to detach.
-- `notes-show ID`: `ID` (required), `-n, --node NODE`, `-f, --format`,
+- `note show ID`: `ID` (required), `-n, --node NODE`, `-f, --format`,
   `-c, --column`. Displays one host note without truncation.
 
 ## EXIT STATUS
@@ -87,7 +86,7 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
 List physical disks as JSON:
 
 ```sh
-sylve system disk-list -f json
+sylve system disk list -f json
 ```
 
 ```json
@@ -103,8 +102,8 @@ sylve system disk-list -f json
 Set a kernel tunable:
 
 ```sh
-sylve system tunable-set \
-  --set name=kern.maxfiles --set 'value="200000"' \
+sylve system tunable set \
+  --set name=kern.maxfiles --set value=200000 \
   --node node1.example.test \
   --format json
 ```
@@ -112,19 +111,19 @@ sylve system tunable-set \
 Create, list, show, and delete host notes:
 
 ```sh
-sylve system notes-create --set title=Maintenance --set 'content=Disk replacement 22:00'
-sylve system notes-list -f json
-sylve system notes-show 3 -f json
-sylve system notes-delete 3 --yes
+sylve system note create --set title=Maintenance --set 'content=Disk replacement 22:00'
+sylve system note list -f json
+sylve system note show 3 -f json
+sylve system note delete 3 --yes
 ```
 
 Upload and download host files, export a certificate archive, and stream SSE
 events:
 
 ```sh
-sylve system file-upload --file ./config.json --param path=/root --node node1.example.test -f json
-sylve system file-download --param id=/root/config.json --output ./config.json --node node1.example.test
-sylve system cert-archive 7 --output ./cert-7.zip
+sylve system file upload --file ./config.json --param path=/root --node node1.example.test -f json
+sylve system file download --param id=/root/config.json --output ./config.json --node node1.example.test
+sylve system cert archive 7 --output ./cert-7.zip
 sylve system events --lines 20
 sylve system terminal --node node1.example.test
 ```
@@ -132,8 +131,8 @@ sylve system terminal --node node1.example.test
 Preview a tunable change before sending it:
 
 ```sh
-sylve system tunable-set \
-  --set name=kern.maxfiles --set 'value="200000"' \
+sylve system tunable set \
+  --set name=kern.maxfiles --set value=200000 \
   --dry-run -f json
 ```
 
@@ -152,23 +151,23 @@ sylve system tunable-set \
 Narrow list output with selection flags (reads only):
 
 ```sh
-sylve system tunables -c Name -c Value --filter name=kern --sort-column name -l 5
-sylve system disk-list -c Name -c Size -c Model --sort-column name -l 5
-sylve system cert-list --filter name=web --sort-column name -l 5
-sylve system notes-list -c ID -c Title --filter title=Maintenance -l 5
+sylve system tunable list -c Name -c Value --filter name=kern --sort-column name -l 5
+sylve system disk list -c Name -c Size -c Model --sort-column name -l 5
+sylve system cert list --filter name=web --sort-column name -l 5
+sylve system note list -c ID -c Title --filter title=Maintenance -l 5
 ```
 
 Schedule SMART self-tests, then adjust and remove the schedule:
 
 ```sh
-sylve system disk-smart-schedule-create \
+sylve system disk smart-schedule-create \
   --set device=ada0 --set testType=long --set 'cronExpr=0 2 * * 0' \
   --dry-run -f json
-sylve system disk-smart-schedule-update 1 \
+sylve system disk smart-schedule-set 1 \
   --set device=ada0 --set testType=short --set 'cronExpr=0 3 * * 0' \
   --dry-run -f json
-sylve system disk-smart-start --set device=ada0 --set testType=short --dry-run -f json
-sylve system disk-smart-schedule-delete 1 --yes --dry-run -f json
+sylve system disk smart-start --set device=ada0 --set testType=short --dry-run -f json
+sylve system disk smart-schedule-delete 1 --yes --dry-run -f json
 ```
 
 ```json
@@ -188,8 +187,8 @@ Enable a service, create a file, and delete files with confirmation skipped:
 
 ```sh
 sylve system service sshd --set enabled=true --dry-run -f json
-sylve system file-create --set path=/root --set name=notes.txt --set isFolder=false --dry-run -f json
-sylve system file-delete --set 'paths=[/root/old.iso]' --yes --dry-run -f json
+sylve system file create --set path=/root --set name=notes.txt --set isFolder=false --dry-run -f json
+sylve system file delete --set paths=/root/old.iso --yes --dry-run -f json
 ```
 
 ```json
@@ -206,11 +205,11 @@ sylve system file-delete --set 'paths=[/root/old.iso]' --yes --dry-run -f json
 Full certificate lifecycle with dry-run previews and a confirmation-safe delete:
 
 ```sh
-sylve system cert-create --set name=web --set domain=example.test --dry-run -f json
-sylve system cert-update 7 --set name=web-renamed --dry-run -f json
-sylve system cert-activate 7 --dry-run -f json
-sylve system cert-renew 7 --dry-run -f json
-sylve system cert-delete 7 --yes --dry-run -f json
+sylve system cert create --set name=web --set domain=example.test --dry-run -f json
+sylve system cert set 7 --set name=web-renamed --dry-run -f json
+sylve system cert activate 7 --dry-run -f json
+sylve system cert renew 7 --dry-run -f json
+sylve system cert delete 7 --yes --dry-run -f json
 ```
 
 ```json
@@ -228,9 +227,9 @@ sylve system cert-delete 7 --yes --dry-run -f json
 Update a host note and delete it without a prompt:
 
 ```sh
-sylve system notes-create --set title=Maintenance --set 'content=Disk replacement 22:00' --dry-run -f json
-sylve system notes-update 3 --set title=Maintenance --set content=Done --dry-run -f json
-sylve system notes-delete 3 --yes --dry-run -f json
+sylve system note create --set title=Maintenance --set 'content=Disk replacement 22:00' --dry-run -f json
+sylve system note set 3 --set title=Maintenance --set content=Done --dry-run -f json
+sylve system note delete 3 --yes --dry-run -f json
 ```
 
 ## SEE ALSO

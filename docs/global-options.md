@@ -101,26 +101,26 @@ anything else supplied is a usage error (exit `2`).
 
 - `-d, --data BODY`
   Base JSON or YAML request body, or `@FILE` to read the body from disk.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable). Dotted keys address nested objects and the
-  CLI parses values as YAML, so common updates need no JSON.
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable). Dotted keys address nested objects, comma-separated `k=v` pairs populate nested objects or append to `array of object` lists, and the CLI uses each field's schema type to preserve strings while coercing numbers, booleans, and lists.
   Every command's `--help` lists its settable fields with types and required
   markers, so key names are visible:
   ```sh
-  sylve system tunable-set --help    # Settable body fields: name, value
-  sylve system tunable-set --set name=vfs.zfs.prefetch_disable --set value=0
-  sylve vm hardware-cpu 101 --set cpuSockets=1 --set cpuCores=4
+  sylve system tunable set --help    # Settable body fields: name, value
+  sylve system tunable set --set name=vfs.zfs.prefetch_disable --set value=0
+  sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=1
   ```
-  `--set` merges over `--data` (nested objects merge key by key) and is the
-  preferred way to send small updates. Quote values the server expects as
-  strings: `--set value='"200000"'`.
+  `--set` (or `--property`) merges over `--data` (nested objects merge key by key) and is the
+  preferred way to send small updates.
 
-  Complex values go in one `--set` as YAML (single-quote it so the shell
-  leaves brackets alone). Dotted keys descend into objects; arrays and
-  objects given wholesale replace the field instead of merging into it:
+  For `array of object` or `array of scalar` fields, repeat `--set` (or pass comma-separated values) to build the list, or pass inline YAML:
   ```sh
-  sylve vm hardware-cpu 101 --set 'cpuPinning=[{cores: [0, 1], socket: 0}]'
-  sylve notifications transport-create --set name=mail --set type=email \
+  sylve vm hardware cpu 101 --set cpuCores=4 --set cpuSockets=1 --set cpuThreads=1 \
+    --set 'cpuPinning=cores=[0, 1],socket=0'
+  sylve network switch set-standard 1 --set private=false \
+    --set addresses4=cidr=10.0.0.1/24,objectId=0 \
+    --set addresses4=cidr=10.0.1.1/24,objectId=0
+  sylve notifications transport create --set name=mail --set type=email \
     --set email.smtpHost=mail.example.test --set email.smtpPort=587
   ```
   If quoting gets awkward, put the body in a file and keep `--set` for the
@@ -143,7 +143,7 @@ value: "0"
 ```
 
 ```sh
-sylve system tunable-set --data @tunable.yaml
+sylve system tunable set --data @tunable.yaml
 ```
 
 `--data` sends the body verbatim; `--set` overrides individual fields on top

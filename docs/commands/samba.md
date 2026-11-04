@@ -22,21 +22,21 @@ format.
 |---|---|---|
 | `config` | none | Show global Samba configuration |
 | `config-set` | none | Update global Samba configuration |
-| `shares` | none | List configured SMB shares |
-| `share-create` | none | Create a share |
-| `share-update` | `ID` | Update share `ID` |
-| `share-delete` | `ID` | Delete share `ID` |
-| `share-enable` | `ID` | Enable or disable share `ID` |
+| `share list` | none | List configured SMB shares |
+| `share create` | none | Create a share |
+| `share set` | `ID` | Update share `ID` |
+| `share delete` | `ID` | Delete share `ID` |
+| `share enable` | `ID` | Enable or disable share `ID` |
 | `audit-logs` | none | Display Samba audit logs |
 
 ## OPTIONS
 
-All subcommands accept:
+Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
-  JSON or YAML request body, or `@FILE`.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable, dotted keys nest); overrides `--data`.
+  JSON or YAML request body, or `@FILE` (write commands).
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
 - `--dry-run`
@@ -61,7 +61,7 @@ All subcommands accept:
 List shares as JSON:
 
 ```sh
-sylve samba shares -f json
+sylve samba share list -f json
 ```
 
 ```json
@@ -78,14 +78,14 @@ sylve samba shares -f json
 Create, update, disable, and delete a share:
 
 ```sh
-sylve samba share-create \
+sylve samba share create \
   --set name=media --set dataset=zroot/media --set enabled=true \
   --node node1.example.test \
   --format json
 
-sylve samba share-update 2 --set guest=true -f json
-sylve samba share-enable 2 --set enabled=false -f json
-sylve samba share-delete 2 --yes
+sylve samba share set 2 --set guest=enabled=true,writeable=false -f json
+sylve samba share enable 2 --set enabled=false -f json
+sylve samba share delete 2 --yes
 ```
 
 Inspect and update global Samba settings and read audit logs:
@@ -100,7 +100,7 @@ Preview a global config change and a share create with `--set`:
 
 ```sh
 sylve samba config-set --set workgroup=EXAMPLE --set serverString=Example --dry-run -f json
-sylve samba share-create \
+sylve samba share create \
   --set name=example-media --set dataset=tank/media --set enabled=true \
   --dry-run -f json
 ```
@@ -108,11 +108,11 @@ sylve samba share-create \
 Update, disable, and delete a share, and narrow list output:
 
 ```sh
-sylve samba share-update 2 --set enabled=true --set timeMachine=false --dry-run -f json
-sylve samba share-enable 2 --set enabled=false --dry-run -f json
-sylve samba shares -c id -c name -c dataset --sort-column name -l 10
+sylve samba share set 2 --set enabled=true --set timeMachine=false --dry-run -f json
+sylve samba share enable 2 --set enabled=false --dry-run -f json
+sylve samba share list -c id -c name -c dataset --sort-column name -l 10
 sylve samba audit-logs -c id -c share -l 5
-sylve samba share-delete 2 --yes
+sylve samba share delete 2 --yes
 ```
 
 ## SEE ALSO

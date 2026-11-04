@@ -22,18 +22,18 @@ or YAML format.
 |---|---|---|
 | `list` | none | List dynamic DNS entries |
 | `create` | none | Create a dynamic DNS entry |
-| `update` | `ID` | Update entry `ID` |
+| `set` | `ID` | Update entry `ID` |
 | `delete` | `ID` | Delete entry `ID` |
 | `sync` | `ID` | Trigger an immediate sync for entry `ID` |
 
 ## OPTIONS
 
-All subcommands accept:
+Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
-  JSON or YAML request body, or `@FILE`.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable, dotted keys nest); overrides `--data`.
+  JSON or YAML request body, or `@FILE` (write commands).
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
 - `--dry-run`
@@ -81,7 +81,7 @@ sylve ddns create \
   --node node1.example.test \
   --format json
 
-sylve ddns update 2 --set enabled=false -f json
+sylve ddns set 2 --set enabled=false -f json
 sylve ddns sync 2
 sylve ddns delete 2 --yes
 ```
@@ -99,7 +99,7 @@ Filter the list, preview an update, then sync and delete:
 
 ```sh
 sylve ddns list -c id -c hostname -c provider --filter provider=example-provider -l 10
-sylve ddns update 2 --set intervalMinutes=10 --set enabled=true --dry-run -f json
+sylve ddns set 2 --set intervalMinutes=10 --set enabled=true --dry-run -f json
 sylve ddns sync 2 --dry-run -f json
 sylve ddns delete 2 --yes
 ```

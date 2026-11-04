@@ -22,19 +22,19 @@ records via generic Sylve API bindings. Supply request payloads with
 |---|---|---|
 | `config` | none | Show mDNS daemon configuration |
 | `config-set` | none | Update mDNS daemon configuration |
-| `records` | none | List mDNS records |
-| `record-create` | none | Create an mDNS record |
-| `record-update` | `ID` | Update record `ID` |
-| `record-delete` | `ID` | Delete record `ID` |
+| `record list` | none | List mDNS records |
+| `record create` | none | Create an mDNS record |
+| `record set` | `ID` | Update record `ID` |
+| `record delete` | `ID` | Delete record `ID` |
 
 ## OPTIONS
 
-All subcommands accept:
+Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
-  JSON or YAML request body, or `@FILE`.
-- `-s, --set KEY=VALUE`
-  Set one body field (repeatable, dotted keys nest); overrides `--data`.
+  JSON or YAML request body, or `@FILE` (write commands).
+- `-s, --set, --property KEY=VALUE`
+  Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
 - `--dry-run`
@@ -59,7 +59,7 @@ All subcommands accept:
 List mDNS records as JSON:
 
 ```sh
-sylve mdns records -f json
+sylve mdns record list -f json
 ```
 
 ```json
@@ -76,22 +76,22 @@ sylve mdns records -f json
 Create, update, and delete a record, and configure the mDNS service:
 
 ```sh
-sylve mdns record-create \
-  --set name=sylve.local --set type=A --set 'interfaces=[em0]' \
+sylve mdns record create \
+  --set name=sylve.local --set type=A --set interfaces=em0 \
   --node node1.example.test \
   --format json
 
-sylve mdns record-update 2 --set 'interfaces=[em0,em1]' -f json
-sylve mdns record-delete 2 --yes
+sylve mdns record set 2 --set interfaces=em0,em1 -f json
+sylve mdns record delete 2 --yes
 sylve mdns config -f json
-sylve mdns config-set --set hostname=example-host --set 'interfaces=[em0]' -f json
+sylve mdns config-set --set hostname=example-host --set interfaces=em0 -f json
 ```
 
 Preview a daemon config change and a record create with `--set`:
 
 ```sh
 sylve mdns config-set --set hostname=example-host --set interfaces=em0 --dry-run -f json
-sylve mdns record-create \
+sylve mdns record create \
   --set name=example-service --set type=_http._tcp \
   --set port=8080 --set interfaces=em0 \
   --dry-run -f json
@@ -100,9 +100,9 @@ sylve mdns record-create \
 Filter the record list, preview an update, and delete:
 
 ```sh
-sylve mdns records -c id -c name -c type --filter type=_http -l 10
-sylve mdns record-update 2 --set port=9090 --dry-run -f json
-sylve mdns record-delete 2 --yes
+sylve mdns record list -c id -c name -c type --filter type=_http -l 10
+sylve mdns record set 2 --set port=9090 --dry-run -f json
+sylve mdns record delete 2 --yes
 ```
 
 ## SEE ALSO
