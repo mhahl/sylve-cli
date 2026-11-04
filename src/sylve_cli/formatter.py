@@ -577,7 +577,7 @@ def apply_row_filters(
             if idx > 0:
                 column = spec[:idx]
                 operator = op
-                value = spec[idx + len(op):]
+                value = spec[idx + len(op) :]
                 break
         else:
             column, sep, value = spec.partition("=")
