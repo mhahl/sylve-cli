@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-whoami` — display the active user, context, server, and token status
+`sylve-whoami` - display the active user, context, server, and token status
 
 ## SYNOPSIS
 
@@ -14,12 +14,12 @@ sylve whoami [-f FORMAT] [-c COLUMN]
 
 `sylve whoami` inspects the active context and bearer token (from the
 configuration file or `SYLVE_SERVER` and `SYLVE_TOKEN`), decodes the JWT
-payload locally without performing a cryptographic signature check, and prints
+payload on this machine without performing a cryptographic signature check, and prints
 session metadata.
 
 The `token_status` field reports `VALID (...)`, `EXPIRED`, or
-`VALID (unknown remaining)` when no expiration claim is available. When
-`--format value` is used without `--column`, only `username` is printed.
+`VALID (unknown remaining)` when no expiration claim is available. Without
+`--column`, `--format value` prints only `username`.
 
 ## OPTIONS
 
@@ -32,9 +32,9 @@ The `token_status` field reports `VALID (...)`, `EXPIRED`, or
 
 ## EXIT STATUS
 
-- `0` — Session details printed.
-- `1` — No context or token is configured, or an invalid column was requested.
-- `2` — Command-line usage error.
+- `0`: Session details printed.
+- `1`: You have not configured a context or token, or you requested an invalid column.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -118,7 +118,7 @@ SYLVE_SERVER=https://sylve.example.test SYLVE_TOKEN=eyJhbGciOi... sylve whoami
  token_status  VALID (unknown remaining)
 ```
 
-An expired token is reported as `EXPIRED`:
+`whoami` reports an expired token as `EXPIRED`:
 
 ```sh
 sylve whoami -f json -c username,token_status

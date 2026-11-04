@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-replication` — manage HA replication policies, manual runs, failovers, and events
+`sylve-replication` - manage HA replication policies, manual runs, failovers, and events
 
 ## SYNOPSIS
 
@@ -66,7 +66,7 @@ failovers, and monitors replication events.
   - `--mode {safe,force}`: failover mode (default: `safe`).
   - `--move-pinned-source / --keep-pinned-source`: update the pinned source
     node (default: `--move-pinned-source`).
-  - `--confirm-data-loss`: required acknowledgement when `--mode force` is set.
+  - `--confirm-data-loss`: required acknowledgement when you set `--mode force`.
 - `delete POLICY_ID`: `-y, --yes`.
 - `update POLICY_ID`: `-d, --data BODY`, `-s, --set KEY=VALUE`,
   `-p, --param KEY=VALUE`, `--dry-run`,
@@ -81,9 +81,9 @@ failovers, and monitors replication events.
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error, failed event while waiting, or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error, failed event while waiting, or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -148,6 +148,17 @@ sylve replication policy update 1 \
   --set guestId=101 \
   --set enabled=false \
   --dry-run -f json
+```
+
+Remap a policy's target nodes with an array of objects (single-quote the
+whole value; a `--set` on a list replaces it):
+
+```sh
+sylve replication policy update 1 \
+  --set name=web-ha \
+  --set 'targets=[{nodeId: 2b7c-uuid, weight: 100}]' \
+  --dry-run -f json
+# body: {"name":"web-ha","targets":[{"nodeId":"2b7c-uuid","weight":100}]}
 ```
 
 ```json

@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-jail` — manage FreeBSD jails, snapshots, pkgbase bootstraps, and templates
+`sylve-jail` - manage FreeBSD jails, snapshots, pkgbase bootstraps, and templates
 
 ## SYNOPSIS
 
@@ -24,7 +24,7 @@ and jail templates.
 | `show JAIL` | Show full details for a jail by CTID or name |
 | `start`, `stop`, `restart` | Power actions on one or more jails |
 | `migrate JAIL` | Validate preflight and migrate a jail to another node |
-| `delete JAIL` | Delete a jail and optionally its root dataset and MACs |
+| `delete JAIL` | Delete a jail, with flags to keep its root dataset and MACs |
 | `logs JAIL` | Display jail console logs |
 | `console JAIL` | Attach to a running jail's interactive console |
 | `guest-info JAIL` | Display live OS and network data |
@@ -107,7 +107,7 @@ and jail templates.
   `--set hooks.prestart.enabled=true`. Values go through the same parsing as
   flags, so `--set memory=2G` works.
 - `--start`
-  Start the jail immediately after creation.
+  Start the jail as soon as creation finishes.
 - `-w, --wait / --no-wait`
   Wait for the start task (default: `--no-wait`).
 - `--dry-run`
@@ -118,7 +118,7 @@ and jail templates.
   Output format (default: `table`).
 
 On a terminal, `jail create` prints a confirmation plan before sending the API
-request unless `-y` / `--yes` or `--dry-run` is given.
+request unless you pass `-y` / `--yes` or `--dry-run`.
 
 ### `jail start`, `stop`, `restart`
 
@@ -129,10 +129,10 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `-w, --wait / --no-wait`
   Wait for the lifecycle task (default: `--no-wait`).
 - `-f, --format`
-  Output format. With `json`/`yaml`/`csv`/`value` each jail's result (`action`,
-  `ctid`, `name`, `node`, `outcome`, `status`, `taskId`) is printed instead of
-  prose. A failure on one jail does not stop the others; the command reports
-  every failure and exits `1`.
+  Output format. With `json`/`yaml`/`csv`/`value` the command prints each jail's
+  result (`action`, `ctid`, `name`, `node`, `outcome`, `status`, `taskId`)
+  instead of prose. A failure on one jail does not stop the others; the command
+  reports every failure and exits `1`.
 
 ### `jail migrate`
 
@@ -147,8 +147,8 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `-w, --wait / --no-wait`
   Wait for migration completion (default: `--wait`).
 - `-f, --format`
-  Output format. With `json`/`yaml`/`csv`/`value` the migration result
-  (`ctid`, `source`, `target`, `status`, `taskId`) is printed instead of prose.
+  Output format. With `json`/`yaml`/`csv`/`value` the command prints the
+  migration result (`ctid`, `source`, `target`, `status`, `taskId`) instead of prose.
 
 ### `jail delete`
 
@@ -159,7 +159,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `--delete-macs / --keep-macs`
   Delete unused MAC objects (default: `--delete-macs`).
 - `--dry-run`
-  Print what would be deleted (CTID, name, node, root dataset) without deleting.
+  Print what the command would delete (CTID, name, node, root dataset) without deleting anything.
 - `-y, --yes`, `-n, --node NODE`, `-f, --format`
   Skip confirmation; target node; output format.
 
@@ -205,9 +205,9 @@ JSON: `sylve jail hardware-cpu 201 --set cores=4`.
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error, failed task, or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error, failed task, or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -237,7 +237,7 @@ sylve jail create dns-03 --pool zroot --bootstrap 15-1-Base \
 ```
 
 `--file` separates the machine definition from the command line, so the same
-file can be reviewed in a pull request and reused across nodes. Keys are flat
+file you can review in a pull request and reuse across nodes. Keys are flat
 or grouped; flags such as `--memory` override the file:
 
 ```yaml
@@ -321,6 +321,18 @@ sylve jail hardware-ram 201 --set memory=2147483648     # 2 GiB
 sylve jail hardware-cpu 201 --set cores=4
 sylve jail hardware-resource-limits 201 --set enabled=true
 sylve jail options-boot-order 201 --set bootOrder=5 --set startAtBoot=true
+```
+
+Arrays take one YAML value (single-quoted); nested objects take dotted keys:
+
+```sh
+sylve jail options-allowed 201 --set 'allowedOptions=[exec, mount]' --dry-run -f json
+# body: {"allowedOptions":["exec","mount"]}
+
+sylve jail options-lifecycle-hooks 201 \
+  --set hooks.prestart.enabled=true --set hooks.prestart.script=/bin/true \
+  --dry-run -f json
+# body: {"hooks":{"prestart":{"enabled":true,"script":"/bin/true"}}}
 ```
 
 Slice list output to the rows and columns you need. `jail list`,

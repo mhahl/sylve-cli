@@ -8,7 +8,7 @@ and networking
 .SH DESCRIPTION
 .B sylve
 talks to a Sylve node over HTTPS. You authenticate with
-.B login
+\fBlogin\fR,
 and sylve saves the bearer token in the active context, sending it
 with each request.
 .SH OPTIONS
@@ -137,8 +137,8 @@ JSON or YAML, or
 to read it from disk.
 .TP
 .BR \-\-set " " \fIKEY=VALUE\fR
-Set one body field. Repeat it; dotted keys nest. Values parse as YAML,
-so small updates need no JSON.
+Set one body field. Repeat it; dotted keys nest. The CLI parses values as
+YAML, so small updates need no JSON.
 .TP
 .BR \-\-dry\-run
 Print the request without sending it.
@@ -204,7 +204,7 @@ sylve download list --long
 .SH "SEE ALSO"
 .BR sylve-config (5)
 .SH NOTES
-Manpage source:
+Manual page source:
 .I docs/man/src/sylve.1.in
 .br
 Update the source when the CLI changes, then regenerate with:

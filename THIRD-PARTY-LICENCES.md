@@ -2,11 +2,11 @@
 
 ## NAME
 
-`sylve-licences` — third-party dependency licence inventory for `sylve-cli`
+`sylve-licences` - third-party dependency licence inventory for `sylve-cli`
 
 ## DESCRIPTION
 
-`sylve-cli` is distributed under the BSD 2-Clause licence ([LICENSE](LICENSE)).
+`sylve-cli` ships under the BSD 2-Clause licence ([LICENSE](LICENSE)).
 This manual lists the direct runtime, build, test, and development
 dependencies declared in `pyproject.toml` and their licences.
 
@@ -45,8 +45,8 @@ dependencies declared in `pyproject.toml` and their licences.
 | `tox` | `>=4.15` | MIT |
 | `build` | `>=1.2` | MIT |
 
-`ruff` is expected on `PATH` for linting and formatting; install it from the
-system package manager or `pipx`.
+Linting and formatting require `ruff` on `PATH`; install it from the system
+package manager or `pipx`.
 
 ## EXAMPLES
 
@@ -70,8 +70,8 @@ for name in [
 PY
 ```
 
-`build` may not be installed in every environment; its MIT licence is recorded
-from its published package metadata.
+Some environments lack `build`; the project records its MIT
+licence from its published package metadata.
 
 Generate the same report with `pip-licenses`:
 
@@ -82,8 +82,8 @@ pip-licenses --format=markdown
 
 ## FILES
 
-- `pyproject.toml` — canonical dependency declarations.
-- `LICENSE` — BSD 2-Clause project licence.
+- `pyproject.toml`: canonical dependency declarations.
+- `LICENSE`: BSD 2-Clause project licence.
 
 ## SEE ALSO
 

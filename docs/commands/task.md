@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-task` — inspect, wait for, or cancel guest lifecycle and migration tasks
+`sylve-task` - inspect, wait for, or cancel guest lifecycle and migration tasks
 
 ## SYNOPSIS
 
@@ -13,8 +13,8 @@ sylve task COMMAND [ARGS ...]
 ## DESCRIPTION
 
 `sylve task` lists, inspects, polls, and cancels asynchronous VM and jail
-lifecycle or migration tasks created by Sylve. Task IDs are returned by
-`task list` or by commands that queue background work.
+lifecycle or migration tasks created by Sylve. `task list` and commands that
+queue background work return task IDs.
 
 ## SUBCOMMANDS
 
@@ -76,13 +76,13 @@ lifecycle or migration tasks created by Sylve. Task IDs are returned by
   Guest type (`vm` or `jail`) and guest ID.
 - `-d, --data`, `-s, --set`, `-p, --param`, `--dry-run`, `-n, --node`,
   `-f, --format`, `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
-  Generic API options. `task active` is read-only and has no `--yes`.
+  Generic API options. `task active` only reads and takes no `--yes`.
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error, wait timeout, or task finished in a failed state.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error, wait timeout, or task finished in a failed state.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-login` — authenticate to a Sylve server and save the session token in a context
+`sylve-login` - authenticate to a Sylve server and save the session token in a context
 
 ## SYNOPSIS
 
@@ -23,13 +23,13 @@ node, token expiration timestamp, and configuration file path.
 ## OPTIONS
 
 - `SERVER`
-  Server URL. Defaults to the active context URL; prompts interactively if
-  omitted and no active context exists.
+  Server URL. Defaults to the active context URL; prompts if you omit it
+  and no active context exists.
 - `-u, --username USER`
   Username. Prompts if omitted.
 - `--password PASSWORD`
   Password. Prompts with hidden input if omitted. Prefer the prompt (or a
-  file): a `--password` value is visible in shell history and process lists.
+  file): shell history and process lists show a `--password` value.
 - `--token JWT`
   Use an existing bearer token instead of username and password.
 - `--auth-type TYPE`
@@ -55,9 +55,9 @@ node, token expiration timestamp, and configuration file path.
 
 ## EXIT STATUS
 
-- `0` — Authentication succeeded and the context was saved.
-- `1` — API, authentication, or TLS error.
-- `2` — Command-line usage error.
+- `0`: The command authenticated and saved the context.
+- `1`: API, authentication, or TLS error.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -77,7 +77,7 @@ Context admin@sylve.example.test saved to /home/admin/.config/sylve/config.yaml.
 ```
 
 PAM login with a 24-hour token, custom CA bundle, context name, and default
-node (the password is prompted for without showing it on the command line):
+node (the CLI prompts for the password without showing it on the command line):
 
 ```sh
 sylve login https://sylve.example.test \

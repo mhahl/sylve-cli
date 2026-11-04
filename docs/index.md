@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-cli` — index of command guides and installed manual pages
+`sylve-cli` - index of command guides and installed manual pages
 
 ## DESCRIPTION
 
@@ -10,13 +10,13 @@
 virtual machines, jails, networking, ZFS storage, backups, HA replication, and
 host maintenance.
 
-`sylve-cli` is an independent tool and is not affiliated with or endorsed by
-the Sylve project.
+`sylve-cli` is an independent tool. The Sylve project does not affiliate with
+or endorse it.
 
 ## COMMAND GUIDES
 
-These links lead to Markdown guides. Only `sylve(1)` and `sylve-config(5)`
-are installed as pages for `man(1)`.
+These links lead to Markdown guides. Only `sylve(1)` and `sylve-config(5)` ship
+as `man(1)` pages.
 
 | Guide | Description |
 |---|---|
@@ -59,7 +59,7 @@ are installed as pages for `man(1)`.
 |---|---|
 | [Options](global-options.md) | Global flags, output formats, environment variables, config format, exit status |
 | [Config file](config-format.md) | YAML config file format reference (`~/.config/sylve/config.yaml`) |
-| [Development](developer-guide.md) | Development setup, source layout, adding commands, and regenerating manpages |
+| [Development](developer-guide.md) | Development setup, source layout, adding commands, and regenerating man pages |
 | [Testing](../TESTING.md) | Unit tests, live OpenAPI contract suite, linting, and type checks |
 | [API contract drift](spec-drift.md) | Known differences between the vendored OpenAPI spec, the 0.3.1 release, and the master branch |
 | [Contributing](../CONTRIBUTING.md) | Bug reports, pull requests, and AI usage policy |

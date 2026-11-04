@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-samba` — manage Samba global configuration, shares, and audit logs
+`sylve-samba` - manage Samba global configuration, shares, and audit logs
 
 ## SYNOPSIS
 
@@ -13,7 +13,7 @@ sylve samba COMMAND [ARGS ...]
 ## DESCRIPTION
 
 `sylve samba` configures the host Samba server and SMB file shares via generic
-Sylve API bindings. Request payloads are supplied with `--data` in JSON or YAML
+Sylve API bindings. Supply request payloads with `--data` in JSON or YAML
 format.
 
 ## SUBCOMMANDS
@@ -52,9 +52,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

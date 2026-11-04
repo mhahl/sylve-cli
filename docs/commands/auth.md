@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-auth` — inspect login configuration, create SSE tokens, and perform WebAuthn passkey flows
+`sylve-auth` - inspect login configuration, create SSE tokens, and perform WebAuthn passkey flows
 
 ## SYNOPSIS
 
@@ -51,9 +51,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

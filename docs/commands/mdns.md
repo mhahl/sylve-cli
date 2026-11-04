@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-mdns` — manage mDNS configuration and records
+`sylve-mdns` - manage mDNS configuration and records
 
 ## SYNOPSIS
 
@@ -13,7 +13,7 @@ sylve mdns COMMAND [ARGS ...]
 ## DESCRIPTION
 
 `sylve mdns` manages multicast DNS (mDNS) daemon settings and advertised
-records via generic Sylve API bindings. Request payloads are supplied with
+records via generic Sylve API bindings. Supply request payloads with
 `--data` in JSON or YAML format.
 
 ## SUBCOMMANDS
@@ -50,9 +50,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

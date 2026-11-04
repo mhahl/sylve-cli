@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-vm` — manage Bhyve virtual machines, snapshots, and templates
+`sylve-vm` - manage Bhyve virtual machines, snapshots, and templates
 
 ## SYNOPSIS
 
@@ -21,12 +21,12 @@ nodes.
 
 1. **Scratch creation** from command-line hardware, storage, network, VNC, and
    boot flags.
-2. **Template deployment** via `--template ID|NAME`, optionally cloning multiple
+2. **Template deployment** via `--template ID|NAME`, which can clone multiple
    guests with `--count` and `--start-rid`.
 3. **Configuration file creation** via `--file FILE` (YAML or JSON).
 
 On a terminal, `vm create` prints a confirmation plan before sending the API
-request unless `-y` / `--yes` or `--dry-run` is given.
+request unless you pass `-y` / `--yes` or `--dry-run`.
 
 ## SUBCOMMANDS
 
@@ -37,7 +37,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 | `show VM` | Show full details for a VM by RID or name |
 | `start`, `stop`, `shutdown`, `reboot` | Perform power actions on one or more VMs |
 | `migrate VM` | Validate preflight and migrate a VM to another node |
-| `delete VM` | Delete a VM and optionally its volumes, raw disks, and MACs |
+| `delete VM` | Delete a VM, with flags to keep its volumes, raw disks, and MACs |
 | `logs VM` | Display VM console logs |
 | `console VM` | Attach to a running VM's interactive serial console |
 | `vnc VM` | Open a VM's graphical console in a local VNC viewer |
@@ -91,7 +91,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `--switch NAME`
   Network switch name, or `none` (default: no switch).
 - `--switch-emulation TYPE`
-  NIC emulation model (default: `virtio` when a switch is attached).
+  NIC emulation model (default: `virtio` when you attach a switch).
 - `--mac-object NAME|ID`
   Existing MAC address object.
 - `--cloud-init / --no-cloud-init`
@@ -107,7 +107,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `--vnc-port PORT`
   VNC port (default: next free port in `5900`–`5999`).
 - `--vnc-password PASSWORD`
-  VNC password (default: generated 12-character password; commas are rejected).
+  VNC password (default: generated 12-character password; the CLI rejects commas).
 - `--vnc-resolution WxH`
   VNC resolution (default: `640x480`).
 - `--vnc-wait / --no-vnc-wait`
@@ -131,7 +131,7 @@ request unless `-y` / `--yes` or `--dry-run` is given.
   Template deployment options (`--count` accepts `1`–`200`; `--storage-pool` is
   repeatable).
 - `--start`
-  Start the VM(s) immediately after creation.
+  Start the VM(s) as soon as creation finishes.
 - `-w, --wait / --no-wait`
   Wait for template and start tasks (default: `--no-wait`).
 - `--dry-run`
@@ -147,9 +147,9 @@ request unless `-y` / `--yes` or `--dry-run` is given.
   and description), `-f, --format`, `-c, --column`, `--sort-column NAME`,
   `--filter COLUMN=VALUE` (repeatable, substring match), `-l, --limit N`.
 - `show VM`: `VM` (RID or name), `-n, --node NODE`, `-f, --format`, `-c, --column`.
-  When the VM is running with the QEMU guest agent enabled and responding,
+  If the VM runs with the QEMU guest agent enabled and responding,
   `show` also reports live `ipAddresses` (non-loopback IPv4 and global IPv6).
-  The field is omitted when the agent is disabled or unavailable.
+  The CLI omits the field when you disable the agent or it is unavailable.
 
 ### `vm start`, `stop`, `shutdown`, `reboot`
 
@@ -160,10 +160,10 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `-w, --wait / --no-wait`
   Wait for the lifecycle task (default: `--no-wait`).
 - `-f, --format`
-  Output format. With `json`/`yaml`/`csv`/`value` each VM's result (`rid`,
-  `name`, `node`, `outcome`, `status`, `taskId`) is printed instead of prose. A failure
-  on one VM does not stop the others; the command reports every failure and
-  exits `1`.
+  Output format. With `json`/`yaml`/`csv`/`value` the command prints each VM's
+  result (`rid`, `name`, `node`, `outcome`, `status`, `taskId`) instead of prose.
+  A failure on one VM does not stop the others; the command reports every
+  failure and exits `1`.
 
 ### `vm migrate`
 
@@ -178,8 +178,8 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `-w, --wait / --no-wait`
   Wait for migration completion (default: `--wait`).
 - `-f, --format`
-  Output format. With `json`/`yaml`/`csv`/`value` the migration result
-  (`rid`, `source`, `target`, `status`, `taskId`) is printed instead of prose.
+  Output format. With `json`/`yaml`/`csv`/`value` the command prints the
+  migration result (`rid`, `source`, `target`, `status`, `taskId`) instead of prose.
 
 ### `vm delete`
 
@@ -194,8 +194,8 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 - `--force`
   Best-effort removal.
 - `--dry-run`
-  Print what would be deleted (RID, name, node, volumes/raw disks/MACs) without
-  deleting anything.
+  Print what the command would delete (RID, name, node, volumes/raw disks/MACs)
+  without deleting anything.
 - `-y, --yes`, `-n, --node NODE`, `-f, --format`
   Skip confirmation; target node; output format (prints `{"deleted":true,...}`).
 
@@ -203,8 +203,8 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 
 - `VM` (required): RID or name.
 - `NEW_NAME` (required for `rename`): new VM name.
-- `-F, --follow` (`logs` only): keep polling and print only newly appended
-  lines; `--interval SECONDS` sets the poll interval (default: `1.0`).
+- `-F, --follow` (`logs` only): keep polling and print only lines appended
+  since the last poll; `--interval SECONDS` sets the poll interval (default: `1.0`).
   Press `Ctrl-C` to stop.
 - `--baudrate, -b N` (`console` only): serial baud rate (default: `115200`).
 - `--takeover / --observe` (`console` only): request input control or attach
@@ -216,14 +216,14 @@ request unless `-y` / `--yes` or `--dry-run` is given.
 ### `vm vnc`
 
 Expose the VM's VNC console on a loopback port and open a local viewer. The CLI
-relays the node's WebSocket VNC stream to plain RFB, so the viewer never talks
-to the node directly. The VNC password is printed once; enter it in the viewer.
+relays the node's WebSocket VNC stream to plain RFB, so the viewer talks to the
+CLI, not the node. The command prints the VNC password once; enter it in the viewer.
 
 - `VM` (required): RID or name. The VM must be running and have VNC enabled.
 - `--overtake / --no-overtake`: take over an existing VNC session instead of
-  reporting that another client is attached (default: `--no-overtake`).
-- `--viewer CMD`: viewer command template; `{host}`, `{port}`, and `{url}` are
-  substituted. By default the CLI uses the first installed viewer it knows
+  reporting that another client has attached (default: `--no-overtake`).
+- `--viewer CMD`: viewer command template; the command substitutes `{host}`,
+  `{port}`, and `{url}`. By default the CLI uses the first installed viewer it knows
   (`xtigervncviewer`, `vncviewer`, `krdc`, `remmina`, `gvncviewer`, `vinagre`,
   or macOS `open`).
 - `--local-port N`: loopback port for the bridge (default: `0`, pick a free
@@ -235,11 +235,11 @@ The bridge keeps running until `Ctrl-C` and reopens the node session for each
 viewer connection, so a viewer that probes or reconnects still works. Over SSH,
 use `--print-only` and forward the printed port with `ssh -L`.
 
-When the viewer is KRDC, the CLI sets its quality for the loopback address to
+For KRDC, the CLI sets its quality for the loopback address to
 High. The node's VNC server only accepts 32-bit pixels, and KRDC's lower quality
 settings request 16- or 8-bit pixels and show a black screen.
 
-Enable VNC first if the VM was created without it:
+Enable VNC first if you created the VM without it:
 
 ```sh
 sylve vm hardware-vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --set vncWait=false
@@ -257,8 +257,8 @@ sylve vm hardware-vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --s
   `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
 - `template capture VM`: `--name NAME` (required), `-n/--node`, `-w/--wait` (default: `--wait`),
   `-f/--format`.
-- `template delete TEMPLATE_ID`: `-y/--yes` (the template's stored datasets are
-  deleted too), `-n/--node`, `-f/--format`.
+- `template delete TEMPLATE_ID`: `-y/--yes` (the command also deletes the
+  template's stored datasets), `-n/--node`, `-f/--format`.
 
 ### Generic Subcommands
 
@@ -280,9 +280,9 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error, failed task, or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error, failed task, or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -353,7 +353,7 @@ sylve vm create --name web-01 --file web.yaml --dry-run -f json
 ```
 
 `--file` separates the machine definition from the command line, so the same
-file can be reviewed in a pull request and reused across nodes. Keys are flat
+file you can review in a pull request and reuse across nodes. Keys are flat
 or grouped; flags such as `--memory` override the file.
 
 Provision a VM from scratch:
@@ -451,6 +451,17 @@ sylve vm hardware-ram 101 --set ram=4294967296        # 4 GiB
 sylve vm hardware-cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2
 sylve vm options-boot-order 101 --set bootOrder=10 --set startAtBoot=true
 sylve vm options-shutdown-wait-time 101 --set waitTime=60
+```
+
+Arrays and arrays of objects go in one `--set` as YAML (single-quote it).
+A `--set` on a list field replaces the whole list:
+
+```sh
+sylve vm hardware-cpu 101 --set 'cpuPinning=[{cores: [0, 1], socket: 0}]' --dry-run -f json
+# body: {"cpuPinning":[{"cores":[0,1],"socket":0}]}
+
+sylve vm options-extra-bhyve 101 --set 'extraBhyveOptions=[-A, -H]'
+sylve vm hardware-cpu 101 --set 'cpuPinning=[{cores: [0, 1], socket: 0}]'
 ```
 
 Slice list output to the rows and columns you need. `vm list` and

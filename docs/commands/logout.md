@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-logout` — revoke the active session token and clear it from the saved context
+`sylve-logout` - revoke the active session token and clear it from the saved context
 
 ## SYNOPSIS
 
@@ -17,13 +17,13 @@ bearer token, clears `token` and `expires_at` from the active context in the
 configuration file (rewriting it with mode `0600`), and prints the logged-out
 context name and server URL.
 
-The active session is read from the configuration file, `--context`, or
+The command reads the active session from the configuration file, `--context`, or
 `SYLVE_SERVER` and `SYLVE_TOKEN`.
 
 ## OPTIONS
 
-`logout` takes no subcommand-specific options. Global options (`--context`,
-`--config`, `-k`) must be placed before `logout`:
+`logout` takes no subcommand-specific options. Place global options (`--context`,
+`--config`, `-k`) before `logout`:
 
 ```sh
 sylve --context prod --config /path/to/config.yaml logout
@@ -36,9 +36,9 @@ sylve --context prod --config /path/to/config.yaml logout
 
 ## EXIT STATUS
 
-- `0` — Token revoked and cleared.
-- `1` — Server rejected the request or could not be reached.
-- `2` — Command-line usage error.
+- `0`: Token revoked and cleared.
+- `1`: The server rejected the request, or the client could not reach it.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

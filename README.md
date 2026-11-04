@@ -23,7 +23,7 @@ once; sylve saves the session bearer token in a local context file
 You get tables by default; pass `-f` / `--format` on data-producing commands
 for `json`, `yaml`, `value`, or `csv`.
 
-`sylve-cli` is independent of the Sylve project: no affiliation, no
+`sylve-cli` runs independently of the Sylve project: no affiliation, no
 endorsement.
 
 ## INSTALLATION
@@ -82,7 +82,7 @@ sylve --install-completion      # write completion into your shell rc file
 sylve --show-completion         # print the script to install it yourself
 ```
 
-Supported for bash, zsh, and fish.
+Completion works in bash, zsh, and fish.
 
 Output flags (`-f`, `-c`, `--filter`) and request flags (`--data`, `--set`,
 `--dry-run`) live in [sylve-options(7)](docs/global-options.md).
@@ -110,7 +110,7 @@ Output flags (`-f`, `-c`, `--filter`) and request flags (`--data`, `--set`,
 | [iscsi](docs/commands/iscsi.md) | iSCSI initiators, targets, LUNs, and portals |
 | [ddns](docs/commands/ddns.md) | Dynamic DNS entries |
 | [mdns](docs/commands/mdns.md) | mDNS configuration and records |
-| [notifications](docs/commands/notifications.md) | Notification transports, rules, and active alerts |
+| [notifications](docs/commands/notifications.md) | Notification transports, rules, and active notifications |
 | [user](docs/commands/user.md) | Local, PAM, and imported users, plus passkeys |
 | [group](docs/commands/group.md) | Authentication groups and membership |
 | [auth](docs/commands/auth.md) | Login configuration, SSE tokens, and passkeys |
@@ -118,13 +118,13 @@ Output flags (`-f`, `-c`, `--filter`) and request flags (`--data`, `--set`,
 
 ## ENVIRONMENT
 
-- `SYLVE_CONFIG` — override configuration file path.
-- `SYLVE_CONTEXT` — override active context name.
-- `SYLVE_SERVER` — override server URL without a saved context.
-- `SYLVE_TOKEN` — override bearer token without a saved context.
-- `SYLVE_NODE` — default target cluster node.
-- `SYLVE_INSECURE` — set to `1`, `true`, or `yes` to skip TLS verification.
-- `XDG_CONFIG_HOME` — base directory for the default configuration file.
+- `SYLVE_CONFIG`: override configuration file path.
+- `SYLVE_CONTEXT`: override active context name.
+- `SYLVE_SERVER`: override server URL without a saved context.
+- `SYLVE_TOKEN`: override bearer token without a saved context.
+- `SYLVE_NODE`: default target cluster node.
+- `SYLVE_INSECURE`: set to `1`, `true`, or `yes` to skip TLS verification.
+- `XDG_CONFIG_HOME`: base directory for the default configuration file.
 
 ## FILES
 
@@ -135,9 +135,9 @@ Output flags (`-f`, `-c`, `--filter`) and request flags (`--data`, `--set`,
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error, formatter error, aborted confirmation, or task failure.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error, formatter error, aborted confirmation, or task failure.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

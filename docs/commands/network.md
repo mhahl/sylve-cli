@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-network` — manage interfaces, switches, routes, DHCP, PF firewall rules, network objects, and WireGuard
+`sylve-network` - manage interfaces, switches, routes, DHCP, PF firewall rules, network objects, and WireGuard
 
 ## SYNOPSIS
 
@@ -51,10 +51,9 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
   - `--vlan N`: VLAN tag (default: `0`).
   - `--vlan-filtering / --no-vlan-filtering`: FreeBSD bridge VLAN filtering
     (default: `--no-vlan-filtering`).
-  - `--default-access-vlan N`: default access VLAN when filtering is enabled
+  - `--default-access-vlan N`: default access VLAN when you enable filtering
     (default: `0`).
   - `-n, --node NODE`: target node.
-  - `-f, --format`: output format.
   - `-f, --format`: output format.
 - `create-manual`: `--name NAME` (required), `--bridge BRIDGE` (required, e.g.
   `bridge0`), `-n, --node NODE`, `-f, --format`.
@@ -74,7 +73,7 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
   `-c/--column`, `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`,
   `--long`.
 - `firewall logs`: `--limit, -l N` (default: `50`), `--cursor N` (`0` starts at
-  the live stream position), `--follow, -F` (poll continuously),
+  the live stream position), `--follow, -F` (keep polling),
   `--interval SECONDS` (default: `1.5`), `--rule-type {traffic,nat}`,
   `--rule-id ID`, `--action {pass,block,scrub,nat,binat,rdr}`,
   `--direction {in,out}`, `--interface, -i INTERFACE`, `--query, -q TEXT`,
@@ -107,9 +106,9 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -219,6 +218,9 @@ sylve network wireguard server-init --node node1.example.test --set port=51820 -
 sylve network wireguard server-init --node node1.example.test --set port=51820
 sylve network wireguard peer-add --node node1.example.test \
   --set name=laptop --set 'clientIPs=["10.99.0.2/32"]'
+sylve network wireguard peer-update peer1 --node node1.example.test \
+  --set 'clientIPs=[10.99.0.2/32]' --set 'routableIPs=[10.99.0.0/24]' --dry-run -f json
+# body: {"clientIPs":["10.99.0.2/32"],"routableIPs":["10.99.0.0/24"]}
 sylve network dhcp config-update --node node1.example.test --set domain=example.test
 sylve network firewall advanced-update --node node1.example.test --set preRules="pass all" --dry-run -f json
 ```

@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-testing` — unit, live contract, lint, and manual page verification for `sylve-cli`
+`sylve-testing` - unit, live contract, lint, and manual page verification for `sylve-cli`
 
 ## SYNOPSIS
 
@@ -19,7 +19,7 @@ make tox
 
 ## DESCRIPTION
 
-The `sylve-cli` test suite is divided into two layers:
+The `sylve-cli` test suite has two layers:
 
 1. **Unit tests** (`tests/unit/`), which run offline against mocked HTTP
    transports and temporary configuration files.
@@ -39,11 +39,12 @@ pytest tests/unit
 
 ### Live Contract Tests
 
-The live suite is read-only by default. It invokes `--help` on every registered
-command, executes read-only commands against the target server, and validates
-successful HTTP response payloads against `docs/swagger.json`. Any schema
-mismatch fails the test with the HTTP method, path, and validation error.
-Destructive commands are not executed automatically.
+The live suite makes read-only requests by default. It invokes `--help` on
+every registered command, executes read-only commands against the target
+server, and validates successful HTTP response payloads against
+`docs/swagger.json`. Any schema mismatch fails the test with the HTTP method,
+path, and validation error. The suite skips destructive commands unless you
+opt in.
 
 ```sh
 export SYLVE_LIVE=1
@@ -59,7 +60,7 @@ make live-test
 pytest -m live tests/live
 ```
 
-Exclude live tests explicitly when invoking `pytest` directly:
+Exclude live tests before running `pytest` without `make`:
 
 ```sh
 pytest -m "not live"
@@ -68,10 +69,11 @@ pytest -m "not live"
 ### Live Mutation Tests
 
 An opt-in suite in `tests/live/test_mutate.py` creates throwaway VMs (and their
-snapshots) and deletes them again. It is marked `live_mutate`, so the normal
-`live` run never collects it. Every resource is named `zclitest-*` and is
-deleted in fixture teardown even when a check fails. It also requires an
-explicit node and pool, so it cannot touch production by accident:
+snapshots) and deletes them again. It carries the `live_mutate` mark, so the
+normal `live` run never collects it. The suite names every resource
+`zclitest-*` and deletes it in fixture teardown even when a check fails. It
+also requires an explicit node and pool, so it cannot touch production by
+accident:
 
 ```sh
 export SYLVE_LIVE=1
@@ -83,7 +85,7 @@ make live-mutate
 pytest -m live_mutate tests/live/test_mutate.py
 ```
 
-Jail lifecycle mutation (`tests/live/test_mutate_jails.py`) additionally needs a
+Jail lifecycle mutation (`tests/live/test_mutate_jails.py`) needs a
 node with an existing pkgbase bootstrap, a pool, a bootstrap name, and a network
 switch:
 
@@ -123,20 +125,20 @@ man docs/man/man5/sylve-config.5
 
 ## ENVIRONMENT
 
-- `SYLVE_LIVE` — set to `1` to enable `tests/live/`.
-- `SYLVE_SERVER` — target Sylve base URL for live tests.
-- `SYLVE_TOKEN` — bearer token for live tests.
-- `SYLVE_INSECURE` — set to `1` to skip TLS verification during live tests.
-- `SYLVE_NODE` — optional target node hostname or UUID for live tests.
-- `SYLVE_SWAGGER` — path to the Swagger contract (default: `docs/swagger.json`).
+- `SYLVE_LIVE`: set to `1` to enable `tests/live/`.
+- `SYLVE_SERVER`: target Sylve base URL for live tests.
+- `SYLVE_TOKEN`: bearer token for live tests.
+- `SYLVE_INSECURE`: set to `1` to skip TLS verification during live tests.
+- `SYLVE_NODE`: optional target node hostname or UUID for live tests.
+- `SYLVE_SWAGGER`: path to the Swagger contract (default: `docs/swagger.json`).
 
 ## FILES
 
-- `tests/unit/` — offline unit and CLI tests.
-- `tests/live/` — live read-only API contract tests.
-- `docs/swagger.json` — Sylve OpenAPI/Swagger schema contract.
-- `docs/man/src/*.in` — roff manual page sources.
-- `docs/man/man1/sylve.1`, `docs/man/man5/sylve-config.5` — rendered manual pages.
+- `tests/unit/`: offline unit and CLI tests.
+- `tests/live/`: live read-only API contract tests.
+- `docs/swagger.json`: Sylve OpenAPI/Swagger schema contract.
+- `docs/man/src/*.in`: roff manual page sources.
+- `docs/man/man1/sylve.1`, `docs/man/man5/sylve-config.5`: rendered manual pages.
 
 ## SEE ALSO
 

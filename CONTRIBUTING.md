@@ -2,12 +2,12 @@
 
 ## NAME
 
-`sylve-contributing` — bug reporting, patch submission, and contribution conventions for `sylve-cli`
+`sylve-contributing` - bug reporting, patch submission, and contribution conventions for `sylve-cli`
 
 ## DESCRIPTION
 
-`sylve-cli` is an independent command-line client and is not affiliated with or
-endorsed by the Sylve project. Contributions are accepted under the BSD
+`sylve-cli` is an independent command-line client. The Sylve project does not
+affiliate with or endorse it. The project accepts contributions under the BSD
 2-Clause licence.
 
 ## REPORTING BUGS
@@ -44,18 +44,17 @@ by default; never paste output from `sylve config view --show-token`.
 
 ## AI USAGE POLICY
 
-AI assistance is allowed and encouraged. Use AI tools to draft code, tests,
-documentation, and reviews — it is a normal part of contributing here.
+The project allows and encourages AI assistance for drafting code, tests,
+documentation, and reviews.
 
 - The submitting author remains responsible for correctness, licensing, and
   security: review, verify, and understand AI-assisted changes before
-  submitting, just as you would a human colleague's draft.
-- No disclosure is required for routine AI assistance.
+  submitting, as you would a human colleague's draft.
+- Routine AI assistance needs no disclosure.
 
 ## LICENCE
 
-All contributions are licensed under the BSD 2-Clause licence in
-[LICENSE](LICENSE).
+The BSD 2-Clause licence in [LICENSE](LICENSE) covers all contributions.
 
 ## SEE ALSO
 

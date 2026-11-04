@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-system` — manage host disks, SMART tests, PCI passthrough, files, certificates, settings, and events
+`sylve-system` - manage host disks, SMART tests, PCI passthrough, files, certificates, settings, and events
 
 ## SYNOPSIS
 
@@ -17,7 +17,7 @@ including disk partitioning, SMART health and test schedules, PCI passthrough
 (`ppt`) configuration, `sysctl`/loader tunables, remote file transfers, TLS
 certificates, health checks, and server-sent event streams.
 
-Most subcommands are generic API bindings whose request payloads are passed via
+Most subcommands are generic API bindings that take their request payloads from
 `--data` according to `docs/swagger.json`.
 
 ## SUBCOMMANDS
@@ -69,7 +69,7 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
 - `events`: `--lines, -l N` (stop after `N` non-empty lines),
   `--reconnect / --no-reconnect` (default: `--reconnect`),
   `-p, --param KEY=VALUE`, `-n, --node NODE`. Mints a short-lived `sse_token`
-  automatically via `POST /auth/sse-tokens` and streams `/events/stream`.
+  via `POST /auth/sse-tokens` and streams `/events/stream`.
 - `terminal`: `--kill-on-exit / --keep-alive` (default: `--kill-on-exit`),
   `-n, --node NODE`. Opens an interactive host shell over WebSocket. Press
   `Enter`, then type `~.` to detach.
@@ -78,9 +78,9 @@ All subcommands except `file-upload`, `file-download`, `cert-archive`,
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API or file I/O error, or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API or file I/O error, or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

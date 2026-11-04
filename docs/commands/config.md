@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-config` — view and modify saved login contexts
+`sylve-config` - view and modify saved login contexts
 
 ## SYNOPSIS
 
@@ -21,8 +21,8 @@ the target server URL, user metadata, TLS settings, default node, and session
 bearer token.
 
 Mutating subcommands (`use-context`, `set-node`, `delete-context`) rewrite the
-configuration file with mode `0600`. `view` redacts bearer tokens unless
-`--show-token` is passed explicitly.
+configuration file with mode `0600`. `view` redacts bearer tokens unless you
+pass `--show-token`.
 
 ## SUBCOMMANDS
 
@@ -49,7 +49,7 @@ configuration file with mode `0600`. `view` redacts bearer tokens unless
 
 No options. Prints a `warning:` line for every problem (a context missing its
 `server` key, a `current_context` that does not exist, a missing or expired
-token) and exits `1` if any were found, `0` when the file is sound.
+token) and exits `1` if it found any, `0` when the file is sound.
 
 ### `config get-contexts`
 
@@ -98,9 +98,9 @@ token) and exits `1` if any were found, `0` when the file is sound.
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — Configuration file or formatting error.
-- `2` — Usage error or unknown context name.
+- `0`: Success.
+- `1`: Configuration file or formatting error.
+- `2`: Usage error or unknown context name.
 
 ## EXAMPLES
 

@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-ddns` — manage dynamic DNS entries
+`sylve-ddns` - manage dynamic DNS entries
 
 ## SYNOPSIS
 
@@ -13,7 +13,7 @@ sylve ddns COMMAND [ARGS ...]
 ## DESCRIPTION
 
 `sylve ddns` creates, updates, synchronizes, and deletes dynamic DNS entries via
-generic Sylve API bindings. Request payloads are supplied with `--data` in JSON
+generic Sylve API bindings. Supply request payloads with `--data` in JSON
 or YAML format.
 
 ## SUBCOMMANDS
@@ -49,9 +49,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

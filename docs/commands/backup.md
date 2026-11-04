@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-backup` — manage backup targets, scheduled jobs, restores, and backup events
+`sylve-backup` - manage backup targets, scheduled jobs, restores, and backup events
 
 ## SYNOPSIS
 
@@ -81,9 +81,9 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error, failed event while waiting, or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error, failed event while waiting, or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -120,13 +120,15 @@ Create a target from a YAML payload file:
 sylve backup target create --data @target.yaml --node node1.example.test -f json
 ```
 
-Preview a new backup target before sending it:
+Preview a new backup target before sending it. `backupRoot` must be a ZFS
+dataset name (`tank/backups`), not a filesystem path, and the server rejects
+anything else at creation time:
 
 ```sh
 sylve backup target create \
   --set name=offsite \
   --set sshHost=backup.example.test \
-  --set backupRoot=/tank/backups \
+  --set backupRoot=tank/backups \
   --set sshPort=22 \
   --dry-run -f json
 ```
@@ -139,7 +141,7 @@ sylve backup target create \
   "body": {
     "name": "offsite",
     "sshHost": "backup.example.test",
-    "backupRoot": "/tank/backups",
+    "backupRoot": "tank/backups",
     "sshPort": 22
   }
 }

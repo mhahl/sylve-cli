@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-download` — list, start, upload, delete, and fetch ISO and disk images
+`sylve-download` - list, start, upload, delete, and fetch ISO and disk images
 
 ## SYNOPSIS
 
@@ -60,7 +60,7 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
 - `--pool, -p POOL`
   Target ZFS pool (default: server default).
 - `--extract / --no-extract`
-  Automatically extract compressed archives (default: `--extract`).
+  Extract compressed archives (default: `--extract`).
 - `--raw-convert / --no-raw-convert`
   Convert disk images to RAW format (default: `--no-raw-convert`).
 - `--ignore-tls`
@@ -124,9 +124,9 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API or file I/O error, or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API or file I/O error, or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -165,7 +165,7 @@ sylve download delete 1 --node node1.example.test
 sylve download delete 2 3 4 --node node1.example.test
 ```
 
-Generate a signed URL and fetch the file locally:
+Generate a signed URL and fetch the file to this machine:
 
 ```sh
 sylve download signed-url --uuid 8f14... --name debian-13.iso

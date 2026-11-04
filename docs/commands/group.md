@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-group` — manage authentication groups and group membership
+`sylve-group` - manage authentication groups and group membership
 
 ## SYNOPSIS
 
@@ -13,8 +13,8 @@ sylve group COMMAND [ARGS ...]
 ## DESCRIPTION
 
 `sylve group` creates, lists, updates membership for, and deletes authentication
-groups via generic Sylve API bindings. Note that `group members` replaces the
-entire member list rather than appending to it.
+groups via generic Sylve API bindings. `group members` replaces the
+entire member list. It does not append.
 
 ## SUBCOMMANDS
 
@@ -48,9 +48,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -82,7 +82,7 @@ sylve group members 2 --set 'usernames=[ops,admin]' -f json
 sylve group delete 2 --yes
 ```
 
-Preview a create (`members` is required) and a full member replacement:
+Preview a create with the required `members` field, then replace a full member list:
 
 ```sh
 sylve group create --set name=operators --set 'members=[1,2]' --dry-run -f json

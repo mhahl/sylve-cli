@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-iscsi` — manage iSCSI initiators, targets, LUNs, and portals
+`sylve-iscsi` - manage iSCSI initiators, targets, LUNs, and portals
 
 ## SYNOPSIS
 
@@ -13,7 +13,7 @@ sylve iscsi COMMAND [ARGS ...]
 ## DESCRIPTION
 
 `sylve iscsi` manages iSCSI initiators, targets, LUNs, portals, and active
-sessions via generic Sylve API bindings. Request payloads are supplied with
+sessions via generic Sylve API bindings. Supply request payloads with
 `--data` in JSON or YAML format.
 
 ## SUBCOMMANDS
@@ -59,9 +59,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

@@ -1,16 +1,16 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+This file documents all notable changes to this project.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Added
 - Typed `jail create` command with flags, `--file`, `--set`, `--dry-run`,
-  and a confirmation plan, mirroring `vm create`. Sizes like `2G` are parsed
-  to bytes and pool/switch/bootstrap names are resolved against the server.
+  and a confirmation plan, mirroring `vm create`. The CLI parses sizes like
+  `2G` to bytes and resolves pool/switch/bootstrap names against the server.
 - `--set KEY=VALUE` (`-s`) on all generic API commands: per-field updates
   with YAML-parsed values and dotted keys for nesting
   (e.g. `jail hardware-cpu 201 --set cores=4`), so small updates need no JSON.
@@ -26,8 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (the old `--data @jail.yaml` file works as `--file jail.yaml`), or `--set`.
   Generic `--data` remains as an escape hatch for the other commands.
 - Every command guide now carries `--set`-based examples with `--dry-run`
-  previews, selection-flag usage, and multi-step flows; stale examples were
-  corrected to the `swagger.json` contract (real body fields, no invented
+  previews, selection-flag usage, and multi-step flows; we corrected stale
+  examples to the `swagger.json` contract (real body fields, no invented
   `--param validate/dryRun/sendWelcome`, `-y/--yes` scoped to destructive
   commands only).
 
@@ -40,11 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stdout; `vm/jail migrate --validate-only` honors `-f`; `node drain` prints
   no prose on non-table formats.
 - `-p` no longer means `--password` on `login` (long form only), so `-p`
-  unambiguously means `--param`/`--port`/`--pool` elsewhere and secrets stay
+  means `--param`/`--port`/`--pool` elsewhere and secrets stay
   out of `ps` and shell history by default.
 - `jail/vm console` and `system terminal` no longer freeze when the connection
   goes quiet or dies: TCP keepalive plus a periodic client ping keeps idle
-  sessions alive through NATs/proxies, reads are bounded so `~.` detach keeps
+  sessions alive through NATs/proxies, the CLI bounds reads so `~.` detach keeps
   working, and a lost connection prints an error instead of hanging.
 - A generic command run with no path argument, body, or parameters prints its
   `--help` instead of erroring (like a bare command group); anything else
@@ -93,5 +93,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 `sylve-cli` releases mirror the Sylve server API version it targets. The
 current release, 0.3.1, corresponds to the Sylve API contract in
-`docs/swagger.json` (also 0.3.1). When the Sylve project advances its API
-version, this project's version advances to match.
+`docs/swagger.json` (also 0.3.1). This project's version advances whenever the
+Sylve API version advances.

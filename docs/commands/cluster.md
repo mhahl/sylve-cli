@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-cluster` — inspect cluster state, manage Raft membership, and edit cluster notes
+`sylve-cluster` - inspect cluster state, manage Raft membership, and edit cluster notes
 
 ## SYNOPSIS
 
@@ -92,7 +92,7 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 
 - `--retain-guests / --no-retain-guests`
   Keep local VM and jail registrations (default: `--retain-guests`). Ignored
-  when `--force` is set.
+  when you set `--force`.
 - `--force`
   Force a local cluster state reset without contacting Raft.
 - `-y, --yes`
@@ -151,9 +151,9 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API failure or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API failure or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

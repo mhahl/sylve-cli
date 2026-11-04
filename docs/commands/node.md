@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-node` — list cluster nodes, inspect telemetry, drain workloads, reboot, remove peers, and read audit logs
+`sylve-node` - list cluster nodes, inspect telemetry, drain workloads, reboot, remove peers, and read audit logs
 
 ## SYNOPSIS
 
@@ -95,7 +95,7 @@ resolves the block.
 - `--retain-guests / --no-retain-guests`
   Keep VM and jail registrations (default: `--retain-guests`).
 - `--force`
-  Force removal of an offline, externally fenced peer.
+  Force removal of an offline peer that another node fenced.
 - `-y, --yes`
   Skip confirmation prompt.
 
@@ -124,9 +124,9 @@ resolves the block.
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API failure, blocked drain plan, or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API failure, blocked drain plan, or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -220,7 +220,7 @@ List nodes filtered to online hosts with selected columns:
 sylve node list --filter Status=ONLINE -l 5 -c Hostname,Status,Guests,Version
 ```
 
-Force-remove an offline, externally fenced peer without prompting:
+Force-remove an offline peer that another node fenced without prompting:
 
 ```sh
 sylve node remove node3.example.test --force --yes

@@ -1,7 +1,7 @@
 # Sylve CLI configuration file
 
 The configuration file is YAML at `~/.config/sylve/config.yaml` (or `$SYLVE_CONFIG`
-when set). It is written with permissions `0600` and stores named login contexts.
+when set). The CLI writes it with permissions `0600` and stores named login contexts.
 
 ## Location
 
@@ -34,7 +34,7 @@ contexts:
 
 ### `current_context`
 
-String. Context selected when `--context` is omitted. Must match a key in
+String. Context selected when you omit `--context`. Must match a key in
 `contexts`.
 
 ### `contexts`
@@ -45,7 +45,7 @@ A mapping of context names to context objects. Each key is an arbitrary label
 #### `server`
 
 Required. The base URL of the Sylve API. The `/api` path suffix is optional.
-If no scheme is given (`http://` or `https://`) the client defaults to HTTPS.
+If you give no scheme (`http://` or `https://`) the client defaults to HTTPS.
 
 #### `username`
 
@@ -64,13 +64,13 @@ token only with `--show-token`.
 #### `expires_at`
 
 Optional. ISO-8601 timestamp for when the token expires (e.g.
-`2026-11-01T12:00:00Z`). If absent, the expiry is decoded from the JWT's
+`2026-11-01T12:00:00Z`). If absent, the CLI decodes the expiry from the JWT's
 `exp` claim.
 
 #### `verify_ssl`
 
 Boolean. Defaults to `true`. Set to `false` only for self-signed test
-clusters. When `false`, `sylve login` and every API call prints a one-line
+clusters. If `false`, `sylve login` and every API call print a one-line
 stderr warning.
 
 #### `ca_cert`
@@ -80,18 +80,18 @@ HTTPS requests and the WebSocket console/VNC bridge.
 
 #### `node_id`
 
-UUID of the node the client connected to during login. Populated automatically
-on `sylve login`.
+UUID of the node the client connected to during login. `sylve login` fills
+it in.
 
 #### `hostname`
 
-Hostname of the node the client connected to during login. Populated
-automatically on `sylve login`.
+Hostname of the node the client connected to during login. `sylve login`
+fills it in.
 
 #### `default_node`
 
-Optional. Default target node hostname or UUID for this context. Used when
-`-n/--node` is not supplied on the command line.
+Optional. Default target node hostname or UUID for this context. The CLI uses
+this when you do not supply `-n/--node` on the command line.
 
 ## Environment overrides
 
@@ -112,15 +112,14 @@ without modifying it:
 Run `sylve config validate` to check the configuration file for:
 
 - parse errors (invalid YAML)
-- contexts with no `server` key (silently dropped by the loader)
+- contexts with no `server` key (the loader drops them without warning)
 - a `current_context` that does not exist
 - expired or missing tokens
 
 ## See also
 
-- `sylve config view` — print the live config (redacted by default)
-- `sylve login` — create a new context
-- `sylve config get-contexts` — list all saved contexts
-- `docs/global-options.md` — global flags, env vars, exit codes
-- `docs/man/man5/sylve-config.5` — roff man page (installed as `sylve-config(5)`)
-- `sylve-config(5)` (roff man page) — the same reference in man page format
+- `sylve config view`: print the live config (redacted by default)
+- `sylve login`: create a new context
+- `sylve config get-contexts`: list all saved contexts
+- `docs/global-options.md`: global flags, env vars, exit codes
+- `sylve-config(5)`: roff man page at `docs/man/man5/sylve-config.5`

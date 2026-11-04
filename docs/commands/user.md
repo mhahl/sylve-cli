@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-user` — manage local, PAM, and imported users, plus passkeys
+`sylve-user` - manage local, PAM, and imported users, plus passkeys
 
 ## SYNOPSIS
 
@@ -54,9 +54,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -77,7 +77,6 @@ history in a file):
 sylve user list -f json
 sylve user create \
   --data @ops-user.json \
-  --node node1.example.test \
   --node node1.example.test \
   --format json
 ```
@@ -125,6 +124,13 @@ sylve user pam-create \
   --set username=ops-pam --set admin=false --set uid=1001 --set homeDirPerms=755 \
   --dry-run -f json
 sylve user importable -c username -c uid --filter username=ops -l 5
+```
+
+Group memberships take an array of IDs:
+
+```sh
+sylve user update 2 --set admin=false --set 'auxGroupIds=[1001,1002]' --dry-run -f json
+# body: {"admin":false,"auxGroupIds":[1001,1002]}
 ```
 
 List passkeys for a user and delete one with confirmation skipped:

@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-options` — global options, output formatting, environment variables, configuration file, and exit status
+`sylve-options` - global options, output formatting, environment variables, configuration file, and exit status
 
 ## SYNOPSIS
 
@@ -65,7 +65,7 @@ applicable:
 
 - `-c, --column NAME`
   Select and order output columns. Repeatable or comma-separated. Matches
-  column headers or raw field keys case-insensitively:
+  column headers or raw field keys ignoring case:
   ```sh
   sylve vm list -c RID,Name,State
   sylve vm list -c RID -c Name
@@ -94,19 +94,18 @@ applicable:
 
 ## GENERIC API OPTIONS
 
-Commands that wrap Sylve API endpoints directly accept:
-
-Run one with nothing supplied and it prints its own `--help` instead of
-erroring. A wrong or missing path argument with anything else supplied is a
-usage error (exit `2`).
+Generic API commands accept `--data`, `--set`, `--param`, and `--dry-run`.
+Run one with nothing supplied and it prints its
+own `--help` instead of erroring. A wrong or missing path argument with
+anything else supplied is a usage error (exit `2`).
 
 - `-d, --data BODY`
   Base JSON or YAML request body, or `@FILE` to read the body from disk.
 - `-s, --set KEY=VALUE`
-  Set one body field (repeatable). Dotted keys address nested objects and
-  values are parsed as YAML, so no JSON is needed for common updates.
+  Set one body field (repeatable). Dotted keys address nested objects and the
+  CLI parses values as YAML, so common updates need no JSON.
   Every command's `--help` lists its settable fields with types and required
-  markers, so you never guess key names:
+  markers, so key names are visible:
   ```sh
   sylve system tunable-set --help    # Settable body fields: name, value
   sylve system tunable-set --set name=vfs.zfs.prefetch_disable --set value=0
@@ -115,11 +114,22 @@ usage error (exit `2`).
   `--set` merges over `--data` (nested objects merge key by key) and is the
   preferred way to send small updates. Quote values the server expects as
   strings: `--set value='"200000"'`.
+
+  Complex values go in one `--set` as YAML (single-quote it so the shell
+  leaves brackets alone). Dotted keys descend into objects; arrays and
+  objects given wholesale replace the field instead of merging into it:
+  ```sh
+  sylve vm hardware-cpu 101 --set 'cpuPinning=[{cores: [0, 1], socket: 0}]'
+  sylve notifications transport-create --set name=mail --set type=email \
+    --set email.smtpHost=mail.example.test --set email.smtpPort=587
+  ```
+  If quoting gets awkward, put the body in a file and keep `--set` for the
+  small tweaks: `--data @body.yaml --set enabled=true`.
 - `--dry-run`
   Print the request (`method`, `path`, `params`, `body`) without sending it.
-  Useful with `-f json` to preview exactly what `--set` and `--data` build.
+  Useful with `-f json` to preview the request that `--set` and `--data` build.
 - `-p, --param KEY=VALUE`
-  Query string parameter. Repeatable; values are parsed as YAML scalars.
+  Query string parameter. Repeatable; the CLI parses each value as a YAML scalar.
 - `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
   Output selection on reads (see above).
 
@@ -165,7 +175,7 @@ sylve node list
 
 ## FILES
 
-`~/.config/sylve/config.yaml` is stored as YAML with permissions `0600`:
+The CLI stores `~/.config/sylve/config.yaml` as YAML with permissions `0600`:
 
 ```yaml
 current_context: admin@sylve.example.test

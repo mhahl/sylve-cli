@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-zfs` — manage ZFS storage pools, datasets, snapshots, periodic snapshot jobs, and telemetry
+`sylve-zfs` - manage ZFS storage pools, datasets, snapshots, periodic snapshot jobs, and telemetry
 
 ## SYNOPSIS
 
@@ -81,9 +81,9 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

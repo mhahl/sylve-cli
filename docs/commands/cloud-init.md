@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-cloud-init` — manage reusable cloud-init templates
+`sylve-cloud-init` - manage reusable cloud-init templates
 
 ## SYNOPSIS
 
@@ -13,7 +13,7 @@ sylve cloud-init COMMAND [ARGS ...]
 ## DESCRIPTION
 
 `sylve cloud-init` lists, creates, updates, and deletes reusable cloud-init
-templates via generic Sylve API bindings. Request payloads are supplied with
+templates via generic Sylve API bindings. Supply request payloads with
 `--data` in JSON or YAML format.
 
 ## SUBCOMMANDS
@@ -48,9 +48,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 

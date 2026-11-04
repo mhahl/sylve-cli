@@ -7,7 +7,7 @@ sylve-config \- configuration file format for sylve(1)
 The configuration file is YAML. It stores named contexts and the active
 context. Each context contains the server URL and the session token.
 .PP
-The file is written with mode 0600. Keep it private.
+The CLI writes the file with mode 0600. Keep it private.
 .SH FORMAT
 .nf
 current_context: prod
@@ -27,13 +27,12 @@ contexts:
 .fi
 .PP
 See also the Markdown version at
-.I docs/config-format.md .
+\fIdocs/config-format.md\fR.
 .SH FIELDS
 .TP
 .B current_context
-Name of the context used when
-.B \-\-context
-is not supplied.
+Name of the context the CLI uses when you do not supply
+\fB\-\-context\fR.
 .TP
 .B contexts
 Mapping of context names to context objects.
@@ -44,29 +43,33 @@ Base URL of the Sylve API. The
 suffix is optional.
 .TP
 .B username
-Login name recorded for the context.
+Login name stored in the context.
 .TP
 .B auth_type
+Either
 .I sylve
 or
 .IR pam .
+The server uses this backend for login.
 .TP
 .B token
 Bearer token. Prefer
 .B sylve login
-over editing this field manually.
+over hand-editing this field.
 .TP
 .B expires_at
-Optional ISO-8601 token expiry. If omitted, the expiry is read from the JWT.
+Optional ISO-8601 token expiry. If you omit it, the CLI reads the expiry from
+the JWT.
 .TP
 .B verify_ssl
 Set to false only for self-signed test systems.
 .TP
 .B ca_cert
-Optional path to a CA certificate.
+Optional path to a CA certificate bundle.
 .TP
 .B default_node
-Optional default target node.
+Optional default target node hostname or UUID. The CLI uses it when you do not
+supply \fB\-n\fR or \fB\-\-node\fR.
 .SH ENVIRONMENT OVERRIDES
 .TP
 .B SYLVE_SERVER
@@ -88,14 +91,13 @@ sylve config use-context prod
 sylve --context prod node list
 .fi
 .SH "SEE ALSO"
-.BR sylve (1),
+.BR sylve (1)
 .br
-.BR sylve-config-format (7)
+.I docs/config-format.md
 .br
-.I docs/config-format.md \-
 Markdown version of this page.
 .SH NOTES
-Manpage source:
+Manual page source:
 .I docs/man/src/sylve-config.5.in
 .br
 Update the source when the CLI changes, then regenerate with:

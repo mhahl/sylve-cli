@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-notifications` — manage notification transports, rules, and active notifications
+`sylve-notifications` - manage notification transports, rules, and active notifications
 
 ## SYNOPSIS
 
@@ -61,9 +61,9 @@ All subcommands accept:
 
 ## EXIT STATUS
 
-- `0` — Success.
-- `1` — API error or aborted confirmation.
-- `2` — Command-line usage error.
+- `0`: Success.
+- `1`: API error or aborted confirmation.
+- `2`: Command-line usage error.
 
 ## EXAMPLES
 
@@ -108,6 +108,16 @@ sylve notifications transport-create \
   --set name=example-mail --set type=email --set enabled=true \
   --dry-run -f json
 sylve notifications transport-update 1 --set enabled=false --dry-run -f json
+```
+
+Configure a nested object with dotted keys, one field at a time:
+
+```sh
+sylve notifications transport-create \
+  --set name=mail --set type=email \
+  --set email.smtpHost=mail.example.test --set email.smtpPort=587 \
+  --dry-run -f json
+# body: {"name":"mail","type":"email","email":{"smtpHost":"mail.example.test","smtpPort":587}}
 ```
 
 Test delivery, bulk-update rules, and clean up:

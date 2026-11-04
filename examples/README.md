@@ -18,12 +18,12 @@ For CI, skip the file and set `SYLVE_SERVER` and `SYLVE_TOKEN` instead.
 
 ## Cloud-init
 
-- `cloud-init/user-data.yaml` — user, SSH key, packages, guest agent
-- `cloud-init/meta-data.yaml` — instance ID and hostname
-- `cloud-init/network-config.yaml` — optional DHCP network config
+- `cloud-init/user-data.yaml`: user, SSH key, packages, guest agent
+- `cloud-init/meta-data.yaml`: instance ID and hostname
+- `cloud-init/network-config.yaml`: optional DHCP network config
 
-The user-data and meta-data pair is required for the CLI to flash a cloud
-image onto the primary disk at create time. Setting cloud-init after creation
+The CLI requires the user-data and meta-data pair to flash a cloud image onto
+the primary disk at create time. Setting cloud-init after creation
 does not flash the image.
 
 ## VM YAML
@@ -47,10 +47,10 @@ sylve jail create --file jail/basic.yaml --yes
 
 ## Scripts
 
-- `scripts/create-fedora-vm.sh` — creates the same VM with explicit flags.
+- `scripts/create-fedora-vm.sh`: creates the same VM with explicit flags.
   Override values with environment variables:
   `VM_NAME=web-01 NODE=node2.example.test ./scripts/create-fedora-vm.sh`
-- `scripts/create-from-yaml.sh` — creates from `vm/fedora-cloud.yaml`.
+- `scripts/create-from-yaml.sh`: creates from `vm/fedora-cloud.yaml`.
 
 Both scripts accept `DRY_RUN=1` to print the request without creating a VM.
 Set `SYLVE_BIN` if `sylve` is not on `PATH`.
