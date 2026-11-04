@@ -119,8 +119,26 @@ def test_normalize_builds_minimal_payload_with_defaults() -> None:
     assert request["type"] == "freebsd"
     assert request["pool"] == "zroot"
     assert request["ctId"] == 102
+    assert request["bootstrapName"] == "15-1-Base"
     assert "memory" not in request
     assert "switchName" not in request
+
+
+def test_normalize_autoselects_only_installed_bootstrap() -> None:
+    client = base_client(
+        bootstraps=[
+            {"name": "15-0-Base", "exists": False},
+            {"name": "15-1-Base", "exists": True, "status": "completed"},
+        ]
+    )
+    request = _normalize_payload(client, "node1.lan", {"name": "dns-03", "pool": "zroot"})
+    assert request["bootstrapName"] == "15-1-Base"
+
+    # Uninstalled bootstrap is rejected even if present in the catalog.
+    with pytest.raises(SylveError, match="Available: 15-1-Base"):
+        _normalize_payload(
+            client, "node1.lan", {"name": "dns-03", "pool": "zroot", "bootstrapName": "15-0-Base"}
+        )
 
 
 def test_normalize_parses_sizes_and_resolves_names() -> None:

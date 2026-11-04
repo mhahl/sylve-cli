@@ -167,6 +167,67 @@ def cli_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
                     },
                 },
             )
+        if path == "/api/vm/101" and request.method == "GET":
+            return httpx.Response(
+                200,
+                json={
+                    "status": "success",
+                    "data": {
+                        "rid": 101,
+                        "name": "web",
+                        "ram": 4 * 1024**3,
+                        "storages": [
+                            {
+                                "id": 1,
+                                "name": "boot",
+                                "type": "zvol",
+                                "pool": "zroot",
+                                "size": 40 * 1024**3,
+                                "emulation": "virtio-blk",
+                            }
+                        ],
+                        "networks": [
+                            {
+                                "id": 1,
+                                "emulation": "virtio",
+                                "mac": "02:00:00:aa:bb:cc",
+                                "standardSwitch": {"name": "vm-public"},
+                            }
+                        ],
+                        "snapshots": [{"id": 7, "name": "pre-upgrade"}],
+                        "cloudInitData": "#cloud-config\npackages:\n  - vim\n",
+                        "cloudInitMetaData": "instance-id: web\n",
+                        "cloudInitNetworkConfig": "",
+                    },
+                },
+            )
+        if path == "/api/jail/201" and request.method == "GET":
+            return httpx.Response(
+                200,
+                json={
+                    "status": "success",
+                    "data": {
+                        "ctId": 201,
+                        "name": "app",
+                        "memory": 2 * 1024**3,
+                        "storages": [{"id": 1, "name": "root", "pool": "zroot", "isBase": True}],
+                        "networks": [
+                            {
+                                "id": 1,
+                                "name": "vnet0",
+                                "dhcp": True,
+                                "standardSwitch": {"name": "vm-public"},
+                            }
+                        ],
+                        "snapshots": [{"id": 3, "name": "clean"}],
+                        "jailHooks": [
+                            {"phase": "prestart", "enabled": True, "script": "/bin/true"},
+                            {"phase": "poststop", "enabled": False, "script": ""},
+                        ],
+                        "fstab": "/data /mnt nullfs ro 0 0\n/logs /var/log nullfs rw 0 0\n",
+                    },
+                },
+            )
         if path == "/api/vm/999":
             return httpx.Response(
                 404,
@@ -220,6 +281,38 @@ def test_jail_list_structured_output(cli_env: Path) -> None:
     data = json.loads(result.stdout)
     assert data[0]["ctId"] == 201
     assert data[0]["name"] == "app"
+
+
+def test_vm_show_summarizes_by_default_and_pretty_prints_with_long(cli_env: Path) -> None:
+    short = runner.invoke(app, ["vm", "show", "101"])
+    assert short.exit_code == 0, short.stdout
+    assert "4.0 GiB" in short.stdout
+    assert "#1 boot (zvol on zroot, 40.0 GiB, virtio-blk)" in short.stdout
+    assert "#1 virtio on vm-public (02:00:00:aa:bb:cc)" in short.stdout
+    assert "1 (latest: pre-upgrade)" in short.stdout
+    assert "user-data (3 lines), meta-data (1 lines)" in short.stdout
+    assert "#cloud-config" not in short.stdout
+
+    detailed = runner.invoke(app, ["vm", "show", "101", "--long"])
+    assert detailed.exit_code == 0, detailed.stdout
+    assert '"emulation": "virtio-blk"' in detailed.stdout
+    assert "#cloud-config\n" in detailed.stdout
+    assert "  - vim" in detailed.stdout
+
+    jail_short = runner.invoke(app, ["jail", "show", "201"])
+    assert jail_short.exit_code == 0, jail_short.stdout
+    assert "2.0 GiB" in jail_short.stdout
+    assert "#1 root (pool zroot, base)" in jail_short.stdout
+    assert "#1 vnet0 on vm-public (dhcp)" in jail_short.stdout
+    assert "1 (latest: clean)" in jail_short.stdout
+    assert "prestart" in jail_short.stdout
+    assert "2 lines (use --long)" in jail_short.stdout
+
+    jail_long = runner.invoke(app, ["jail", "show", "201", "--long"])
+    assert jail_long.exit_code == 0, jail_long.stdout
+    assert '"isBase": true' in jail_long.stdout
+    assert "/data /mnt nullfs ro 0 0\n" in jail_long.stdout
+    assert "/logs /var/log nullfs rw 0 0" in jail_long.stdout
 
 
 def test_vm_create_dry_run_parses_options(cli_env: Path) -> None:

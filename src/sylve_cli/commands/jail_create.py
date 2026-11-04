@@ -193,21 +193,29 @@ def _apply_set_overrides(payload: dict[str, Any], values: list[str] | None) -> N
     _merge(payload, _parse_set(values))
 
 
-def _resolve_bootstrap(client: SylveClient, host: str, pool: str, requested: Any) -> str:
-    """Resolve a bootstrap name against the pool's installed bootstraps."""
-    wanted = str(requested).strip()
+def _installed_bootstraps(client: SylveClient, host: str, pool: str) -> tuple[list[str], bool]:
+    """Return ``(installed_names, has_catalog_entries)`` for ``pool`` on ``host``."""
     try:
         entries = client.get("/jail/bootstraps", params={"pool": pool}, node=host)
     except SylveError:
-        entries = []
-    names: list[str] = []
-    if isinstance(entries, list):
-        for entry in entries:
-            if not isinstance(entry, dict) or not entry.get("name"):
-                continue
-            names.append(str(entry["name"]))
-            if str(entry["name"]).lower() == wanted.lower():
-                return str(entry["name"])
+        return [], False
+    if not isinstance(entries, list):
+        return [], False
+    installed = [
+        str(entry["name"])
+        for entry in entries
+        if isinstance(entry, dict) and entry.get("name") and entry.get("exists", True) is not False
+    ]
+    return installed, bool(entries)
+
+
+def _resolve_bootstrap(client: SylveClient, host: str, pool: str, requested: Any) -> str:
+    """Resolve a bootstrap name against the pool's installed bootstraps."""
+    wanted = str(requested).strip()
+    names, _ = _installed_bootstraps(client, host, pool)
+    for name in names:
+        if name.lower() == wanted.lower():
+            return name
     available = ", ".join(names) if names else "none"
     raise SylveError(
         f"Jail bootstrap '{requested}' not found in pool '{pool}' on '{host}'. "
@@ -240,14 +248,30 @@ def _normalize_payload(client: SylveClient, host: str, payload: dict[str, Any]) 
     pool_name, _ = _resolve_pool(client, host, payload.get("pool"))
     payload["pool"] = pool_name
 
+    if payload.get("base") is not None and not str(payload["base"]).strip():
+        payload.pop("base", None)
+
     if payload.get("bootstrapName") not in (None, ""):
         payload["bootstrapName"] = _resolve_bootstrap(
             client, host, pool_name, payload["bootstrapName"]
         )
     else:
         payload.pop("bootstrapName", None)
-    if payload.get("base") is not None and not str(payload["base"]).strip():
-        payload.pop("base", None)
+        if not payload.get("base") and not payload.get("zfsSource"):
+            installed, has_catalog = _installed_bootstraps(client, host, pool_name)
+            if len(installed) == 1:
+                payload["bootstrapName"] = installed[0]
+            elif len(installed) > 1:
+                raise SylveError(
+                    f"Pool '{pool_name}' on '{host}' has multiple installed bootstraps "
+                    f"({', '.join(installed)}). Pass --bootstrap NAME."
+                )
+            elif has_catalog:
+                raise SylveError(
+                    f"No jail bootstrap is installed in pool '{pool_name}' on '{host}'. "
+                    f"Run 'sylve jail bootstrap create --pool {pool_name} --major 15 --minor 1' "
+                    "or pass --base / --zfs-source-dataset."
+                )
 
     if payload.get("cores") not in (None, ""):
         cores = _as_int(payload["cores"], "cores")
@@ -377,6 +401,10 @@ def _friendly_create_error(exc: SylveAPIError) -> str:
         ("guest_id_already_in_use", "CTID is already used by another guest."),
         ("pool_not_found", "The selected storage pool was not found."),
         ("bootstrap_not_found", "The selected bootstrap was not found."),
+        (
+            "download_uuid_or_bootstrap_name_required",
+            "A jail requires --bootstrap NAME, --base DOWNLOAD, or --zfs-source-dataset.",
+        ),
         ("switch_not_found", "The selected network switch was not found."),
         ("invalid_ctid_range", "The jail CTID range is invalid."),
     )

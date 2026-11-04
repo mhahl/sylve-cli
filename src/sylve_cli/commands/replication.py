@@ -119,6 +119,7 @@ def policy_list(
 def policy_show(
     ctx: typer.Context,
     policy_id: Annotated[int, typer.Argument(help="Replication policy ID.")],
+    long: LongOption = False,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
 ) -> None:
@@ -130,7 +131,11 @@ def policy_show(
         for p in policies:
             if isinstance(p, dict) and int(p.get("id") or 0) == policy_id:
                 print_dict(
-                    p, fmt=fmt, selected_columns=columns, title=f"Replication Policy #{policy_id}"
+                    p,
+                    fmt=fmt,
+                    selected_columns=columns,
+                    title=f"Replication Policy #{policy_id}",
+                    long=long,
                 )
                 return
     raise ResourceNotFoundError(f"Replication policy #{policy_id} not found.")

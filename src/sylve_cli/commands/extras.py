@@ -60,6 +60,7 @@ from sylve_cli.state import (
     FilterOption,
     FormatOption,
     LimitOption,
+    LongOption,
     NodeOption,
     SortColumnOption,
     confirm_destructive,
@@ -172,8 +173,6 @@ _PUBLIC_PATHS = {
     "/auth/passkeys/login/begin",
     "/auth/passkeys/login/finish",
     "/basic/initialize",
-    "/health/basic",
-    "/health/http",
 }
 
 
@@ -450,9 +449,14 @@ def _print_result(
     sort_column: str | None = None,
     filters: list[str] | None = None,
     limit: int | None = None,
+    long: bool = False,
 ) -> None:
     if data in (None, {}, []):
-        if fmt not in (OutputFormat.json, OutputFormat.yaml, OutputFormat.value):
+        if fmt == OutputFormat.json:
+            print_dict({}, fmt=fmt) if isinstance(data, dict) else print_list([], [], fmt=fmt)
+        elif fmt == OutputFormat.yaml:
+            print_dict({}, fmt=fmt) if isinstance(data, dict) else print_list([], [], fmt=fmt)
+        elif fmt != OutputFormat.value:
             console.print("OK", style="green", markup=False)
         return
     if isinstance(data, list) and all(isinstance(row, dict) for row in data):
@@ -468,7 +472,7 @@ def _print_result(
             limit=limit,
         )
     elif isinstance(data, dict):
-        print_dict(data, fmt=fmt, title=title, selected_columns=selected)
+        print_dict(data, fmt=fmt, title=title, selected_columns=selected, long=long)
     else:
         print_result(data, fmt)
 
@@ -550,6 +554,7 @@ def _execute_generic(
     sort_column: str | None = None,
     filters: list[str] | None = None,
     limit: int | None = None,
+    long: bool = False,
 ) -> None:
     """Run one generic API request and print the result."""
     schema_entry = BODY_SCHEMAS.get((method, path), {})
@@ -593,6 +598,7 @@ def _execute_generic(
             {"method": method, "path": target_path, "params": params, "body": body},
             fmt,
             f"Dry run: {method} {target_path}",
+            long=True,
         )
         return
     destructive = method == "DELETE" or "delete" in path.lower()
@@ -609,7 +615,7 @@ def _execute_generic(
             node=node,
             require_auth=path not in _PUBLIC_PATHS,
         )
-    _print_result(result, fmt, title, selected, sort_column, filters, limit)
+    _print_result(result, fmt, title, selected, sort_column, filters, limit, long=long)
 
 
 PathArgs = Annotated[list[str] | None, typer.Argument(help="Path arguments in URL order.")]
@@ -747,6 +753,7 @@ def _add(
             ctx: typer.Context,
             args: PathArgs = None,
             param: ParamOption = None,
+            long: LongOption = False,
             dry_run: DryRunOption = False,
             node: NodeOption = None,
             fmt: FormatOption = OutputFormat.table,
@@ -772,6 +779,7 @@ def _add(
                 sort_column,
                 filters,
                 limit,
+                long=long,
             )
 
     else:

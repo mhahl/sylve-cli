@@ -44,8 +44,9 @@ and jail templates.
 
 - `list`: `-n, --node NODE`, `-f, --format`, `-c, --column`,
   `--sort-column NAME`, `--long` (adds the `Limits` column).
-- `show JAIL`: `JAIL` (CTID or name), `-n, --node NODE`, `-f, --format`,
-  `-c, --column`.
+- `show JAIL`: `JAIL` (CTID or name), `--long` (pretty-prints nested storage,
+  network, snapshot, and hook JSON and prints full multi-line fstab/resolv.conf/logs),
+  `-n, --node NODE`, `-f, --format`, `-c, --column`.
 
 ### `jail create`
 

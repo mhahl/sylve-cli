@@ -184,6 +184,7 @@ def jail_list(
 def jail_show(
     ctx: typer.Context,
     jail: Annotated[str, typer.Argument(help="Jail CTID or name.")],
+    long: LongOption = False,
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -206,6 +207,7 @@ def jail_show(
         fmt=fmt,
         selected_columns=columns,
         title=f"Jail {data.get('name')} (CTID {ctid} on {data.get('node')})",
+        long=long,
     )
 
 
@@ -416,6 +418,7 @@ def jail_console(
 def jail_guest_info(
     ctx: typer.Context,
     jail: Annotated[str, typer.Argument(help="Jail CTID or name.")],
+    long: LongOption = False,
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -426,7 +429,9 @@ def jail_guest_info(
         ctid, host, _ = client.resolve_jail(jail, node=node)
         data = client.get(f"/jail/{ctid}/guest-info", node=host or None) or {}
     if isinstance(data, dict):
-        print_dict(data, fmt=fmt, selected_columns=columns, title=f"Jail {ctid} Guest Info")
+        print_dict(
+            data, fmt=fmt, selected_columns=columns, title=f"Jail {ctid} Guest Info", long=long
+        )
     else:
         console.print(str(data))
 
@@ -590,6 +595,10 @@ def jail_bootstrap_list(
                 if isinstance(entry, dict):
                     r = dict(entry)
                     r.setdefault("node", host)
+                    if not r.get("version") and r.get("major") is not None:
+                        r["version"] = f"{r.get('major')}.{r.get('minor', 0)}"
+                    if not r.get("status"):
+                        r["status"] = "installed" if r.get("exists") else "not installed"
                     rows.append(r)
     spec = [
         ColumnSpec("Name", "name"),

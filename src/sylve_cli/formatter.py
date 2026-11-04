@@ -796,6 +796,213 @@ def _project_dict(data: dict[str, Any], selected: Sequence[str]) -> dict[str, An
     return projected
 
 
+_BYTE_DICT_KEYS = {
+    "allocated",
+    "available",
+    "extractedsize",
+    "free",
+    "memory",
+    "ram",
+    "size",
+    "swaptotal",
+    "swapused",
+    "total",
+    "used",
+}
+_TIMESTAMP_DICT_KEYS = {
+    "createdat",
+    "expires_at",
+    "expiresat",
+    "lastrunat",
+    "nextrunat",
+    "startedat",
+    "stoppedat",
+    "updatedat",
+}
+_MULTILINE_TEXT_KEYS = {
+    "additionaloptions",
+    "fstab",
+    "metadataenv",
+    "metadatameta",
+    "resolvconf",
+    "startlogs",
+    "stoplogs",
+}
+
+
+def _summarize_nested_dict(obj: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for k, v in obj.items():
+        if v in (None, "", [], {}):
+            continue
+        k_fold = str(k).casefold()
+        if k_fold in _BYTE_DICT_KEYS and isinstance(v, (int, float)) and not isinstance(v, bool):
+            parts.append(f"{k}={format_bytes(v)}")
+        elif k_fold == "usage" and isinstance(v, (int, float)) and not isinstance(v, bool):
+            parts.append(f"{k}={format_percent(v)}")
+        elif isinstance(v, (dict, list)):
+            parts.append(f"{k}=({len(v)} items)")
+        else:
+            parts.append(f"{k}={v}")
+    return ", ".join(parts) if parts else "-"
+
+
+def _summarize_dict_list(items: list[Any]) -> str:
+    lines: list[str] = []
+    for item in items:
+        if not isinstance(item, dict):
+            lines.append(str(item))
+            continue
+        label = (
+            item.get("name")
+            or item.get("hostname")
+            or item.get("nodeId")
+            or item.get("ip")
+            or item.get("address")
+            or (f"#{item.get('id')}" if item.get("id") is not None else "")
+        )
+        extras: list[str] = []
+        for field in ("type", "status", "state", "weight", "pool", "size", "ready"):
+            if field in item and item[field] not in (None, ""):
+                val = (
+                    format_bytes(item[field])
+                    if field == "size" and isinstance(item[field], (int, float))
+                    else item[field]
+                )
+                extras.append(f"{field}={val}" if field in ("weight", "ready") else str(val))
+        if label and extras:
+            lines.append(f"{label} ({', '.join(extras)})")
+        elif label:
+            lines.append(str(label))
+        else:
+            lines.append(_summarize_nested_dict(item))
+    return "\n".join(lines) if lines else "-"
+
+
+def summarize_dict_for_table(data: dict[str, Any], selected: set[str]) -> dict[str, Any]:
+    """Summarize nested lists, dicts, and multi-line blobs for compact table output."""
+    view = dict(data)
+    for key, val in list(view.items()):
+        k_fold = str(key).casefold()
+        if k_fold in ("body", "params"):
+            continue
+        if (
+            k_fold in _BYTE_DICT_KEYS
+            and isinstance(val, (int, float))
+            and not isinstance(val, bool)
+        ):
+            view[key] = format_bytes(val)
+        elif k_fold in _TIMESTAMP_DICT_KEYS and isinstance(val, str) and val:
+            view[key] = format_timestamp(val)
+        elif k_fold in _MULTILINE_TEXT_KEYS and k_fold not in selected:
+            raw = str(val or "").strip()
+            if not raw:
+                view[key] = "-"
+            elif "\n" in raw or len(raw) > 80:
+                view[key] = f"{len(raw.splitlines())} lines (use --long)"
+
+    storages = view.get("storages")
+    if isinstance(storages, list):
+        disk_lines: list[str] = []
+        for s in storages:
+            if not isinstance(s, dict):
+                continue
+            if "isBase" in s or ("pool" in s and "type" not in s and "emulation" not in s):
+                dname = s.get("name") or "dataset"
+                label = f"#{s.get('id')} {dname}".strip() if s.get("id") is not None else str(dname)
+                parts = [f"pool {s['pool']}" if s.get("pool") else "dataset"]
+                if s.get("isBase"):
+                    parts.append("base")
+                disk_lines.append(f"{label} ({', '.join(parts)})")
+            else:
+                stype = s.get("type") or "disk"
+                dname = s.get("name") or (s.get("dataset") or {}).get("name") or ""
+                pool = s.get("pool") or ""
+                parts = [f"{stype} on {pool}" if pool else str(stype)]
+                if s.get("size"):
+                    parts.append(format_bytes(s.get("size")))
+                if s.get("emulation"):
+                    parts.append(str(s.get("emulation")))
+                label = f"#{s.get('id')} {dname}".strip() if s.get("id") is not None else str(dname)
+                disk_lines.append(f"{label} ({', '.join(parts)})".strip())
+        view["storages"] = "\n".join(disk_lines) if disk_lines else "-"
+
+    networks = view.get("networks")
+    if isinstance(networks, list):
+        nic_lines: list[str] = []
+        for n in networks:
+            if not isinstance(n, dict):
+                continue
+            sw = (
+                (n.get("standardSwitch") or {}).get("name")
+                or (n.get("manualSwitch") or {}).get("name")
+                or n.get("switchType")
+                or (f"switch#{n.get('switchId')}" if n.get("switchId") else "unattached")
+            )
+            emu = n.get("emulation") or n.get("name") or "nic"
+            mac = n.get("mac") or (n.get("macObj") or {}).get("name") or ""
+            flags = [
+                flag for flag, on in (("dhcp", n.get("dhcp")), ("slaac", n.get("slaac"))) if on
+            ]
+            meta = ", ".join([x for x in (mac, *flags) if x])
+            prefix = f"#{n.get('id')} " if n.get("id") is not None else ""
+            suffix = f" ({meta})" if meta else ""
+            nic_lines.append(f"{prefix}{emu} on {sw}{suffix}")
+        view["networks"] = "\n".join(nic_lines) if nic_lines else "-"
+
+    snapshots = view.get("snapshots")
+    if isinstance(snapshots, list):
+        if snapshots and isinstance(snapshots[-1], dict):
+            last = snapshots[-1]
+            latest = last.get("name") or last.get("snapshotName") or f"#{last.get('id')}"
+            view["snapshots"] = f"{len(snapshots)} (latest: {latest})"
+        else:
+            view["snapshots"] = "0"
+
+    pinning = view.get("cpuPinning")
+    if isinstance(pinning, list):
+        pin_lines = [
+            f"socket {p.get('hostSocket', p.get('socket', 0))}: "
+            f"{p.get('hostCpu', p.get('cores', []))}"
+            for p in pinning
+            if isinstance(p, dict)
+        ]
+        view["cpuPinning"] = ", ".join(pin_lines) if pin_lines else "-"
+
+    for hook_key in ("jailHooks", "hooks"):
+        hooks = view.get(hook_key)
+        if isinstance(hooks, list):
+            enabled = [
+                str(h.get("phase") or h.get("name") or "")
+                for h in hooks
+                if isinstance(h, dict) and h.get("enabled")
+            ]
+            view[hook_key] = ", ".join(enabled) if enabled else "-"
+
+    ci_keys = (
+        ("cloudInitData", "user-data"),
+        ("cloudInitMetaData", "meta-data"),
+        ("cloudInitNetworkConfig", "network-config"),
+    )
+    if any(k in view for k, _ in ci_keys) and not any(k.casefold() in selected for k, _ in ci_keys):
+        ci_parts: list[str] = []
+        for key, label in ci_keys:
+            raw = str(view.pop(key, "") or "").strip()
+            if raw:
+                ci_parts.append(f"{label} ({len(raw.splitlines())} lines)")
+        view["cloudInit"] = ", ".join(ci_parts) if ci_parts else "-"
+
+    for key, val in list(view.items()):
+        if str(key).casefold() in ("body", "params"):
+            continue
+        if isinstance(val, dict):
+            view[key] = _summarize_nested_dict(val)
+        elif isinstance(val, list) and val and any(isinstance(x, dict) for x in val):
+            view[key] = _summarize_dict_list(val)
+
+    return view
+
+
 def _format_dict_value(value: Any) -> str:
     if value is None:
         return "-"
@@ -803,8 +1010,10 @@ def _format_dict_value(value: Any) -> str:
         if value and all(not isinstance(item, (dict, list, tuple)) for item in value):
             return _normalize_cell(_stringify_cell(value))
         if value:
-            return json.dumps(value, separators=(",", ":"), default=str)
+            return json.dumps(value, indent=2, default=str)
         return _stringify_cell(value)
+    if isinstance(value, str) and "\n" in value:
+        return value.replace("\r\n", "\n").replace("\r", "\n").replace("\t", "    ").rstrip("\n")
     return _normalize_cell(_stringify_cell(value))
 
 
@@ -813,6 +1022,7 @@ def print_dict(
     fmt: OutputFormat = OutputFormat.table,
     selected_columns: Sequence[str] | None = None,
     title: str | None = None,
+    long: bool = False,
 ) -> None:
     """Render one resource dictionary.
 
@@ -821,6 +1031,7 @@ def print_dict(
         fmt: Output format.
         selected_columns: Optional field subset/order.
         title: Table title.
+        long: Render full pretty-printed JSON and multi-line strings instead of summaries.
 
     Raises:
         FormatterError: If a requested field is unknown.
@@ -828,7 +1039,13 @@ def print_dict(
     Example:
         >>> print_dict({"name": "node1"}, fmt=OutputFormat.json)
     """
-    filtered = _project_dict(data, _split_columns(selected_columns))
+    cols = _split_columns(selected_columns)
+    source = (
+        summarize_dict_for_table(data, {c.casefold() for c in cols})
+        if fmt == OutputFormat.table and not long
+        else data
+    )
+    filtered = _project_dict(source, cols)
 
     if fmt == OutputFormat.json:
         sys.stdout.write(json.dumps(filtered, indent=2, default=str) + "\n")

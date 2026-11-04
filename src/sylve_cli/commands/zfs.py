@@ -181,6 +181,7 @@ def pool_list(
 def pool_status(
     ctx: typer.Context,
     pool: Annotated[str, typer.Argument(help="ZFS pool name or GUID.")],
+    long: LongOption = False,
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -193,7 +194,11 @@ def pool_status(
     if isinstance(data, dict):
         data["node"] = host
         print_dict(
-            data, fmt=fmt, selected_columns=columns, title=f"ZFS Pool Status: {pool} ({host})"
+            data,
+            fmt=fmt,
+            selected_columns=columns,
+            title=f"ZFS Pool Status: {pool} ({host})",
+            long=long,
         )
 
 

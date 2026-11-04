@@ -101,6 +101,7 @@ def download_list(
 def download_show(
     ctx: typer.Context,
     identifier: Annotated[str, typer.Argument(help="Download ID, UUID, or filename.")],
+    long: LongOption = False,
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -128,6 +129,7 @@ def download_show(
                         fmt=fmt,
                         selected_columns=columns,
                         title=f"Download {dl.get('name')} ({host})",
+                        long=long,
                     )
                     return
 

@@ -146,7 +146,9 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 - `list`: `-n, --node NODE`, `--long` (fetches CPU, RAM, VNC, autostart,
   and description), `-f, --format`, `-c, --column`, `--sort-column NAME`,
   `--filter COLUMN=VALUE` (repeatable, substring match), `-l, --limit N`.
-- `show VM`: `VM` (RID or name), `-n, --node NODE`, `-f, --format`, `-c, --column`.
+- `show VM`: `VM` (RID or name), `--long` (pretty-prints nested storage, network,
+  and snapshot JSON and prints full multi-line cloud-init YAML instead of compact
+  summaries), `-n, --node NODE`, `-f, --format`, `-c, --column`.
   If the VM runs with the QEMU guest agent enabled and responding,
   `show` also reports live `ipAddresses` (non-loopback IPv4 and global IPv6).
   The CLI omits the field when you disable the agent or it is unavailable.

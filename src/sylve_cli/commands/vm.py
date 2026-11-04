@@ -236,6 +236,7 @@ def _guest_ip_addresses(agent: Any) -> list[str]:
 def vm_show(
     ctx: typer.Context,
     vm: Annotated[str, typer.Argument(help="VM RID or name.")],
+    long: LongOption = False,
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -275,6 +276,7 @@ def vm_show(
         fmt=fmt,
         selected_columns=columns,
         title=f"Virtual Machine {data.get('name')} (RID {rid} on {data.get('node')})",
+        long=long,
     )
 
 
@@ -615,6 +617,7 @@ def vm_vnc(
 def vm_guest_agent(
     ctx: typer.Context,
     vm: Annotated[str, typer.Argument(help="VM RID or name.")],
+    long: LongOption = False,
     node: NodeOption = None,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
@@ -625,7 +628,9 @@ def vm_guest_agent(
         rid, host, _ = client.resolve_vm(vm, node=node)
         data = client.get(f"/vm/{rid}/guest-agent", node=host or None) or {}
     if isinstance(data, dict):
-        print_dict(data, fmt=fmt, selected_columns=columns, title=f"VM {rid} Guest Agent Info")
+        print_dict(
+            data, fmt=fmt, selected_columns=columns, title=f"VM {rid} Guest Agent Info", long=long
+        )
     else:
         console.print(str(data))
 

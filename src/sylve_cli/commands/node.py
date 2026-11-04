@@ -441,6 +441,7 @@ def node_show(
         str | None,
         typer.Argument(help="Node hostname or UUID (defaults to current/connected node)."),
     ] = None,
+    long: LongOption = False,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
 ) -> None:
@@ -487,6 +488,7 @@ def node_show(
         fmt=fmt,
         selected_columns=columns,
         title=f"Node Details: {combined.get('hostname') or target_host or 'local'}",
+        long=long,
     )
 
 

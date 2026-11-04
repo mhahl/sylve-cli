@@ -105,6 +105,7 @@ def target_list(
 def target_show(
     ctx: typer.Context,
     target_id: Annotated[int, typer.Argument(help="Backup target ID.")],
+    long: LongOption = False,
     fmt: FormatOption = OutputFormat.table,
     columns: ColumnsOption = None,
 ) -> None:
@@ -116,7 +117,11 @@ def target_show(
         for t in targets:
             if isinstance(t, dict) and int(t.get("id") or 0) == target_id:
                 print_dict(
-                    t, fmt=fmt, selected_columns=columns, title=f"Backup Target #{target_id}"
+                    t,
+                    fmt=fmt,
+                    selected_columns=columns,
+                    title=f"Backup Target #{target_id}",
+                    long=long,
                 )
                 return
     raise ResourceNotFoundError(f"Backup target #{target_id} not found.")
