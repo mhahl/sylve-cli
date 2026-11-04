@@ -24,32 +24,48 @@ OUTPUT = ROOT / "src" / "sylve_cli" / "body_schemas.py"
 SPEC_RE = re.compile(r'\(\s*\w+_app,\s*"([^"]+)",\s*"(GET|POST|PUT|PATCH|DELETE)",\s*"([^"]+)"')
 
 
-def short_type(schema: dict, defs: dict, depth: int = 0) -> str:
-    """Render a swagger property schema as a short type name.
+def _field(name: str, schema: dict, defs: dict, required: set, depth: int = 0) -> tuple:
+    """Build a ``(name, type, required, children)`` tuple.
 
-    Object references expand two levels (``object {a, b: object {x}}``) so
-    ``--set`` dotted keys stay discoverable; deeper nesting is a bare name.
+    Objects and arrays of objects expand two levels so ``--set`` dotted
+    keys stay discoverable; deeper nesting is a bare name.
     """
     if "$ref" in schema:
-        name = schema["$ref"].split("/")[-1]
+        ref = schema["$ref"].split("/")[-1]
         if depth > 1:
-            return name.split(".")[-1]
-        props = defs.get(name, {}).get("properties", {})
+            return (name, ref.split(".")[-1], name in required, ())
+        target = defs.get(ref, {})
+        props = target.get("properties", {})
         if not props:
-            return "object"
-        inner = ", ".join(
-            f"{k}: {short_type(v, defs, depth + 1)}" for k, v in sorted(props.items())
+            return (name, "object", name in required, ())
+        sub_required = set(target.get("required", []))
+        return (
+            name,
+            "object",
+            name in required,
+            tuple(
+                _field(key, value, defs, sub_required, depth + 1)
+                for key, value in sorted(props.items())
+            ),
         )
-        return "object {" + inner + "}"
-    kind = str(schema.get("type", ""))
+    kind = str(schema.get("type", "")) or "value"
     if kind == "array":
         items = schema.get("items", {})
-        return f"array of {short_type(items, defs, depth + 1)}" if items else "array"
-    return kind or "value"
+        if not items:
+            return (name, "array", name in required, ())
+        elem = _field("", items, defs, set(), depth + 1)
+        if elem[3]:
+            return (name, "array of object", name in required, elem[3])
+        return (name, f"array of {elem[1]}", name in required, ())
+    return (name, kind, name in required, ())
 
 
 def build() -> dict:
-    """Map (METHOD, path) to required/optional body and query fields."""
+    """Map (METHOD, path) to required-first body and query fields.
+
+    Each field is a ``(name, type, required, children)`` tuple; children use
+    the same shape for one more nesting level.
+    """
     spec = json.loads(SPEC.read_text(encoding="utf-8"))
     defs = spec.get("definitions", {})
     paths = spec.get("paths", {})
@@ -61,23 +77,21 @@ def build() -> dict:
     result: dict[tuple[str, str], dict] = {}
     for method, path in sorted(seen):
         op = paths.get(path, {}).get(method.lower(), {})
-        entry: dict[str, object] = {"body": {}, "body_required": [], "query": {}}
+        body_fields: list[tuple] = []
+        query_fields: list[tuple] = []
         for param in op.get("parameters", []):
             if param.get("in") == "body":
                 ref = (param.get("schema", {}) or {}).get("$ref", "")
                 definition = defs.get(ref.split("/")[-1], {})
-                props = definition.get("properties", {})
-                entry["body"] = {k: short_type(v, defs) for k, v in props.items()}
-                entry["body_required"] = list(definition.get("required", []))
+                required = set(definition.get("required", []))
+                for key in sorted(definition.get("properties", {})):
+                    body_fields.append(_field(key, definition["properties"][key], defs, required))
             elif param.get("in") == "query":
-                query = entry["query"]
-                assert isinstance(query, dict)
-                query[param["name"]] = short_type(param, defs)
-                if param.get("required"):
-                    required = entry.setdefault("query_required", [])
-                    assert isinstance(required, list)
-                    required.append(param["name"])
-        result[(method, path)] = entry
+                query_required = {param["name"]} if param.get("required") else set()
+                query_fields.append(_field(param["name"], param, defs, query_required))
+        body_fields.sort(key=lambda f: (not f[2], f[0]))
+        query_fields.sort(key=lambda f: (not f[2], f[0]))
+        result[(method, path)] = {"body": tuple(body_fields), "query": tuple(query_fields)}
     return result
 
 
@@ -95,25 +109,15 @@ def render(mapping: dict) -> str:
         "BODY_SCHEMAS: dict[tuple[str, str], dict] = {",
     ]
     for (method, path), entry in mapping.items():
-        body = entry["body"]
-        assert isinstance(body, dict)
-        query = entry["query"]
-        assert isinstance(query, dict)
-        body_req = entry["body_required"]
-        assert isinstance(body_req, list)
-        query_req = entry.get("query_required", [])
-        assert isinstance(query_req, list)
         lines.append(f"    ({method!r}, {path!r}): {{")
-        lines.append(f'        "body_required": {body_req!r},')
-        lines.append('        "body": {')
-        for name in sorted(body):
-            lines.append(f"            {name!r}: {body[name]!r},")
-        lines.append("        },")
-        lines.append('        "query": {')
-        for name in sorted(query):
-            lines.append(f"            {name!r}: {query[name]!r},")
-        lines.append("        },")
-        lines.append(f'        "query_required": {query_req!r},')
+        for section in ("body", "query"):
+            lines.append(f'        "{section}": (')
+            for name, field_type, required, children in entry[section]:
+                lines.append(f"            ({name!r}, {field_type!r}, {required!r}, (")
+                for child in children:
+                    lines.append(f"                {child!r},")
+                lines.append("            )),")
+            lines.append("        ),")
         lines.append("    },")
     lines.append("}")
     lines.append("")

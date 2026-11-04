@@ -306,11 +306,17 @@ def test_generic_help_lists_settable_fields(cli_env: Path) -> None:
     cpu = runner.invoke(app, ["vm", "hardware-cpu", "--help"])
     assert cpu.exit_code == 0
     assert "Settable body fields (--set):" in cpu.stdout
-    assert "cpuCores (integer, required)" in cpu.stdout
+    flat = " ".join(cpu.stdout.split())
+    assert "cpuCores (integer, required)" in flat
+    # Required fields sort first; nested objects render indented below.
+    assert cpu.stdout.index("cpuCores") < cpu.stdout.index("cpuPinning")
+    assert "cores (array of integer, required)" in flat
 
     tunable = runner.invoke(app, ["system", "tunable-set", "--help"])
     assert tunable.exit_code == 0
-    assert "name (string, required), value (string, required)" in " ".join(tunable.stdout.split())
+    flat = " ".join(tunable.stdout.split())
+    assert "name (string, required)" in flat
+    assert "value (string, required)" in flat
 
     # Reads advertise query parameters instead of body fields.
     tunables = runner.invoke(app, ["system", "tunables", "--help"])

@@ -248,37 +248,51 @@ def _print_result(
         print_result(data, fmt)
 
 
-def _schema_help_suffix(method: str, path: str) -> str:
-    """Describe the settable body/query fields for ``--help`` output.
+def _render_field_lines(fields: object, indent: str) -> list[str]:
+    """Render ``(name, type, required, children)`` fields as one line each."""
+    lines: list[str] = []
+    if not isinstance(fields, (list, tuple)):
+        return lines
+    for field in fields:
+        if not isinstance(field, (list, tuple)) or len(field) != 4:
+            continue
+        name, field_type, required, children = field
+        marker = ", required" if required else ""
+        if isinstance(children, (list, tuple)) and children:
+            lines.append(f"{indent}{name} ({field_type}{marker}):")
+            lines.extend(_render_field_lines(children, indent + "  "))
+        else:
+            lines.append(f"{indent}{name} ({field_type}{marker})")
+    return lines
+
+
+def _schema_epilog(method: str, path: str) -> str | None:
+    """Build the ``--help`` appendix listing settable fields.
 
     Generic commands take free-form ``--set`` keys, so the schema is the
     only in-terminal discovery. Shapes come from the checked-in
     ``body_schemas`` module (built from ``docs/swagger.json``), never from
-    the network, so ``--help`` stays offline-fast.
+    the network, so ``--help`` stays offline-fast. Required fields sort
+    first; nested objects render indented one level down.
     """
     entry = BODY_SCHEMAS.get((method, path))
     if not entry:
-        return ""
-    parts: list[str] = []
+        return None
+    sections: list[str] = []
     body = entry.get("body")
-    required = entry.get("body_required") or []
-    if isinstance(body, dict) and body:
-        assert isinstance(required, list)
-        fields = ", ".join(
-            f"{name} ({body[name]}{', required' if name in required else ''})"
-            for name in sorted(body)
-        )
-        parts.append(f"Settable body fields (--set): {fields}.")
+    if body:
+        sections.append("Settable body fields (--set):")
+        sections.extend(_render_field_lines(body, "  "))
     query = entry.get("query")
-    query_required = entry.get("query_required") or []
-    if isinstance(query, dict) and query:
-        assert isinstance(query_required, list)
-        fields = ", ".join(
-            f"{name} ({query[name]}{', required' if name in query_required else ''})"
-            for name in sorted(query)
-        )
-        parts.append(f"Query parameters (--param): {fields}.")
-    return (" " + " ".join(parts)) if parts else ""
+    if query:
+        if sections:
+            sections.append("")
+        sections.append("Query parameters (--param):")
+        sections.extend(_render_field_lines(query, "  "))
+    if not sections:
+        return None
+    # \b keeps the field list preformatted instead of rewrapped.
+    return "\b\n" + "\n".join(sections)
 
 
 def _path_for(template: str, args: list[str] | None) -> str:
@@ -373,7 +387,7 @@ def _add(
 ) -> None:
     title = description.split(".")[0]
     help_text = description if not args_help else f"{description} Arguments: {args_help}."
-    help_text += _schema_help_suffix(method, path)
+    epilog = _schema_epilog(method, path)
     destructive = method == "DELETE" or "delete" in path.lower()
 
     if binary:
@@ -573,7 +587,7 @@ def _add(
 
     command.__name__ = f"{app.info.name}_{name}".replace("-", "_")
     command.__doc__ = help_text
-    app.command(name, help=help_text)(command)
+    app.command(name, help=help_text, epilog=epilog)(command)
 
 
 # ---------------------------------------------------------------------------

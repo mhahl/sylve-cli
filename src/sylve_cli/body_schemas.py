@@ -8,2974 +8,3372 @@ from __future__ import annotations
 
 BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     ('DELETE', '/auth/groups/{groupId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/auth/users/{userId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'removehome': 'boolean',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('removehome', 'boolean', False, (
+            )),
+        ),
     },
     ('DELETE', '/auth/users/{userId}/passkeys/{credentialId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/certificates/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/certificates/{id}/activate'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/disk/partitions/{partition}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/disk/smart/self-test/schedules/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/disk/{device}/partition-table'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/dynamic-dns/entries/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/info/notes'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'ids': 'array of integer',
-        },
-        "query_required": ['ids'],
+        "body": (
+        ),
+        "query": (
+            ('ids', 'array of integer', True, (
+            )),
+        ),
     },
     ('DELETE', '/info/notes/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/iscsi/initiators/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/iscsi/targets/{targetId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/iscsi/targets/{targetId}/luns/{lunId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/iscsi/targets/{targetId}/portals/{portalId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/jail/bootstraps/{name}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'pool': 'string',
-        },
-        "query_required": ['pool'],
+        "body": (
+        ),
+        "query": (
+            ('pool', 'string', True, (
+            )),
+        ),
     },
     ('DELETE', '/jail/templates/{templateId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/jail/{ctid}/networks/{networkId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/mdns/records/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/dhcp/lease/dynamic'): {
-        "body_required": ['identifier', 'ip'],
-        "body": {
-            'identifier': 'string',
-            'ip': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('identifier', 'string', True, (
+            )),
+            ('ip', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/dhcp/lease/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/dhcp/range/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/firewall/nat'): {
-        "body_required": ['ids'],
-        "body": {
-            'ids': 'array of integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ids', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/firewall/nat/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/firewall/traffic'): {
-        "body_required": ['ids'],
-        "body": {
-            'ids': 'array of integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ids', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/firewall/traffic/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/object'): {
-        "body_required": ['ids'],
-        "body": {
-            'ids': 'array of integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ids', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/wireguard/clients/{clientId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/wireguard/server'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/network/wireguard/server/peer/{peerId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/notifications/rules/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/notifications/transports/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/samba/shares/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/system/file-explorer/upload'): {
-        "body_required": [],
-        "body": {
-            'data': 'object',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('data', 'object', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/system/ppt-devices/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/utilities/cloud-init/templates/{templateId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/utilities/downloader-uploads/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/vm/{rid}/networks/{networkId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/vm/{rid}/registration'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'deletemacs': 'boolean',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('deletemacs', 'boolean', False, (
+            )),
+        ),
     },
     ('DELETE', '/vm/{rid}/storage/{storageId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'deleteBacking': 'boolean',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('deleteBacking', 'boolean', False, (
+            )),
+        ),
     },
     ('DELETE', '/zfs/datasets'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'guid': 'array of string',
-            'name': 'array of string',
-        },
-        "query_required": ['name', 'guid'],
+        "body": (
+        ),
+        "query": (
+            ('guid', 'array of string', True, (
+            )),
+            ('name', 'array of string', True, (
+            )),
+        ),
     },
     ('DELETE', '/zfs/datasets/snapshot/periodic/{id}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('DELETE', '/zfs/pools/{guid}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/auth/groups'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/auth/login/config'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/auth/users'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'source': 'string',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('source', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/auth/users/capabilities'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/auth/users/importable'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/auth/users/uid/next'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/auth/users/{userId}/passkeys'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/basic/settings'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/certificates'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/certificates/domain-check'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'domain': 'string',
-        },
-        "query_required": ['domain'],
+        "body": (
+        ),
+        "query": (
+            ('domain', 'string', True, (
+            )),
+        ),
     },
     ('GET', '/certificates/{id}/archive'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/cluster/backups/events/remote'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'jobId': 'integer',
-            'nodeId': 'string',
-            'page': 'integer',
-            'search': 'string',
-            'size': 'integer',
-            'sort[0][dir]': 'string',
-            'sort[0][field]': 'string',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('jobId', 'integer', False, (
+            )),
+            ('nodeId', 'string', False, (
+            )),
+            ('page', 'integer', False, (
+            )),
+            ('search', 'string', False, (
+            )),
+            ('size', 'integer', False, (
+            )),
+            ('sort[0][dir]', 'string', False, (
+            )),
+            ('sort[0][field]', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/cluster/backups/targets/{id}/datasets/jail-metadata'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'dataset': 'string',
-        },
-        "query_required": ['dataset'],
+        "body": (
+        ),
+        "query": (
+            ('dataset', 'string', True, (
+            )),
+        ),
     },
     ('GET', '/cluster/backups/targets/{id}/datasets/snapshots'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'cursor': 'string',
-            'dataset': 'string',
-            'limit': 'integer',
-        },
-        "query_required": ['dataset'],
+        "body": (
+        ),
+        "query": (
+            ('dataset', 'string', True, (
+            )),
+            ('cursor', 'string', False, (
+            )),
+            ('limit', 'integer', False, (
+            )),
+        ),
     },
     ('GET', '/cluster/backups/targets/{id}/datasets/vm-metadata'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'dataset': 'string',
-        },
-        "query_required": ['dataset'],
+        "body": (
+        ),
+        "query": (
+            ('dataset', 'string', True, (
+            )),
+        ),
     },
     ('GET', '/cluster/backups/targets/{id}/running-jobs'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/disk'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'smart': 'string',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('smart', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/disk/smart/self-test'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'device': 'string',
-        },
-        "query_required": ['device'],
+        "body": (
+        ),
+        "query": (
+            ('device', 'string', True, (
+            )),
+        ),
     },
     ('GET', '/disk/smart/self-test/schedules'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/dynamic-dns/entries'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/health/basic'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/health/http'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/info/cpu/historical'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/info/network-interfaces/historical'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/info/notes'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/info/ram/historical'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/info/summary/history'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/info/summary/history/delta'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'cpuAfter': 'integer',
-            'networkAfter': 'integer',
-            'ramAfter': 'integer',
-        },
-        "query_required": ['cpuAfter', 'ramAfter', 'networkAfter'],
+        "body": (
+        ),
+        "query": (
+            ('cpuAfter', 'integer', True, (
+            )),
+            ('networkAfter', 'integer', True, (
+            )),
+            ('ramAfter', 'integer', True, (
+            )),
+        ),
     },
     ('GET', '/info/swap/historical'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/iscsi/initiators'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/iscsi/status'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/iscsi/target-sessions'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/iscsi/targets'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/jail/templates/{templateId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/jail/{ctid}/root-mountpoint'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/jail/{ctid}/state'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/jail/{ctid}/stats'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/mdns/config'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/mdns/records'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/network/firewall/advanced'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/network/firewall/advanced/rendered'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/network/firewall/nat/counters'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/network/firewall/nat/{id}/route-suggestions'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/network/firewall/traffic/counters'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/notifications'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'limit': 'integer',
-            'offset': 'integer',
-            'scope': 'string',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('limit', 'integer', False, (
+            )),
+            ('offset', 'integer', False, (
+            )),
+            ('scope', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/notifications/count'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/notifications/rules'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/notifications/transports'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/samba/audit-logs'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'page': 'integer',
-            'size': 'integer',
-            'sort[0][dir]': 'string',
-            'sort[0][field]': 'string',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('page', 'integer', False, (
+            )),
+            ('size', 'integer', False, (
+            )),
+            ('sort[0][dir]', 'string', False, (
+            )),
+            ('sort[0][field]', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/samba/config'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/samba/shares'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/system/basic-settings'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/system/file-explorer'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'id': 'string',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('id', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/system/file-explorer/download'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'auth': 'string',
-            'hash': 'string',
-            'id': 'string',
-        },
-        "query_required": ['id'],
+        "body": (
+        ),
+        "query": (
+            ('id', 'string', True, (
+            )),
+            ('auth', 'string', False, (
+            )),
+            ('hash', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/system/pci-devices'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/system/ppt-devices'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/system/tunables/remote'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'configuredOnly': 'boolean',
-            'page': 'integer',
-            'search': 'string',
-            'size': 'integer',
-            'sort[0][dir]': 'string',
-            'sort[0][field]': 'string',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('configuredOnly', 'boolean', False, (
+            )),
+            ('page', 'integer', False, (
+            )),
+            ('search', 'string', False, (
+            )),
+            ('size', 'integer', False, (
+            )),
+            ('sort[0][dir]', 'string', False, (
+            )),
+            ('sort[0][field]', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/tasks/lifecycle/active/{guestType}/{guestId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/utilities/cloud-init/templates'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/utilities/downloads/utype'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/utilities/downloads/{uuid}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'expires': 'integer',
-            'id': 'integer',
-            'node': 'string',
-            'sig': 'string',
-        },
-        "query_required": ['expires', 'sig', 'id', 'node'],
+        "body": (
+        ),
+        "query": (
+            ('expires', 'integer', True, (
+            )),
+            ('id', 'integer', True, (
+            )),
+            ('node', 'string', True, (
+            )),
+            ('sig', 'string', True, (
+            )),
+        ),
     },
     ('GET', '/utilities/downloads/{uuid}/{filename}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'expires': 'integer',
-            'id': 'integer',
-            'node': 'string',
-            'sig': 'string',
-        },
-        "query_required": ['expires', 'sig', 'id', 'node'],
+        "body": (
+        ),
+        "query": (
+            ('expires', 'integer', True, (
+            )),
+            ('id', 'integer', True, (
+            )),
+            ('node', 'string', True, (
+            )),
+            ('sig', 'string', True, (
+            )),
+        ),
     },
     ('GET', '/vm/templates/{templateId}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/vm/{rid}/domain'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/vm/{rid}/stats'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/vm/{rid}/stats/{step}'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/zfs/dashboard/history'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'maxPoints': 'integer',
-            'poolGuid': 'string',
-            'rangeSeconds': 'integer',
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+            ('maxPoints', 'integer', False, (
+            )),
+            ('poolGuid', 'string', False, (
+            )),
+            ('rangeSeconds', 'integer', False, (
+            )),
+        ),
     },
     ('GET', '/zfs/dashboard/history/delta'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'arcAfter': 'integer',
-            'poolAfter': 'integer',
-            'poolGuid': 'string',
-        },
-        "query_required": ['poolAfter', 'arcAfter'],
+        "body": (
+        ),
+        "query": (
+            ('arcAfter', 'integer', True, (
+            )),
+            ('poolAfter', 'integer', True, (
+            )),
+            ('poolGuid', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/zfs/dashboard/snapshot'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('GET', '/zfs/datasets/paginated'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'datasetType': 'string',
-            'nameFilter': 'string',
-            'page': 'integer',
-            'search': 'string',
-            'size': 'integer',
-            'sort[0][dir]': 'string',
-            'sort[0][field]': 'string',
-        },
-        "query_required": ['datasetType'],
+        "body": (
+        ),
+        "query": (
+            ('datasetType', 'string', True, (
+            )),
+            ('nameFilter', 'string', False, (
+            )),
+            ('page', 'integer', False, (
+            )),
+            ('search', 'string', False, (
+            )),
+            ('size', 'integer', False, (
+            )),
+            ('sort[0][dir]', 'string', False, (
+            )),
+            ('sort[0][field]', 'string', False, (
+            )),
+        ),
     },
     ('GET', '/zfs/pools/disks-usage'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/certificates/{id}'): {
-        "body_required": [],
-        "body": {
-            'certificate': 'string',
-            'domain': 'string',
-            'dynamicDnsEntryId': 'integer',
-            'name': 'string',
-            'privateKey': 'string',
-            'staging': 'boolean',
-            'type': 'object',
-            'validateDomain': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('certificate', 'string', False, (
+            )),
+            ('domain', 'string', False, (
+            )),
+            ('dynamicDnsEntryId', 'integer', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('privateKey', 'string', False, (
+            )),
+            ('staging', 'boolean', False, (
+            )),
+            ('type', 'object', False, (
+            )),
+            ('validateDomain', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/jail/{ctid}/description'): {
-        "body_required": ['description'],
-        "body": {
-            'description': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('description', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/jail/{ctid}/networks/{networkId}'): {
-        "body_required": [],
-        "body": {
-            'defaultGateway': 'boolean',
-            'dhcp': 'boolean',
-            'ip4': 'integer',
-            'ip4Raw': 'string',
-            'ip4gw': 'integer',
-            'ip4gwRaw': 'string',
-            'ip6': 'integer',
-            'ip6Raw': 'string',
-            'ip6gw': 'integer',
-            'ip6gwRaw': 'string',
-            'macId': 'integer',
-            'macRaw': 'string',
-            'name': 'string',
-            'slaac': 'boolean',
-            'switchName': 'string',
-            'vlanPolicy': 'object {mode: string, taggedVlans: array of integer, untaggedVlan: integer}',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('defaultGateway', 'boolean', False, (
+            )),
+            ('dhcp', 'boolean', False, (
+            )),
+            ('ip4', 'integer', False, (
+            )),
+            ('ip4Raw', 'string', False, (
+            )),
+            ('ip4gw', 'integer', False, (
+            )),
+            ('ip4gwRaw', 'string', False, (
+            )),
+            ('ip6', 'integer', False, (
+            )),
+            ('ip6Raw', 'string', False, (
+            )),
+            ('ip6gw', 'integer', False, (
+            )),
+            ('ip6gwRaw', 'string', False, (
+            )),
+            ('macId', 'integer', False, (
+            )),
+            ('macRaw', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('slaac', 'boolean', False, (
+            )),
+            ('switchName', 'string', False, (
+            )),
+            ('vlanPolicy', 'object', False, (
+                ('mode', 'string', False, ()),
+                ('taggedVlans', 'array of integer', False, ()),
+                ('untaggedVlan', 'integer', False, ()),
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/network/wireguard/clients/{clientId}'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/network/wireguard/server'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/network/wireguard/server/peer/{peerId}'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/system/basic-settings/services/{service}'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/utilities/downloads/{id}'): {
-        "body_required": [],
-        "body": {
-            'automaticExtraction': 'boolean',
-            'automaticRawConversion': 'boolean',
-            'name': 'string',
-            'uType': 'object',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('automaticExtraction', 'boolean', False, (
+            )),
+            ('automaticRawConversion', 'boolean', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('uType', 'object', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/vm/{rid}/description'): {
-        "body_required": [],
-        "body": {
-            'description': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('description', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/vm/{rid}/networks/{networkId}'): {
-        "body_required": [],
-        "body": {
-            'emulation': 'string',
-            'enable': 'boolean',
-            'macId': 'integer',
-            'switchName': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('emulation', 'string', False, (
+            )),
+            ('enable', 'boolean', False, (
+            )),
+            ('macId', 'integer', False, (
+            )),
+            ('switchName', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/vm/{rid}/storage/{storageId}'): {
-        "body_required": [],
-        "body": {
-            'bootOrder': 'integer',
-            'emulation': 'value',
-            'enable': 'boolean',
-            'filesystemTarget': 'string',
-            'name': 'string',
-            'readOnly': 'boolean',
-            'size': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('bootOrder', 'integer', False, (
+            )),
+            ('emulation', 'value', False, (
+            )),
+            ('enable', 'boolean', False, (
+            )),
+            ('filesystemTarget', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('readOnly', 'boolean', False, (
+            )),
+            ('size', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/zfs/datasets/filesystem/{guid}'): {
-        "body_required": ['properties'],
-        "body": {
-            'properties': 'object',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('properties', 'object', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/zfs/datasets/snapshot/periodic/{id}'): {
-        "body_required": [],
-        "body": {
-            'cronExpr': 'string',
-            'interval': 'integer',
-            'keepDaily': 'integer',
-            'keepHourly': 'integer',
-            'keepLast': 'integer',
-            'keepMonthly': 'integer',
-            'keepWeekly': 'integer',
-            'keepYearly': 'integer',
-            'maxAgeDays': 'integer',
-            'retentionType': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('cronExpr', 'string', False, (
+            )),
+            ('interval', 'integer', False, (
+            )),
+            ('keepDaily', 'integer', False, (
+            )),
+            ('keepHourly', 'integer', False, (
+            )),
+            ('keepLast', 'integer', False, (
+            )),
+            ('keepMonthly', 'integer', False, (
+            )),
+            ('keepWeekly', 'integer', False, (
+            )),
+            ('keepYearly', 'integer', False, (
+            )),
+            ('maxAgeDays', 'integer', False, (
+            )),
+            ('retentionType', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/zfs/datasets/volume/{guid}'): {
-        "body_required": ['properties'],
-        "body": {
-            'properties': 'object',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('properties', 'object', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PATCH', '/zfs/pools/{guid}'): {
-        "body_required": [],
-        "body": {
-            'properties': 'object',
-            'spares': 'array of string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('properties', 'object', False, (
+            )),
+            ('spares', 'array of string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/groups'): {
-        "body_required": ['members', 'name'],
-        "body": {
-            'members': 'array of string',
-            'name': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('members', 'array of string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/passkeys/login/begin'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/passkeys/login/finish'): {
-        "body_required": ['credential', 'requestId'],
-        "body": {
-            'credential': 'array of integer',
-            'remember': 'boolean',
-            'requestId': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('credential', 'array of integer', True, (
+            )),
+            ('requestId', 'string', True, (
+            )),
+            ('remember', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/passkeys/register/begin'): {
-        "body_required": ['userId'],
-        "body": {
-            'userId': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('userId', 'integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/passkeys/register/finish'): {
-        "body_required": ['credential', 'requestId'],
-        "body": {
-            'credential': 'array of integer',
-            'label': 'string',
-            'requestId': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('credential', 'array of integer', True, (
+            )),
+            ('requestId', 'string', True, (
+            )),
+            ('label', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/sse-tokens'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/users'): {
-        "body_required": ['admin', 'username'],
-        "body": {
-            'admin': 'boolean',
-            'auxGroupIds': 'array of integer',
-            'confirmGuestActions': 'boolean',
-            'disablePassword': 'boolean',
-            'doasEnabled': 'boolean',
-            'email': 'string',
-            'fullName': 'string',
-            'homeDirPerms': 'integer',
-            'homeDirectory': 'string',
-            'locked': 'boolean',
-            'newPrimaryGroup': 'boolean',
-            'password': 'string',
-            'primaryGroupId': 'integer',
-            'shell': 'string',
-            'sshPublicKey': 'string',
-            'uid': 'integer',
-            'username': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('admin', 'boolean', True, (
+            )),
+            ('username', 'string', True, (
+            )),
+            ('auxGroupIds', 'array of integer', False, (
+            )),
+            ('confirmGuestActions', 'boolean', False, (
+            )),
+            ('disablePassword', 'boolean', False, (
+            )),
+            ('doasEnabled', 'boolean', False, (
+            )),
+            ('email', 'string', False, (
+            )),
+            ('fullName', 'string', False, (
+            )),
+            ('homeDirPerms', 'integer', False, (
+            )),
+            ('homeDirectory', 'string', False, (
+            )),
+            ('locked', 'boolean', False, (
+            )),
+            ('newPrimaryGroup', 'boolean', False, (
+            )),
+            ('password', 'string', False, (
+            )),
+            ('primaryGroupId', 'integer', False, (
+            )),
+            ('shell', 'string', False, (
+            )),
+            ('sshPublicKey', 'string', False, (
+            )),
+            ('uid', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/users/import'): {
-        "body_required": ['admin', 'username'],
-        "body": {
-            'admin': 'boolean',
-            'confirmGuestActions': 'boolean',
-            'password': 'string',
-            'username': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('admin', 'boolean', True, (
+            )),
+            ('username', 'string', True, (
+            )),
+            ('confirmGuestActions', 'boolean', False, (
+            )),
+            ('password', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/auth/users/pam'): {
-        "body_required": ['admin', 'homeDirPerms', 'password', 'uid', 'username'],
-        "body": {
-            'admin': 'boolean',
-            'auxGroupIds': 'array of integer',
-            'confirmGuestActions': 'boolean',
-            'createSamba': 'boolean',
-            'disablePassword': 'boolean',
-            'doasEnabled': 'boolean',
-            'email': 'string',
-            'fullName': 'string',
-            'homeDirPerms': 'integer',
-            'homeDirectory': 'string',
-            'locked': 'boolean',
-            'newPrimaryGroup': 'boolean',
-            'password': 'string',
-            'primaryGroupId': 'integer',
-            'shell': 'string',
-            'sshPublicKey': 'string',
-            'uid': 'integer',
-            'username': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('admin', 'boolean', True, (
+            )),
+            ('homeDirPerms', 'integer', True, (
+            )),
+            ('password', 'string', True, (
+            )),
+            ('uid', 'integer', True, (
+            )),
+            ('username', 'string', True, (
+            )),
+            ('auxGroupIds', 'array of integer', False, (
+            )),
+            ('confirmGuestActions', 'boolean', False, (
+            )),
+            ('createSamba', 'boolean', False, (
+            )),
+            ('disablePassword', 'boolean', False, (
+            )),
+            ('doasEnabled', 'boolean', False, (
+            )),
+            ('email', 'string', False, (
+            )),
+            ('fullName', 'string', False, (
+            )),
+            ('homeDirectory', 'string', False, (
+            )),
+            ('locked', 'boolean', False, (
+            )),
+            ('newPrimaryGroup', 'boolean', False, (
+            )),
+            ('primaryGroupId', 'integer', False, (
+            )),
+            ('shell', 'string', False, (
+            )),
+            ('sshPublicKey', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/basic/initialize'): {
-        "body_required": [],
-        "body": {
-            'pools': 'array of string',
-            'services': 'array of object',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('pools', 'array of string', False, (
+            )),
+            ('services', 'array of object', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/certificates'): {
-        "body_required": [],
-        "body": {
-            'certificate': 'string',
-            'domain': 'string',
-            'dynamicDnsEntryId': 'integer',
-            'name': 'string',
-            'privateKey': 'string',
-            'staging': 'boolean',
-            'type': 'object',
-            'validateDomain': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('certificate', 'string', False, (
+            )),
+            ('domain', 'string', False, (
+            )),
+            ('dynamicDnsEntryId', 'integer', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('privateKey', 'string', False, (
+            )),
+            ('staging', 'boolean', False, (
+            )),
+            ('type', 'object', False, (
+            )),
+            ('validateDomain', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/certificates/{id}/activate'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/certificates/{id}/renew'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/certificates/{id}/retry'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/cluster/accept-join'): {
-        "body_required": ['nodeId', 'nodeIp', 'nodeVersion'],
-        "body": {
-            'inventory': 'object {conflicts: array of GuestIdentityInventoryConflict, digest: string, entries: array of GuestIdentityInventoryEntry, inFlightGuestIds: array of integer}',
-            'nodeId': 'string',
-            'nodeIp': 'string',
-            'nodeVersion': 'string',
-            'preflight': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('nodeId', 'string', True, (
+            )),
+            ('nodeIp', 'string', True, (
+            )),
+            ('nodeVersion', 'string', True, (
+            )),
+            ('inventory', 'object', False, (
+                ('conflicts', 'array of GuestIdentityInventoryConflict', False, ()),
+                ('digest', 'string', False, ()),
+                ('entries', 'array of GuestIdentityInventoryEntry', False, ()),
+                ('inFlightGuestIds', 'array of integer', False, ()),
+            )),
+            ('preflight', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/cluster/backups/jobs'): {
-        "body_required": ['mode', 'name', 'targetId'],
-        "body": {
-            'cronExpr': 'string',
-            'enabled': 'boolean',
-            'encrypted': 'boolean',
-            'jailRootDataset': 'string',
-            'mode': 'string',
-            'name': 'string',
-            'pruneKeepLast': 'integer',
-            'pruneTarget': 'boolean',
-            'recursive': 'boolean',
-            'runnerNodeId': 'string',
-            'sourceDataset': 'string',
-            'stopBeforeBackup': 'boolean',
-            'targetId': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('mode', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('targetId', 'integer', True, (
+            )),
+            ('cronExpr', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('encrypted', 'boolean', False, (
+            )),
+            ('jailRootDataset', 'string', False, (
+            )),
+            ('pruneKeepLast', 'integer', False, (
+            )),
+            ('pruneTarget', 'boolean', False, (
+            )),
+            ('recursive', 'boolean', False, (
+            )),
+            ('runnerNodeId', 'string', False, (
+            )),
+            ('sourceDataset', 'string', False, (
+            )),
+            ('stopBeforeBackup', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/cluster/backups/targets'): {
-        "body_required": ['backupRoot', 'name', 'sshHost'],
-        "body": {
-            'backupRoot': 'string',
-            'createBackupRoot': 'boolean',
-            'description': 'string',
-            'enabled': 'boolean',
-            'id': 'integer',
-            'name': 'string',
-            'sshHost': 'string',
-            'sshKey': 'string',
-            'sshPort': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('backupRoot', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('sshHost', 'string', True, (
+            )),
+            ('createBackupRoot', 'boolean', False, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('id', 'integer', False, (
+            )),
+            ('sshKey', 'string', False, (
+            )),
+            ('sshPort', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/cluster/backups/targets/{id}/restore'): {
-        "body_required": [],
-        "body": {
-            'destinationDataset': 'string',
-            'encryptionKey': 'string',
-            'encryptionKeyFormat': 'string',
-            'operationId': 'string',
-            'remoteDataset': 'string',
-            'restoreNetwork': 'boolean',
-            'restoreNodeId': 'string',
-            'snapshot': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('destinationDataset', 'string', False, (
+            )),
+            ('encryptionKey', 'string', False, (
+            )),
+            ('encryptionKeyFormat', 'string', False, (
+            )),
+            ('operationId', 'string', False, (
+            )),
+            ('remoteDataset', 'string', False, (
+            )),
+            ('restoreNetwork', 'boolean', False, (
+            )),
+            ('restoreNodeId', 'string', False, (
+            )),
+            ('snapshot', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/cluster/notes/bulk-delete'): {
-        "body_required": ['ids'],
-        "body": {
-            'ids': 'array of integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ids', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/disk/smart/self-test'): {
-        "body_required": ['device', 'testType'],
-        "body": {
-            'device': 'string',
-            'testType': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('device', 'string', True, (
+            )),
+            ('testType', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/disk/smart/self-test/abort'): {
-        "body_required": ['device'],
-        "body": {
-            'device': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('device', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/disk/smart/self-test/schedules'): {
-        "body_required": ['cronExpr', 'device', 'testType'],
-        "body": {
-            'cronExpr': 'string',
-            'device': 'string',
-            'enabled': 'boolean',
-            'testType': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('cronExpr', 'string', True, (
+            )),
+            ('device', 'string', True, (
+            )),
+            ('testType', 'string', True, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/disk/{device}/partition-table'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/disk/{device}/partitions'): {
-        "body_required": ['sizes'],
-        "body": {
-            'sizes': 'array of integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('sizes', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/dynamic-dns/entries'): {
-        "body_required": [],
-        "body": {
-            'enabled': 'boolean',
-            'hostname': 'string',
-            'intervalMinutes': 'integer',
-            'provider': 'string',
-            'providerSettings': 'object',
-            'recordType': 'string',
-            'sourceSettings': 'object',
-            'sourceType': 'string',
-            'token': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', False, (
+            )),
+            ('hostname', 'string', False, (
+            )),
+            ('intervalMinutes', 'integer', False, (
+            )),
+            ('provider', 'string', False, (
+            )),
+            ('providerSettings', 'object', False, (
+            )),
+            ('recordType', 'string', False, (
+            )),
+            ('sourceSettings', 'object', False, (
+            )),
+            ('sourceType', 'string', False, (
+            )),
+            ('token', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/dynamic-dns/entries/{id}/sync'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/info/notes'): {
-        "body_required": ['content', 'title'],
-        "body": {
-            'content': 'string',
-            'title': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('content', 'string', True, (
+            )),
+            ('title', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/iscsi/initiators'): {
-        "body_required": [],
-        "body": {
-            'authMethod': 'string',
-            'chapName': 'string',
-            'chapSecret': 'string',
-            'initiatorName': 'string',
-            'nickname': 'string',
-            'targetAddress': 'string',
-            'targetName': 'string',
-            'tgtChapName': 'string',
-            'tgtChapSecret': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('authMethod', 'string', False, (
+            )),
+            ('chapName', 'string', False, (
+            )),
+            ('chapSecret', 'string', False, (
+            )),
+            ('initiatorName', 'string', False, (
+            )),
+            ('nickname', 'string', False, (
+            )),
+            ('targetAddress', 'string', False, (
+            )),
+            ('targetName', 'string', False, (
+            )),
+            ('tgtChapName', 'string', False, (
+            )),
+            ('tgtChapSecret', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/iscsi/initiators/{id}/connect'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/iscsi/targets'): {
-        "body_required": [],
-        "body": {
-            'alias': 'string',
-            'authMethod': 'string',
-            'chapName': 'string',
-            'chapSecret': 'string',
-            'mutualChapName': 'string',
-            'mutualChapSecret': 'string',
-            'targetName': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('alias', 'string', False, (
+            )),
+            ('authMethod', 'string', False, (
+            )),
+            ('chapName', 'string', False, (
+            )),
+            ('chapSecret', 'string', False, (
+            )),
+            ('mutualChapName', 'string', False, (
+            )),
+            ('mutualChapSecret', 'string', False, (
+            )),
+            ('targetName', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/iscsi/targets/{targetId}/luns'): {
-        "body_required": [],
-        "body": {
-            'lunNumber': 'integer',
-            'zvol': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('lunNumber', 'integer', False, (
+            )),
+            ('zvol', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/iscsi/targets/{targetId}/portals'): {
-        "body_required": [],
-        "body": {
-            'address': 'string',
-            'port': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('address', 'string', False, (
+            )),
+            ('port', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/jail/templates/{templateId}/jails'): {
-        "body_required": [],
-        "body": {
-            'count': 'integer',
-            'ctid': 'integer',
-            'mode': 'string',
-            'name': 'string',
-            'namePrefix': 'string',
-            'pool': 'string',
-            'startCtid': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('count', 'integer', False, (
+            )),
+            ('ctid', 'integer', False, (
+            )),
+            ('mode', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('namePrefix', 'string', False, (
+            )),
+            ('pool', 'string', False, (
+            )),
+            ('startCtid', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/jail/{ctid}/networks'): {
-        "body_required": ['name', 'switchName'],
-        "body": {
-            'defaultGateway': 'boolean',
-            'dhcp': 'boolean',
-            'ip4': 'integer',
-            'ip4Raw': 'string',
-            'ip4gw': 'integer',
-            'ip4gwRaw': 'string',
-            'ip6': 'integer',
-            'ip6Raw': 'string',
-            'ip6gw': 'integer',
-            'ip6gwRaw': 'string',
-            'macId': 'integer',
-            'macRaw': 'string',
-            'name': 'string',
-            'slaac': 'boolean',
-            'switchName': 'string',
-            'vlanPolicy': 'object {mode: string, taggedVlans: array of integer, untaggedVlan: integer}',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('name', 'string', True, (
+            )),
+            ('switchName', 'string', True, (
+            )),
+            ('defaultGateway', 'boolean', False, (
+            )),
+            ('dhcp', 'boolean', False, (
+            )),
+            ('ip4', 'integer', False, (
+            )),
+            ('ip4Raw', 'string', False, (
+            )),
+            ('ip4gw', 'integer', False, (
+            )),
+            ('ip4gwRaw', 'string', False, (
+            )),
+            ('ip6', 'integer', False, (
+            )),
+            ('ip6Raw', 'string', False, (
+            )),
+            ('ip6gw', 'integer', False, (
+            )),
+            ('ip6gwRaw', 'string', False, (
+            )),
+            ('macId', 'integer', False, (
+            )),
+            ('macRaw', 'string', False, (
+            )),
+            ('slaac', 'boolean', False, (
+            )),
+            ('vlanPolicy', 'object', False, (
+                ('mode', 'string', False, ()),
+                ('taggedVlans', 'array of integer', False, ()),
+                ('untaggedVlan', 'integer', False, ()),
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/jail/{ctid}/templates'): {
-        "body_required": [],
-        "body": {
-            'name': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('name', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/mdns/records'): {
-        "body_required": [],
-        "body": {
-            'interfaces': 'string',
-            'name': 'string',
-            'port': 'integer',
-            'txt': 'object',
-            'type': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('interfaces', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('port', 'integer', False, (
+            )),
+            ('txt', 'object', False, (
+            )),
+            ('type', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/dhcp/lease'): {
-        "body_required": ['dhcpRangeId'],
-        "body": {
-            'comments': 'string',
-            'dhcpRangeId': 'integer',
-            'duidId': 'integer',
-            'hostname': 'string',
-            'ipId': 'integer',
-            'ipRaw': 'string',
-            'macId': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('dhcpRangeId', 'integer', True, (
+            )),
+            ('comments', 'string', False, (
+            )),
+            ('duidId', 'integer', False, (
+            )),
+            ('hostname', 'string', False, (
+            )),
+            ('ipId', 'integer', False, (
+            )),
+            ('ipRaw', 'string', False, (
+            )),
+            ('macId', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/dhcp/range'): {
-        "body_required": ['expiry', 'type'],
-        "body": {
-            'endIp': 'string',
-            'expiry': 'integer',
-            'manualSwitch': 'integer',
-            'raOnly': 'boolean',
-            'slaac': 'boolean',
-            'standardSwitch': 'integer',
-            'startIp': 'string',
-            'type': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('expiry', 'integer', True, (
+            )),
+            ('type', 'string', True, (
+            )),
+            ('endIp', 'string', False, (
+            )),
+            ('manualSwitch', 'integer', False, (
+            )),
+            ('raOnly', 'boolean', False, (
+            )),
+            ('slaac', 'boolean', False, (
+            )),
+            ('standardSwitch', 'integer', False, (
+            )),
+            ('startIp', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/firewall/advanced/preview'): {
-        "body_required": [],
-        "body": {
-            'postNatDecl': 'string',
-            'postRules': 'string',
-            'postTrafficAnchor': 'string',
-            'preNatDecl': 'string',
-            'preRules': 'string',
-            'preTrafficAnchor': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('postNatDecl', 'string', False, (
+            )),
+            ('postRules', 'string', False, (
+            )),
+            ('postTrafficAnchor', 'string', False, (
+            )),
+            ('preNatDecl', 'string', False, (
+            )),
+            ('preRules', 'string', False, (
+            )),
+            ('preTrafficAnchor', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/firewall/nat'): {
-        "body_required": ['egressInterfaces', 'family', 'ingressInterfaces', 'name', 'natType', 'protocol'],
-        "body": {
-            'description': 'string',
-            'destObjId': 'integer',
-            'destRaw': 'string',
-            'dnatTargetObjId': 'integer',
-            'dnatTargetRaw': 'string',
-            'dstPortObjId': 'integer',
-            'dstPortsRaw': 'string',
-            'egressInterfaces': 'array of string',
-            'enabled': 'boolean',
-            'family': 'string',
-            'ingressInterfaces': 'array of string',
-            'log': 'boolean',
-            'name': 'string',
-            'natType': 'string',
-            'passRedirectedTraffic': 'boolean',
-            'policyRouteGateway': 'string',
-            'policyRoutingEnabled': 'boolean',
-            'priority': 'integer',
-            'protocol': 'string',
-            'redirectPortObjId': 'integer',
-            'redirectPortsRaw': 'string',
-            'sourceObjId': 'integer',
-            'sourceRaw': 'string',
-            'targetAddressScope': 'string',
-            'targetHandling': 'string',
-            'translateMode': 'string',
-            'translateToObjId': 'integer',
-            'translateToRaw': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('egressInterfaces', 'array of string', True, (
+            )),
+            ('family', 'string', True, (
+            )),
+            ('ingressInterfaces', 'array of string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('natType', 'string', True, (
+            )),
+            ('protocol', 'string', True, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('destObjId', 'integer', False, (
+            )),
+            ('destRaw', 'string', False, (
+            )),
+            ('dnatTargetObjId', 'integer', False, (
+            )),
+            ('dnatTargetRaw', 'string', False, (
+            )),
+            ('dstPortObjId', 'integer', False, (
+            )),
+            ('dstPortsRaw', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('log', 'boolean', False, (
+            )),
+            ('passRedirectedTraffic', 'boolean', False, (
+            )),
+            ('policyRouteGateway', 'string', False, (
+            )),
+            ('policyRoutingEnabled', 'boolean', False, (
+            )),
+            ('priority', 'integer', False, (
+            )),
+            ('redirectPortObjId', 'integer', False, (
+            )),
+            ('redirectPortsRaw', 'string', False, (
+            )),
+            ('sourceObjId', 'integer', False, (
+            )),
+            ('sourceRaw', 'string', False, (
+            )),
+            ('targetAddressScope', 'string', False, (
+            )),
+            ('targetHandling', 'string', False, (
+            )),
+            ('translateMode', 'string', False, (
+            )),
+            ('translateToObjId', 'integer', False, (
+            )),
+            ('translateToRaw', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/firewall/traffic'): {
-        "body_required": ['egressInterfaces', 'icmpTypes', 'ingressInterfaces', 'name'],
-        "body": {
-            'action': 'string',
-            'blockResponse': 'string',
-            'description': 'string',
-            'destObjId': 'integer',
-            'destRaw': 'string',
-            'direction': 'string',
-            'dstPortObjId': 'integer',
-            'dstPortsRaw': 'string',
-            'egressInterfaces': 'array of string',
-            'enabled': 'boolean',
-            'family': 'string',
-            'icmpTypes': 'array of string',
-            'ingressInterfaces': 'array of string',
-            'kind': 'string',
-            'log': 'boolean',
-            'name': 'string',
-            'priority': 'integer',
-            'protocol': 'string',
-            'quick': 'boolean',
-            'rawPF': 'string',
-            'sourceObjId': 'integer',
-            'sourceRaw': 'string',
-            'srcPortObjId': 'integer',
-            'srcPortsRaw': 'string',
-            'statePolicy': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('egressInterfaces', 'array of string', True, (
+            )),
+            ('icmpTypes', 'array of string', True, (
+            )),
+            ('ingressInterfaces', 'array of string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('action', 'string', False, (
+            )),
+            ('blockResponse', 'string', False, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('destObjId', 'integer', False, (
+            )),
+            ('destRaw', 'string', False, (
+            )),
+            ('direction', 'string', False, (
+            )),
+            ('dstPortObjId', 'integer', False, (
+            )),
+            ('dstPortsRaw', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('family', 'string', False, (
+            )),
+            ('kind', 'string', False, (
+            )),
+            ('log', 'boolean', False, (
+            )),
+            ('priority', 'integer', False, (
+            )),
+            ('protocol', 'string', False, (
+            )),
+            ('quick', 'boolean', False, (
+            )),
+            ('rawPF', 'string', False, (
+            )),
+            ('sourceObjId', 'integer', False, (
+            )),
+            ('sourceRaw', 'string', False, (
+            )),
+            ('srcPortObjId', 'integer', False, (
+            )),
+            ('srcPortsRaw', 'string', False, (
+            )),
+            ('statePolicy', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/route'): {
-        "body_required": ['destinationType', 'family', 'name', 'nextHopMode'],
-        "body": {
-            'description': 'string',
-            'destination': 'string',
-            'destinationObjId': 'integer',
-            'destinationRaw': 'string',
-            'destinationType': 'string',
-            'enabled': 'boolean',
-            'family': 'string',
-            'fib': 'integer',
-            'gateway': 'string',
-            'gatewayObjId': 'integer',
-            'gatewayRaw': 'string',
-            'gatewayZone': 'string',
-            'interface': 'string',
-            'name': 'string',
-            'nextHopMode': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('destinationType', 'string', True, (
+            )),
+            ('family', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('nextHopMode', 'string', True, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('destination', 'string', False, (
+            )),
+            ('destinationObjId', 'integer', False, (
+            )),
+            ('destinationRaw', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('fib', 'integer', False, (
+            )),
+            ('gateway', 'string', False, (
+            )),
+            ('gatewayObjId', 'integer', False, (
+            )),
+            ('gatewayRaw', 'string', False, (
+            )),
+            ('gatewayZone', 'string', False, (
+            )),
+            ('interface', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/wireguard/clients'): {
-        "body_required": ['addresses', 'allowedIPs', 'endpointHost', 'endpointPort', 'name', 'peerPublicKey', 'privateKey'],
-        "body": {
-            'addresses': 'array of string',
-            'allowedIPs': 'array of string',
-            'enabled': 'boolean',
-            'endpointHost': 'string',
-            'endpointPort': 'integer',
-            'fib': 'integer',
-            'listenPort': 'integer',
-            'metric': 'integer',
-            'mtu': 'integer',
-            'name': 'string',
-            'peerPublicKey': 'string',
-            'persistentKeepalive': 'boolean',
-            'preSharedKey': 'string',
-            'privateKey': 'string',
-            'routeAllowedIPs': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('addresses', 'array of string', True, (
+            )),
+            ('allowedIPs', 'array of string', True, (
+            )),
+            ('endpointHost', 'string', True, (
+            )),
+            ('endpointPort', 'integer', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('peerPublicKey', 'string', True, (
+            )),
+            ('privateKey', 'string', True, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('fib', 'integer', False, (
+            )),
+            ('listenPort', 'integer', False, (
+            )),
+            ('metric', 'integer', False, (
+            )),
+            ('mtu', 'integer', False, (
+            )),
+            ('persistentKeepalive', 'boolean', False, (
+            )),
+            ('preSharedKey', 'string', False, (
+            )),
+            ('routeAllowedIPs', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/wireguard/server'): {
-        "body_required": ['port'],
-        "body": {
-            'addresses': 'array of string',
-            'allowWireGuardPort': 'boolean',
-            'masqueradeIPv4Interface': 'string',
-            'masqueradeIPv6Interface': 'string',
-            'mtu': 'integer',
-            'port': 'integer',
-            'privateKey': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('port', 'integer', True, (
+            )),
+            ('addresses', 'array of string', False, (
+            )),
+            ('allowWireGuardPort', 'boolean', False, (
+            )),
+            ('masqueradeIPv4Interface', 'string', False, (
+            )),
+            ('masqueradeIPv6Interface', 'string', False, (
+            )),
+            ('mtu', 'integer', False, (
+            )),
+            ('privateKey', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/network/wireguard/server/peer'): {
-        "body_required": ['clientIPs', 'name'],
-        "body": {
-            'clientIPs': 'array of string',
-            'enabled': 'boolean',
-            'name': 'string',
-            'persistentKeepalive': 'boolean',
-            'preSharedKey': 'string',
-            'privateKey': 'string',
-            'routableIPs': 'array of string',
-            'routeIPs': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('clientIPs', 'array of string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('persistentKeepalive', 'boolean', False, (
+            )),
+            ('preSharedKey', 'string', False, (
+            )),
+            ('privateKey', 'string', False, (
+            )),
+            ('routableIPs', 'array of string', False, (
+            )),
+            ('routeIPs', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/notifications/dismiss-all'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/notifications/rules'): {
-        "body_required": [],
-        "body": {
-            'discordEnabled': 'boolean',
-            'emailEnabled': 'boolean',
-            'ntfyEnabled': 'boolean',
-            'pushoverEnabled': 'boolean',
-            'targetKey': 'string',
-            'templateKey': 'string',
-            'uiEnabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('discordEnabled', 'boolean', False, (
+            )),
+            ('emailEnabled', 'boolean', False, (
+            )),
+            ('ntfyEnabled', 'boolean', False, (
+            )),
+            ('pushoverEnabled', 'boolean', False, (
+            )),
+            ('targetKey', 'string', False, (
+            )),
+            ('templateKey', 'string', False, (
+            )),
+            ('uiEnabled', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/notifications/rules/bulk-delete'): {
-        "body_required": ['ids'],
-        "body": {
-            'ids': 'array of integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ids', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/notifications/rules/bulk-update'): {
-        "body_required": ['ids'],
-        "body": {
-            'discordEnabled': 'boolean',
-            'emailEnabled': 'boolean',
-            'ids': 'array of integer',
-            'ntfyEnabled': 'boolean',
-            'pushoverEnabled': 'boolean',
-            'uiEnabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ids', 'array of integer', True, (
+            )),
+            ('discordEnabled', 'boolean', False, (
+            )),
+            ('emailEnabled', 'boolean', False, (
+            )),
+            ('ntfyEnabled', 'boolean', False, (
+            )),
+            ('pushoverEnabled', 'boolean', False, (
+            )),
+            ('uiEnabled', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/notifications/rules/test'): {
-        "body_required": [],
-        "body": {
-            'condition': 'string',
-            'severity': 'string',
-            'targetKey': 'string',
-            'templateKey': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('condition', 'string', False, (
+            )),
+            ('severity', 'string', False, (
+            )),
+            ('targetKey', 'string', False, (
+            )),
+            ('templateKey', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/notifications/transports'): {
-        "body_required": [],
-        "body": {
-            'discord': 'object {webhookUrl: string}',
-            'email': 'object {recipients: array of string, smtpFrom: string, smtpHost: string, smtpPassword: string, smtpPort: integer, smtpUseTls: boolean, smtpUsername: string}',
-            'enabled': 'boolean',
-            'name': 'string',
-            'ntfy': 'object {authToken: string, baseUrl: string, topic: string}',
-            'pushover': 'object {apiToken: string, userKey: string}',
-            'type': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('discord', 'object', False, (
+                ('webhookUrl', 'string', False, ()),
+            )),
+            ('email', 'object', False, (
+                ('recipients', 'array of string', False, ()),
+                ('smtpFrom', 'string', False, ()),
+                ('smtpHost', 'string', False, ()),
+                ('smtpPassword', 'string', False, ()),
+                ('smtpPort', 'integer', False, ()),
+                ('smtpUseTls', 'boolean', False, ()),
+                ('smtpUsername', 'string', False, ()),
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('ntfy', 'object', False, (
+                ('authToken', 'string', False, ()),
+                ('baseUrl', 'string', False, ()),
+                ('topic', 'string', False, ()),
+            )),
+            ('pushover', 'object', False, (
+                ('apiToken', 'string', False, ()),
+                ('userKey', 'string', False, ()),
+            )),
+            ('type', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/notifications/transports/{id}/test'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/notifications/{id}/dismiss'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('POST', '/samba/shares'): {
-        "body_required": [],
-        "body": {
-            'auditEnabled': 'boolean',
-            'auditRetentionDays': 'integer',
-            'auditedOperations': 'array of string',
-            'createMask': 'string',
-            'dataset': 'string',
-            'directoryMask': 'string',
-            'enabled': 'boolean',
-            'extraShareConfig': 'string',
-            'guest': 'object {enabled: boolean, writeable: boolean}',
-            'name': 'string',
-            'permissions': 'object {read: object {directorySids: array of string, groupIds: array of integer, userIds: array of integer}, write: object {directorySids: array of string, groupIds: array of integer, userIds: array of integer}}',
-            'timeMachine': 'boolean',
-            'timeMachineMaxSize': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('auditEnabled', 'boolean', False, (
+            )),
+            ('auditRetentionDays', 'integer', False, (
+            )),
+            ('auditedOperations', 'array of string', False, (
+            )),
+            ('createMask', 'string', False, (
+            )),
+            ('dataset', 'string', False, (
+            )),
+            ('directoryMask', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('extraShareConfig', 'string', False, (
+            )),
+            ('guest', 'object', False, (
+                ('enabled', 'boolean', False, ()),
+                ('writeable', 'boolean', False, ()),
+            )),
+            ('name', 'string', False, (
+            )),
+            ('permissions', 'object', False, (
+                ('read', 'object', False, (('directorySids', 'array of string', False, ()), ('groupIds', 'array of integer', False, ()), ('userIds', 'array of integer', False, ()))),
+                ('write', 'object', False, (('directorySids', 'array of string', False, ()), ('groupIds', 'array of integer', False, ()), ('userIds', 'array of integer', False, ()))),
+            )),
+            ('timeMachine', 'boolean', False, (
+            )),
+            ('timeMachineMaxSize', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/system/file-explorer'): {
-        "body_required": ['isFolder', 'name', 'path'],
-        "body": {
-            'isFolder': 'boolean',
-            'name': 'string',
-            'path': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('isFolder', 'boolean', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('path', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/system/file-explorer/copy-or-move-batch'): {
-        "body_required": ['items'],
-        "body": {
-            'items': 'array of object {destination: string, source: string}',
-            'move': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('items', 'array of object', True, (
+                ('destination', 'string', True, ()),
+                ('source', 'string', True, ()),
+            )),
+            ('move', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/system/file-explorer/delete'): {
-        "body_required": ['paths'],
-        "body": {
-            'paths': 'array of string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('paths', 'array of string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/system/file-explorer/rename'): {
-        "body_required": ['id', 'newName'],
-        "body": {
-            'id': 'string',
-            'newName': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('id', 'string', True, (
+            )),
+            ('newName', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/system/file-explorer/upload'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-            'path': 'string',
-        },
-        "query_required": ['path'],
+        "body": (
+        ),
+        "query": (
+            ('path', 'string', True, (
+            )),
+        ),
     },
     ('POST', '/system/ppt-devices'): {
-        "body_required": ['deviceID', 'domain'],
-        "body": {
-            'deviceID': 'string',
-            'domain': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('deviceID', 'string', True, (
+            )),
+            ('domain', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/system/ppt-devices/import'): {
-        "body_required": ['deviceID', 'domain'],
-        "body": {
-            'deviceID': 'string',
-            'domain': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('deviceID', 'string', True, (
+            )),
+            ('domain', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/system/ppt-devices/prepare'): {
-        "body_required": ['deviceID', 'domain'],
-        "body": {
-            'deviceID': 'string',
-            'domain': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('deviceID', 'string', True, (
+            )),
+            ('domain', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/utilities/cloud-init/templates'): {
-        "body_required": ['meta', 'name', 'networkConfig', 'user'],
-        "body": {
-            'meta': 'string',
-            'name': 'string',
-            'networkConfig': 'string',
-            'user': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('meta', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('networkConfig', 'string', True, (
+            )),
+            ('user', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/vm/{rid}/networks'): {
-        "body_required": ['emulation', 'switchName'],
-        "body": {
-            'emulation': 'string',
-            'macId': 'integer',
-            'switchName': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('emulation', 'string', True, (
+            )),
+            ('switchName', 'string', True, (
+            )),
+            ('macId', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/vm/{rid}/storage'): {
-        "body_required": ['attachType', 'emulation', 'storageType'],
-        "body": {
-            'attachType': 'value',
-            'bootOrder': 'integer',
-            'dataset': 'string',
-            'downloadUUID': 'string',
-            'emulation': 'value',
-            'filesystemTarget': 'string',
-            'name': 'string',
-            'pool': 'string',
-            'rawPath': 'string',
-            'readOnly': 'boolean',
-            'recordSize': 'integer',
-            'size': 'integer',
-            'storageType': 'value',
-            'volBlockSize': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('attachType', 'value', True, (
+            )),
+            ('emulation', 'value', True, (
+            )),
+            ('storageType', 'value', True, (
+            )),
+            ('bootOrder', 'integer', False, (
+            )),
+            ('dataset', 'string', False, (
+            )),
+            ('downloadUUID', 'string', False, (
+            )),
+            ('filesystemTarget', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('pool', 'string', False, (
+            )),
+            ('rawPath', 'string', False, (
+            )),
+            ('readOnly', 'boolean', False, (
+            )),
+            ('recordSize', 'integer', False, (
+            )),
+            ('size', 'integer', False, (
+            )),
+            ('volBlockSize', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/vm/{rid}/storage/from-image'): {
-        "body_required": ['downloadUUID', 'emulation', 'name', 'pool', 'storageType'],
-        "body": {
-            'bootOrder': 'integer',
-            'downloadUUID': 'string',
-            'emulation': 'value',
-            'name': 'string',
-            'pool': 'string',
-            'recordSize': 'integer',
-            'size': 'integer',
-            'storageType': 'value',
-            'volBlockSize': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('downloadUUID', 'string', True, (
+            )),
+            ('emulation', 'value', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('pool', 'string', True, (
+            )),
+            ('storageType', 'value', True, (
+            )),
+            ('bootOrder', 'integer', False, (
+            )),
+            ('recordSize', 'integer', False, (
+            )),
+            ('size', 'integer', False, (
+            )),
+            ('volBlockSize', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/zfs/datasets/snapshot/periodic'): {
-        "body_required": ['guid', 'prefix'],
-        "body": {
-            'cronExpr': 'string',
-            'guid': 'string',
-            'interval': 'integer',
-            'keepDaily': 'integer',
-            'keepHourly': 'integer',
-            'keepLast': 'integer',
-            'keepMonthly': 'integer',
-            'keepWeekly': 'integer',
-            'keepYearly': 'integer',
-            'maxAgeDays': 'integer',
-            'prefix': 'string',
-            'recursive': 'boolean',
-            'retentionType': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('guid', 'string', True, (
+            )),
+            ('prefix', 'string', True, (
+            )),
+            ('cronExpr', 'string', False, (
+            )),
+            ('interval', 'integer', False, (
+            )),
+            ('keepDaily', 'integer', False, (
+            )),
+            ('keepHourly', 'integer', False, (
+            )),
+            ('keepLast', 'integer', False, (
+            )),
+            ('keepMonthly', 'integer', False, (
+            )),
+            ('keepWeekly', 'integer', False, (
+            )),
+            ('keepYearly', 'integer', False, (
+            )),
+            ('maxAgeDays', 'integer', False, (
+            )),
+            ('recursive', 'boolean', False, (
+            )),
+            ('retentionType', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/zfs/datasets/volume/{guid}/flash'): {
-        "body_required": ['uuid'],
-        "body": {
-            'uuid': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('uuid', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/zfs/pools'): {
-        "body_required": ['name'],
-        "body": {
-            'createForce': 'boolean',
-            'mountpoint': 'string',
-            'name': 'string',
-            'properties': 'object',
-            'spares': 'array of string',
-            'vdevs': 'array of object {devices: array of string, name: string, raidType: RaidType, type: VdevType}',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('name', 'string', True, (
+            )),
+            ('createForce', 'boolean', False, (
+            )),
+            ('mountpoint', 'string', False, (
+            )),
+            ('properties', 'object', False, (
+            )),
+            ('spares', 'array of string', False, (
+            )),
+            ('vdevs', 'array of object', False, (
+                ('devices', 'array of string', False, ()),
+                ('name', 'string', False, ()),
+                ('raidType', 'RaidType', False, ()),
+                ('type', 'VdevType', False, ()),
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/zfs/pools/{guid}/detach'): {
-        "body_required": ['device'],
-        "body": {
-            'device': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('device', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('POST', '/zfs/pools/{guid}/replace-device'): {
-        "body_required": ['new', 'old'],
-        "body": {
-            'new': 'string',
-            'old': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('new', 'string', True, (
+            )),
+            ('old', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/auth/groups/{groupId}/members'): {
-        "body_required": ['usernames'],
-        "body": {
-            'usernames': 'array of string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('usernames', 'array of string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/auth/users/{userId}'): {
-        "body_required": ['admin'],
-        "body": {
-            'admin': 'boolean',
-            'auxGroupIds': 'array of integer',
-            'confirmGuestActions': 'boolean',
-            'disablePassword': 'boolean',
-            'doasEnabled': 'boolean',
-            'email': 'string',
-            'fullName': 'string',
-            'homeDirPerms': 'integer',
-            'homeDirectory': 'string',
-            'locked': 'boolean',
-            'newPrimaryGroup': 'boolean',
-            'password': 'string',
-            'primaryGroupId': 'integer',
-            'sambaAction': 'string',
-            'shell': 'string',
-            'sshPublicKey': 'string',
-            'uid': 'integer',
-            'username': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('admin', 'boolean', True, (
+            )),
+            ('auxGroupIds', 'array of integer', False, (
+            )),
+            ('confirmGuestActions', 'boolean', False, (
+            )),
+            ('disablePassword', 'boolean', False, (
+            )),
+            ('doasEnabled', 'boolean', False, (
+            )),
+            ('email', 'string', False, (
+            )),
+            ('fullName', 'string', False, (
+            )),
+            ('homeDirPerms', 'integer', False, (
+            )),
+            ('homeDirectory', 'string', False, (
+            )),
+            ('locked', 'boolean', False, (
+            )),
+            ('newPrimaryGroup', 'boolean', False, (
+            )),
+            ('password', 'string', False, (
+            )),
+            ('primaryGroupId', 'integer', False, (
+            )),
+            ('sambaAction', 'string', False, (
+            )),
+            ('shell', 'string', False, (
+            )),
+            ('sshPublicKey', 'string', False, (
+            )),
+            ('uid', 'integer', False, (
+            )),
+            ('username', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/cluster/backups/jobs/{id}'): {
-        "body_required": ['mode', 'name', 'targetId'],
-        "body": {
-            'cronExpr': 'string',
-            'enabled': 'boolean',
-            'encrypted': 'boolean',
-            'jailRootDataset': 'string',
-            'mode': 'string',
-            'name': 'string',
-            'pruneKeepLast': 'integer',
-            'pruneTarget': 'boolean',
-            'recursive': 'boolean',
-            'runnerNodeId': 'string',
-            'sourceDataset': 'string',
-            'stopBeforeBackup': 'boolean',
-            'targetId': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('mode', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('targetId', 'integer', True, (
+            )),
+            ('cronExpr', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('encrypted', 'boolean', False, (
+            )),
+            ('jailRootDataset', 'string', False, (
+            )),
+            ('pruneKeepLast', 'integer', False, (
+            )),
+            ('pruneTarget', 'boolean', False, (
+            )),
+            ('recursive', 'boolean', False, (
+            )),
+            ('runnerNodeId', 'string', False, (
+            )),
+            ('sourceDataset', 'string', False, (
+            )),
+            ('stopBeforeBackup', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/cluster/backups/targets/{id}'): {
-        "body_required": ['backupRoot', 'name', 'sshHost'],
-        "body": {
-            'backupRoot': 'string',
-            'createBackupRoot': 'boolean',
-            'description': 'string',
-            'enabled': 'boolean',
-            'id': 'integer',
-            'name': 'string',
-            'sshHost': 'string',
-            'sshKey': 'string',
-            'sshPort': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('backupRoot', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('sshHost', 'string', True, (
+            )),
+            ('createBackupRoot', 'boolean', False, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('id', 'integer', False, (
+            )),
+            ('sshKey', 'string', False, (
+            )),
+            ('sshPort', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/cluster/notes/{id}'): {
-        "body_required": ['content', 'title'],
-        "body": {
-            'content': 'string',
-            'title': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('content', 'string', True, (
+            )),
+            ('title', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/cluster/replication/policies/{id}'): {
-        "body_required": ['guestId', 'guestType', 'name', 'targets'],
-        "body": {
-            'crashRecovery': 'boolean',
-            'crashRestartMax': 'integer',
-            'cronExpr': 'string',
-            'description': 'string',
-            'enabled': 'boolean',
-            'failbackMode': 'string',
-            'failoverMode': 'string',
-            'guestId': 'integer',
-            'guestType': 'string',
-            'name': 'string',
-            'poolCapacityPct': 'integer',
-            'poolHealthCheck': 'boolean',
-            'sourceMode': 'string',
-            'sourceNodeId': 'string',
-            'targets': 'array of object {nodeId: string, weight: integer}',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('guestId', 'integer', True, (
+            )),
+            ('guestType', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('targets', 'array of object', True, (
+                ('nodeId', 'string', True, ()),
+                ('weight', 'integer', False, ()),
+            )),
+            ('crashRecovery', 'boolean', False, (
+            )),
+            ('crashRestartMax', 'integer', False, (
+            )),
+            ('cronExpr', 'string', False, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('failbackMode', 'string', False, (
+            )),
+            ('failoverMode', 'string', False, (
+            )),
+            ('poolCapacityPct', 'integer', False, (
+            )),
+            ('poolHealthCheck', 'boolean', False, (
+            )),
+            ('sourceMode', 'string', False, (
+            )),
+            ('sourceNodeId', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/disk/smart/self-test/schedules/{id}'): {
-        "body_required": ['cronExpr', 'device', 'testType'],
-        "body": {
-            'cronExpr': 'string',
-            'device': 'string',
-            'enabled': 'boolean',
-            'testType': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('cronExpr', 'string', True, (
+            )),
+            ('device', 'string', True, (
+            )),
+            ('testType', 'string', True, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/dynamic-dns/entries/{id}'): {
-        "body_required": [],
-        "body": {
-            'enabled': 'boolean',
-            'hostname': 'string',
-            'intervalMinutes': 'integer',
-            'provider': 'string',
-            'providerSettings': 'object',
-            'recordType': 'string',
-            'sourceSettings': 'object',
-            'sourceType': 'string',
-            'token': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', False, (
+            )),
+            ('hostname', 'string', False, (
+            )),
+            ('intervalMinutes', 'integer', False, (
+            )),
+            ('provider', 'string', False, (
+            )),
+            ('providerSettings', 'object', False, (
+            )),
+            ('recordType', 'string', False, (
+            )),
+            ('sourceSettings', 'object', False, (
+            )),
+            ('sourceType', 'string', False, (
+            )),
+            ('token', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/info/notes/{id}'): {
-        "body_required": ['content', 'title'],
-        "body": {
-            'content': 'string',
-            'title': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('content', 'string', True, (
+            )),
+            ('title', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/iscsi/initiators/{id}'): {
-        "body_required": [],
-        "body": {
-            'authMethod': 'string',
-            'chapName': 'string',
-            'chapSecret': 'string',
-            'initiatorName': 'string',
-            'nickname': 'string',
-            'targetAddress': 'string',
-            'targetName': 'string',
-            'tgtChapName': 'string',
-            'tgtChapSecret': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('authMethod', 'string', False, (
+            )),
+            ('chapName', 'string', False, (
+            )),
+            ('chapSecret', 'string', False, (
+            )),
+            ('initiatorName', 'string', False, (
+            )),
+            ('nickname', 'string', False, (
+            )),
+            ('targetAddress', 'string', False, (
+            )),
+            ('targetName', 'string', False, (
+            )),
+            ('tgtChapName', 'string', False, (
+            )),
+            ('tgtChapSecret', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/iscsi/targets/{targetId}'): {
-        "body_required": [],
-        "body": {
-            'alias': 'string',
-            'authMethod': 'string',
-            'chapName': 'string',
-            'chapSecret': 'string',
-            'mutualChapName': 'string',
-            'mutualChapSecret': 'string',
-            'targetName': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('alias', 'string', False, (
+            )),
+            ('authMethod', 'string', False, (
+            )),
+            ('chapName', 'string', False, (
+            )),
+            ('chapSecret', 'string', False, (
+            )),
+            ('mutualChapName', 'string', False, (
+            )),
+            ('mutualChapSecret', 'string', False, (
+            )),
+            ('targetName', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/hardware/cpu'): {
-        "body_required": ['cores'],
-        "body": {
-            'cores': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('cores', 'integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/hardware/ram'): {
-        "body_required": ['memory'],
-        "body": {
-            'memory': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('memory', 'integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/hardware/resource-limits'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/network/inheritance'): {
-        "body_required": ['ipv4', 'ipv6'],
-        "body": {
-            'ipv4': 'boolean',
-            'ipv6': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ipv4', 'boolean', True, (
+            )),
+            ('ipv6', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/additional-options'): {
-        "body_required": ['additionalOptions'],
-        "body": {
-            'additionalOptions': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('additionalOptions', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/allowed-options'): {
-        "body_required": ['allowedOptions'],
-        "body": {
-            'allowedOptions': 'array of string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('allowedOptions', 'array of string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/boot-order'): {
-        "body_required": ['bootOrder', 'startAtBoot'],
-        "body": {
-            'bootOrder': 'integer',
-            'startAtBoot': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('bootOrder', 'integer', True, (
+            )),
+            ('startAtBoot', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/devfs-rules'): {
-        "body_required": ['devFSRules'],
-        "body": {
-            'devFSRules': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('devFSRules', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/execution-timeout'): {
-        "body_required": ['execTimeout'],
-        "body": {
-            'execTimeout': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('execTimeout', 'integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/fstab'): {
-        "body_required": ['fstab'],
-        "body": {
-            'fstab': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('fstab', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/lifecycle-hooks'): {
-        "body_required": ['hooks'],
-        "body": {
-            'hooks': 'object {poststart: object {enabled: boolean, script: string}, poststop: object {enabled: boolean, script: string}, prestart: object {enabled: boolean, script: string}, prestop: object {enabled: boolean, script: string}, start: object {enabled: boolean, script: string}, stop: object {enabled: boolean, script: string}}',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('hooks', 'object', True, (
+                ('poststart', 'object', True, (('enabled', 'boolean', True, ()), ('script', 'string', True, ()))),
+                ('poststop', 'object', True, (('enabled', 'boolean', True, ()), ('script', 'string', True, ()))),
+                ('prestart', 'object', True, (('enabled', 'boolean', True, ()), ('script', 'string', True, ()))),
+                ('prestop', 'object', True, (('enabled', 'boolean', True, ()), ('script', 'string', True, ()))),
+                ('start', 'object', True, (('enabled', 'boolean', True, ()), ('script', 'string', True, ()))),
+                ('stop', 'object', True, (('enabled', 'boolean', True, ()), ('script', 'string', True, ()))),
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/metadata'): {
-        "body_required": ['env', 'metadata'],
-        "body": {
-            'env': 'string',
-            'metadata': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('env', 'string', True, (
+            )),
+            ('metadata', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/resolv-conf'): {
-        "body_required": ['resolvConf'],
-        "body": {
-            'resolvConf': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('resolvConf', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/jail/{ctid}/options/wol'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/mdns/config'): {
-        "body_required": [],
-        "body": {
-            'hostname': 'string',
-            'interfaces': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('hostname', 'string', False, (
+            )),
+            ('interfaces', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/mdns/records/{id}'): {
-        "body_required": [],
-        "body": {
-            'interfaces': 'string',
-            'name': 'string',
-            'port': 'integer',
-            'txt': 'object',
-            'type': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('interfaces', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('port', 'integer', False, (
+            )),
+            ('txt', 'object', False, (
+            )),
+            ('type', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/dhcp/config'): {
-        "body_required": [],
-        "body": {
-            'dnsServers': 'array of string',
-            'domain': 'string',
-            'expandHosts': 'boolean',
-            'manualSwitches': 'array of integer',
-            'standardSwitches': 'array of integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('dnsServers', 'array of string', False, (
+            )),
+            ('domain', 'string', False, (
+            )),
+            ('expandHosts', 'boolean', False, (
+            )),
+            ('manualSwitches', 'array of integer', False, (
+            )),
+            ('standardSwitches', 'array of integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/dhcp/lease/{id}'): {
-        "body_required": ['dhcpRangeId'],
-        "body": {
-            'comments': 'string',
-            'dhcpRangeId': 'integer',
-            'duidId': 'integer',
-            'hostname': 'string',
-            'ipId': 'integer',
-            'ipRaw': 'string',
-            'macId': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('dhcpRangeId', 'integer', True, (
+            )),
+            ('comments', 'string', False, (
+            )),
+            ('duidId', 'integer', False, (
+            )),
+            ('hostname', 'string', False, (
+            )),
+            ('ipId', 'integer', False, (
+            )),
+            ('ipRaw', 'string', False, (
+            )),
+            ('macId', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/dhcp/range/{id}'): {
-        "body_required": ['expiry', 'type'],
-        "body": {
-            'endIp': 'string',
-            'expiry': 'integer',
-            'manualSwitch': 'integer',
-            'raOnly': 'boolean',
-            'slaac': 'boolean',
-            'standardSwitch': 'integer',
-            'startIp': 'string',
-            'type': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('expiry', 'integer', True, (
+            )),
+            ('type', 'string', True, (
+            )),
+            ('endIp', 'string', False, (
+            )),
+            ('manualSwitch', 'integer', False, (
+            )),
+            ('raOnly', 'boolean', False, (
+            )),
+            ('slaac', 'boolean', False, (
+            )),
+            ('standardSwitch', 'integer', False, (
+            )),
+            ('startIp', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/firewall/advanced'): {
-        "body_required": [],
-        "body": {
-            'postNatDecl': 'string',
-            'postRules': 'string',
-            'postTrafficAnchor': 'string',
-            'preNatDecl': 'string',
-            'preRules': 'string',
-            'preTrafficAnchor': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('postNatDecl', 'string', False, (
+            )),
+            ('postRules', 'string', False, (
+            )),
+            ('postTrafficAnchor', 'string', False, (
+            )),
+            ('preNatDecl', 'string', False, (
+            )),
+            ('preRules', 'string', False, (
+            )),
+            ('preTrafficAnchor', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/firewall/nat/reorder'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/firewall/nat/{id}'): {
-        "body_required": ['egressInterfaces', 'family', 'ingressInterfaces', 'name', 'natType', 'protocol'],
-        "body": {
-            'description': 'string',
-            'destObjId': 'integer',
-            'destRaw': 'string',
-            'dnatTargetObjId': 'integer',
-            'dnatTargetRaw': 'string',
-            'dstPortObjId': 'integer',
-            'dstPortsRaw': 'string',
-            'egressInterfaces': 'array of string',
-            'enabled': 'boolean',
-            'family': 'string',
-            'ingressInterfaces': 'array of string',
-            'log': 'boolean',
-            'name': 'string',
-            'natType': 'string',
-            'passRedirectedTraffic': 'boolean',
-            'policyRouteGateway': 'string',
-            'policyRoutingEnabled': 'boolean',
-            'priority': 'integer',
-            'protocol': 'string',
-            'redirectPortObjId': 'integer',
-            'redirectPortsRaw': 'string',
-            'sourceObjId': 'integer',
-            'sourceRaw': 'string',
-            'targetAddressScope': 'string',
-            'targetHandling': 'string',
-            'translateMode': 'string',
-            'translateToObjId': 'integer',
-            'translateToRaw': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('egressInterfaces', 'array of string', True, (
+            )),
+            ('family', 'string', True, (
+            )),
+            ('ingressInterfaces', 'array of string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('natType', 'string', True, (
+            )),
+            ('protocol', 'string', True, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('destObjId', 'integer', False, (
+            )),
+            ('destRaw', 'string', False, (
+            )),
+            ('dnatTargetObjId', 'integer', False, (
+            )),
+            ('dnatTargetRaw', 'string', False, (
+            )),
+            ('dstPortObjId', 'integer', False, (
+            )),
+            ('dstPortsRaw', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('log', 'boolean', False, (
+            )),
+            ('passRedirectedTraffic', 'boolean', False, (
+            )),
+            ('policyRouteGateway', 'string', False, (
+            )),
+            ('policyRoutingEnabled', 'boolean', False, (
+            )),
+            ('priority', 'integer', False, (
+            )),
+            ('redirectPortObjId', 'integer', False, (
+            )),
+            ('redirectPortsRaw', 'string', False, (
+            )),
+            ('sourceObjId', 'integer', False, (
+            )),
+            ('sourceRaw', 'string', False, (
+            )),
+            ('targetAddressScope', 'string', False, (
+            )),
+            ('targetHandling', 'string', False, (
+            )),
+            ('translateMode', 'string', False, (
+            )),
+            ('translateToObjId', 'integer', False, (
+            )),
+            ('translateToRaw', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/firewall/traffic/reorder'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/firewall/traffic/{id}'): {
-        "body_required": ['egressInterfaces', 'icmpTypes', 'ingressInterfaces', 'name'],
-        "body": {
-            'action': 'string',
-            'blockResponse': 'string',
-            'description': 'string',
-            'destObjId': 'integer',
-            'destRaw': 'string',
-            'direction': 'string',
-            'dstPortObjId': 'integer',
-            'dstPortsRaw': 'string',
-            'egressInterfaces': 'array of string',
-            'enabled': 'boolean',
-            'family': 'string',
-            'icmpTypes': 'array of string',
-            'ingressInterfaces': 'array of string',
-            'kind': 'string',
-            'log': 'boolean',
-            'name': 'string',
-            'priority': 'integer',
-            'protocol': 'string',
-            'quick': 'boolean',
-            'rawPF': 'string',
-            'sourceObjId': 'integer',
-            'sourceRaw': 'string',
-            'srcPortObjId': 'integer',
-            'srcPortsRaw': 'string',
-            'statePolicy': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('egressInterfaces', 'array of string', True, (
+            )),
+            ('icmpTypes', 'array of string', True, (
+            )),
+            ('ingressInterfaces', 'array of string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('action', 'string', False, (
+            )),
+            ('blockResponse', 'string', False, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('destObjId', 'integer', False, (
+            )),
+            ('destRaw', 'string', False, (
+            )),
+            ('direction', 'string', False, (
+            )),
+            ('dstPortObjId', 'integer', False, (
+            )),
+            ('dstPortsRaw', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('family', 'string', False, (
+            )),
+            ('kind', 'string', False, (
+            )),
+            ('log', 'boolean', False, (
+            )),
+            ('priority', 'integer', False, (
+            )),
+            ('protocol', 'string', False, (
+            )),
+            ('quick', 'boolean', False, (
+            )),
+            ('rawPF', 'string', False, (
+            )),
+            ('sourceObjId', 'integer', False, (
+            )),
+            ('sourceRaw', 'string', False, (
+            )),
+            ('srcPortObjId', 'integer', False, (
+            )),
+            ('srcPortsRaw', 'string', False, (
+            )),
+            ('statePolicy', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/object/{id}'): {
-        "body_required": ['name', 'type', 'values'],
-        "body": {
-            'name': 'string',
-            'type': 'string',
-            'values': 'array of string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('name', 'string', True, (
+            )),
+            ('type', 'string', True, (
+            )),
+            ('values', 'array of string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/route/{id}'): {
-        "body_required": ['destinationType', 'family', 'name', 'nextHopMode'],
-        "body": {
-            'description': 'string',
-            'destination': 'string',
-            'destinationObjId': 'integer',
-            'destinationRaw': 'string',
-            'destinationType': 'string',
-            'enabled': 'boolean',
-            'family': 'string',
-            'fib': 'integer',
-            'gateway': 'string',
-            'gatewayObjId': 'integer',
-            'gatewayRaw': 'string',
-            'gatewayZone': 'string',
-            'interface': 'string',
-            'name': 'string',
-            'nextHopMode': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('destinationType', 'string', True, (
+            )),
+            ('family', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('nextHopMode', 'string', True, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('destination', 'string', False, (
+            )),
+            ('destinationObjId', 'integer', False, (
+            )),
+            ('destinationRaw', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('fib', 'integer', False, (
+            )),
+            ('gateway', 'string', False, (
+            )),
+            ('gatewayObjId', 'integer', False, (
+            )),
+            ('gatewayRaw', 'string', False, (
+            )),
+            ('gatewayZone', 'string', False, (
+            )),
+            ('interface', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/switch/standard/{id}'): {
-        "body_required": ['private'],
-        "body": {
-            'addresses4': 'array of object {cidr: string, objectId: integer}',
-            'addresses6': 'array of object {cidr: string, objectId: integer}',
-            'bridgeMac': 'object {macObjectId: integer, mode: string, port: string}',
-            'confirmHostLayer3Removal': 'boolean',
-            'confirmRCConflicts': 'boolean',
-            'defaultAccessVlan': 'integer',
-            'defaultRoute': 'boolean',
-            'defaultRoute6': 'boolean',
-            'dhcp': 'boolean',
-            'disableBridgeOffloads': 'boolean',
-            'disableIPv6': 'boolean',
-            'gateway4': 'integer',
-            'gateway4Manual': 'string',
-            'gateway6': 'integer',
-            'gateway6Manual': 'string',
-            'hostVlan': 'integer',
-            'mtu': 'integer',
-            'network4': 'integer',
-            'network4Manual': 'string',
-            'network6': 'integer',
-            'network6Manual': 'string',
-            'portPolicies': 'object',
-            'ports': 'array of string',
-            'private': 'boolean',
-            'slaac': 'boolean',
-            'vlan': 'integer',
-            'vlanFiltering': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('private', 'boolean', True, (
+            )),
+            ('addresses4', 'array of object', False, (
+                ('cidr', 'string', False, ()),
+                ('objectId', 'integer', False, ()),
+            )),
+            ('addresses6', 'array of object', False, (
+                ('cidr', 'string', False, ()),
+                ('objectId', 'integer', False, ()),
+            )),
+            ('bridgeMac', 'object', False, (
+                ('macObjectId', 'integer', False, ()),
+                ('mode', 'string', False, ()),
+                ('port', 'string', False, ()),
+            )),
+            ('confirmHostLayer3Removal', 'boolean', False, (
+            )),
+            ('confirmRCConflicts', 'boolean', False, (
+            )),
+            ('defaultAccessVlan', 'integer', False, (
+            )),
+            ('defaultRoute', 'boolean', False, (
+            )),
+            ('defaultRoute6', 'boolean', False, (
+            )),
+            ('dhcp', 'boolean', False, (
+            )),
+            ('disableBridgeOffloads', 'boolean', False, (
+            )),
+            ('disableIPv6', 'boolean', False, (
+            )),
+            ('gateway4', 'integer', False, (
+            )),
+            ('gateway4Manual', 'string', False, (
+            )),
+            ('gateway6', 'integer', False, (
+            )),
+            ('gateway6Manual', 'string', False, (
+            )),
+            ('hostVlan', 'integer', False, (
+            )),
+            ('mtu', 'integer', False, (
+            )),
+            ('network4', 'integer', False, (
+            )),
+            ('network4Manual', 'string', False, (
+            )),
+            ('network6', 'integer', False, (
+            )),
+            ('network6Manual', 'string', False, (
+            )),
+            ('portPolicies', 'object', False, (
+            )),
+            ('ports', 'array of string', False, (
+            )),
+            ('slaac', 'boolean', False, (
+            )),
+            ('vlan', 'integer', False, (
+            )),
+            ('vlanFiltering', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/wireguard/clients/{clientId}'): {
-        "body_required": ['addresses', 'allowedIPs', 'endpointHost', 'endpointPort', 'name', 'peerPublicKey', 'privateKey'],
-        "body": {
-            'addresses': 'array of string',
-            'allowedIPs': 'array of string',
-            'enabled': 'boolean',
-            'endpointHost': 'string',
-            'endpointPort': 'integer',
-            'fib': 'integer',
-            'listenPort': 'integer',
-            'metric': 'integer',
-            'mtu': 'integer',
-            'name': 'string',
-            'peerPublicKey': 'string',
-            'persistentKeepalive': 'boolean',
-            'preSharedKey': 'string',
-            'privateKey': 'string',
-            'routeAllowedIPs': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('addresses', 'array of string', True, (
+            )),
+            ('allowedIPs', 'array of string', True, (
+            )),
+            ('endpointHost', 'string', True, (
+            )),
+            ('endpointPort', 'integer', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('peerPublicKey', 'string', True, (
+            )),
+            ('privateKey', 'string', True, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('fib', 'integer', False, (
+            )),
+            ('listenPort', 'integer', False, (
+            )),
+            ('metric', 'integer', False, (
+            )),
+            ('mtu', 'integer', False, (
+            )),
+            ('persistentKeepalive', 'boolean', False, (
+            )),
+            ('preSharedKey', 'string', False, (
+            )),
+            ('routeAllowedIPs', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/wireguard/server'): {
-        "body_required": ['port'],
-        "body": {
-            'addresses': 'array of string',
-            'allowWireGuardPort': 'boolean',
-            'masqueradeIPv4Interface': 'string',
-            'masqueradeIPv6Interface': 'string',
-            'mtu': 'integer',
-            'port': 'integer',
-            'privateKey': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('port', 'integer', True, (
+            )),
+            ('addresses', 'array of string', False, (
+            )),
+            ('allowWireGuardPort', 'boolean', False, (
+            )),
+            ('masqueradeIPv4Interface', 'string', False, (
+            )),
+            ('masqueradeIPv6Interface', 'string', False, (
+            )),
+            ('mtu', 'integer', False, (
+            )),
+            ('privateKey', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/network/wireguard/server/peer/{peerId}'): {
-        "body_required": ['clientIPs', 'name'],
-        "body": {
-            'clientIPs': 'array of string',
-            'enabled': 'boolean',
-            'name': 'string',
-            'persistentKeepalive': 'boolean',
-            'preSharedKey': 'string',
-            'privateKey': 'string',
-            'routableIPs': 'array of string',
-            'routeIPs': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('clientIPs', 'array of string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('persistentKeepalive', 'boolean', False, (
+            )),
+            ('preSharedKey', 'string', False, (
+            )),
+            ('privateKey', 'string', False, (
+            )),
+            ('routableIPs', 'array of string', False, (
+            )),
+            ('routeIPs', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/notifications/rules'): {
-        "body_required": [],
-        "body": {
-            'rules': 'array of object {discordEnabled: boolean, emailEnabled: boolean, id: integer, kind: string, ntfyEnabled: boolean, pool: string, pushoverEnabled: boolean, targetKey: string, templateKey: string, uiEnabled: boolean}',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('rules', 'array of object', False, (
+                ('discordEnabled', 'boolean', False, ()),
+                ('emailEnabled', 'boolean', False, ()),
+                ('id', 'integer', False, ()),
+                ('kind', 'string', False, ()),
+                ('ntfyEnabled', 'boolean', False, ()),
+                ('pool', 'string', False, ()),
+                ('pushoverEnabled', 'boolean', False, ()),
+                ('targetKey', 'string', False, ()),
+                ('templateKey', 'string', False, ()),
+                ('uiEnabled', 'boolean', False, ()),
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/notifications/rules/{id}'): {
-        "body_required": [],
-        "body": {
-            'config': 'string',
-            'discordEnabled': 'boolean',
-            'emailEnabled': 'boolean',
-            'ntfyEnabled': 'boolean',
-            'pushoverEnabled': 'boolean',
-            'uiEnabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('config', 'string', False, (
+            )),
+            ('discordEnabled', 'boolean', False, (
+            )),
+            ('emailEnabled', 'boolean', False, (
+            )),
+            ('ntfyEnabled', 'boolean', False, (
+            )),
+            ('pushoverEnabled', 'boolean', False, (
+            )),
+            ('uiEnabled', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/notifications/transports/{id}'): {
-        "body_required": [],
-        "body": {
-            'discord': 'object {webhookUrl: string}',
-            'email': 'object {recipients: array of string, smtpFrom: string, smtpHost: string, smtpPassword: string, smtpPort: integer, smtpUseTls: boolean, smtpUsername: string}',
-            'enabled': 'boolean',
-            'name': 'string',
-            'ntfy': 'object {authToken: string, baseUrl: string, topic: string}',
-            'pushover': 'object {apiToken: string, userKey: string}',
-            'type': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('discord', 'object', False, (
+                ('webhookUrl', 'string', False, ()),
+            )),
+            ('email', 'object', False, (
+                ('recipients', 'array of string', False, ()),
+                ('smtpFrom', 'string', False, ()),
+                ('smtpHost', 'string', False, ()),
+                ('smtpPassword', 'string', False, ()),
+                ('smtpPort', 'integer', False, ()),
+                ('smtpUseTls', 'boolean', False, ()),
+                ('smtpUsername', 'string', False, ()),
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('ntfy', 'object', False, (
+                ('authToken', 'string', False, ()),
+                ('baseUrl', 'string', False, ()),
+                ('topic', 'string', False, ()),
+            )),
+            ('pushover', 'object', False, (
+                ('apiToken', 'string', False, ()),
+                ('userKey', 'string', False, ()),
+            )),
+            ('type', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/samba/config'): {
-        "body_required": [],
-        "body": {
-            'advertiseMdns': 'boolean',
-            'appleExtensions': 'boolean',
-            'bindInterfacesOnly': 'boolean',
-            'extraGlobalConfig': 'string',
-            'interfaces': 'string',
-            'serverString': 'string',
-            'unixCharset': 'string',
-            'workgroup': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('advertiseMdns', 'boolean', False, (
+            )),
+            ('appleExtensions', 'boolean', False, (
+            )),
+            ('bindInterfacesOnly', 'boolean', False, (
+            )),
+            ('extraGlobalConfig', 'string', False, (
+            )),
+            ('interfaces', 'string', False, (
+            )),
+            ('serverString', 'string', False, (
+            )),
+            ('unixCharset', 'string', False, (
+            )),
+            ('workgroup', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/samba/shares/{id}'): {
-        "body_required": [],
-        "body": {
-            'auditEnabled': 'boolean',
-            'auditRetentionDays': 'integer',
-            'auditedOperations': 'array of string',
-            'createMask': 'string',
-            'dataset': 'string',
-            'directoryMask': 'string',
-            'enabled': 'boolean',
-            'extraShareConfig': 'string',
-            'guest': 'object {enabled: boolean, writeable: boolean}',
-            'name': 'string',
-            'permissions': 'object {read: object {directorySids: array of string, groupIds: array of integer, userIds: array of integer}, write: object {directorySids: array of string, groupIds: array of integer, userIds: array of integer}}',
-            'timeMachine': 'boolean',
-            'timeMachineMaxSize': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('auditEnabled', 'boolean', False, (
+            )),
+            ('auditRetentionDays', 'integer', False, (
+            )),
+            ('auditedOperations', 'array of string', False, (
+            )),
+            ('createMask', 'string', False, (
+            )),
+            ('dataset', 'string', False, (
+            )),
+            ('directoryMask', 'string', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('extraShareConfig', 'string', False, (
+            )),
+            ('guest', 'object', False, (
+                ('enabled', 'boolean', False, ()),
+                ('writeable', 'boolean', False, ()),
+            )),
+            ('name', 'string', False, (
+            )),
+            ('permissions', 'object', False, (
+                ('read', 'object', False, (('directorySids', 'array of string', False, ()), ('groupIds', 'array of integer', False, ()), ('userIds', 'array of integer', False, ()))),
+                ('write', 'object', False, (('directorySids', 'array of string', False, ()), ('groupIds', 'array of integer', False, ()), ('userIds', 'array of integer', False, ()))),
+            )),
+            ('timeMachine', 'boolean', False, (
+            )),
+            ('timeMachineMaxSize', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/samba/shares/{id}/enabled'): {
-        "body_required": [],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/system/basic-settings/pools'): {
-        "body_required": [],
-        "body": {
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/system/tunables'): {
-        "body_required": ['name', 'value'],
-        "body": {
-            'name': 'string',
-            'value': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('name', 'string', True, (
+            )),
+            ('value', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/utilities/cloud-init/templates/{templateId}'): {
-        "body_required": ['meta', 'name', 'networkConfig', 'user'],
-        "body": {
-            'meta': 'string',
-            'name': 'string',
-            'networkConfig': 'string',
-            'user': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('meta', 'string', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('networkConfig', 'string', True, (
+            )),
+            ('user', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/hardware/cpu'): {
-        "body_required": ['cpuCores', 'cpuSockets', 'cpuThreads'],
-        "body": {
-            'cpuCores': 'integer',
-            'cpuPinning': 'array of object {cores: array of integer, socket: integer}',
-            'cpuSockets': 'integer',
-            'cpuThreads': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('cpuCores', 'integer', True, (
+            )),
+            ('cpuSockets', 'integer', True, (
+            )),
+            ('cpuThreads', 'integer', True, (
+            )),
+            ('cpuPinning', 'array of object', False, (
+                ('cores', 'array of integer', True, ()),
+                ('socket', 'integer', True, ()),
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/hardware/pci-devices'): {
-        "body_required": ['pciDevices'],
-        "body": {
-            'pciDevices': 'array of integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('pciDevices', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/hardware/ram'): {
-        "body_required": ['ram'],
-        "body": {
-            'ram': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ram', 'integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/hardware/vnc'): {
-        "body_required": ['vncEnabled', 'vncResolution', 'vncWait'],
-        "body": {
-            'vncBind': 'string',
-            'vncEnabled': 'boolean',
-            'vncPassword': 'string',
-            'vncPort': 'integer',
-            'vncResolution': 'string',
-            'vncWait': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('vncEnabled', 'boolean', True, (
+            )),
+            ('vncResolution', 'string', True, (
+            )),
+            ('vncWait', 'boolean', True, (
+            )),
+            ('vncBind', 'string', False, (
+            )),
+            ('vncPassword', 'string', False, (
+            )),
+            ('vncPort', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/boot-order'): {
-        "body_required": ['bootOrder', 'startAtBoot'],
-        "body": {
-            'bootOrder': 'integer',
-            'startAtBoot': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('bootOrder', 'integer', True, (
+            )),
+            ('startAtBoot', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/boot-rom'): {
-        "body_required": ['bootRom'],
-        "body": {
-            'bootRom': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('bootRom', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/clock'): {
-        "body_required": ['timeOffset'],
-        "body": {
-            'timeOffset': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('timeOffset', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/cloud-init'): {
-        "body_required": ['data', 'metadata', 'networkConfig'],
-        "body": {
-            'data': 'string',
-            'metadata': 'string',
-            'networkConfig': 'string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('data', 'string', True, (
+            )),
+            ('metadata', 'string', True, (
+            )),
+            ('networkConfig', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/extra-bhyve-options'): {
-        "body_required": ['extraBhyveOptions'],
-        "body": {
-            'extraBhyveOptions': 'array of string',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('extraBhyveOptions', 'array of string', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/ignore-umsrs'): {
-        "body_required": ['ignoreUMSRs'],
-        "body": {
-            'ignoreUMSRs': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('ignoreUMSRs', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/qemu-guest-agent'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/serial-console'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/shutdown-wait-time'): {
-        "body_required": ['waitTime'],
-        "body": {
-            'waitTime': 'integer',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('waitTime', 'integer', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/tpm'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
     ('PUT', '/vm/{rid}/options/wol'): {
-        "body_required": ['enabled'],
-        "body": {
-            'enabled': 'boolean',
-        },
-        "query": {
-        },
-        "query_required": [],
+        "body": (
+            ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
     },
 }
