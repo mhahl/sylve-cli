@@ -557,14 +557,34 @@ def apply_row_filters(
 ) -> list[dict[str, Any]]:
     """Filter and cap list rows before rendering.
 
-    ``filters`` are ``COLUMN=VALUE`` pairs (matched against header or key,
-    case-insensitive substring) or bare text matched against any field.
+    ``filters`` support these forms:
+
+    - ``COLUMN==VALUE``  exact match (case-insensitive)
+    - ``COLUMN!=VALUE``  exclude rows where column matches exactly
+    - ``COLUMN~VALUE``   substring match (case-insensitive)
+    - ``COLUMN=VALUE``   substring match (same as ``~``, backward compat)
+    - ``baretext``       match against any field (case-insensitive)
+
     ``limit`` keeps the first N rows after filtering.
     """
     result = list(items)
     for spec in _split_columns(filters):
-        column, sep, value = spec.partition("=")
-        if not sep:
+        if not spec:
+            continue
+        # Detect operator: ==, !=, ~  (must have a column before the operator)
+        for op in ("==", "!=", "~"):
+            idx = spec.find(op)
+            if idx > 0:
+                column = spec[:idx]
+                operator = op
+                value = spec[idx + len(op):]
+                break
+        else:
+            column, sep, value = spec.partition("=")
+            operator = "=" if sep else ""
+
+        if not operator:
+            # Bare text — match against any field
             needle = spec.casefold()
             result = [
                 row
@@ -572,16 +592,39 @@ def apply_row_filters(
                 if any(needle in _stringify_cell(v).casefold() for v in row.values())
             ]
             continue
+
         needle = value.casefold()
-        result = [
-            row
-            for row in result
-            if any(
-                _stringify_cell(v).casefold().find(needle) >= 0
-                for k, v in row.items()
-                if k == column or k.casefold() == column.casefold()
-            )
-        ]
+        if operator == "==":
+            result = [
+                row
+                for row in result
+                if any(
+                    _stringify_cell(v).casefold() == needle
+                    for k, v in row.items()
+                    if k == column or k.casefold() == column.casefold()
+                )
+            ]
+        elif operator == "!=":
+            result = [
+                row
+                for row in result
+                if not any(
+                    _stringify_cell(v).casefold() == needle
+                    for k, v in row.items()
+                    if k == column or k.casefold() == column.casefold()
+                )
+            ]
+        else:
+            # ~ or =  → substring
+            result = [
+                row
+                for row in result
+                if any(
+                    _stringify_cell(v).casefold().find(needle) >= 0
+                    for k, v in row.items()
+                    if k == column or k.casefold() == column.casefold()
+                )
+            ]
     if limit is not None and limit > 0:
         result = result[:limit]
     return result

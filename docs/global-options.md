@@ -32,8 +32,9 @@ sylve [GLOBAL_OPTIONS] COMMAND [SUBCOMMAND] [COMMAND_OPTIONS] [ARGS ...]
   Named login context to use. Overrides `current_context` in the configuration
   file. Environment: `SYLVE_CONTEXT`.
 - `-n, --node NODE`
-  Target cluster node hostname or UUID. Subcommands that also define `--node`
-  use their own value when supplied. Environment: `SYLVE_NODE`.
+  Target cluster node hostname or UUID. Passed into every subcommand.
+  Subcommands that also accept `--node` can still override it with the long
+  form. Environment: `SYLVE_NODE`.
 - `-k, --insecure`
   Skip TLS certificate verification. Environment: `SYLVE_INSECURE`.
 - `--timeout SECONDS`
@@ -72,23 +73,37 @@ applicable:
   ```
 - `--sort-column NAME`
   Sort table rows by column header or field key.
-- `--filter COLUMN=VALUE`
-  Keep only rows whose column contains `VALUE` (case-insensitive substring),
-  or bare text matched against any field. Repeatable:
+- `--filter COLUMN=~=VALUE`
+  Keep only rows that match the filter expression. Supports four operators
+  (all case-insensitive):
+
+  | Operator | Match | Example |
+  |---|---|---|
+  | `==` | exact match | `--filter State==RUNNING` |
+  | `!=` | exclude exact | `--filter State!=STOPPED` |
+  | `~` | substring | `--filter Name~web` |
+  | `=` | substring (same as `~`) | `--filter State=running` |
+
+  Bare text (no operator) matches against any field:
   ```sh
-  sylve vm list --filter State=running --filter node1
+  sylve vm list --filter State==RUNNING --filter node1
+  sylve jail list --filter Name~dns
+  sylve node list --filter State!=ONLINE
   ```
 - `-l, --limit N`
   Show at most `N` rows after filtering.
 - `--long`
   Include lower-priority columns in table output. The extra columns vary by
   command.
-- `-n, --node NODE`
+- `--node NODE`
   Restrict a list command to one cluster node, or select the target node for a
-  single-resource command.
+  single-resource command. Only the long form is accepted here; the short form
+  `-n` is reserved for the global option.
 - `-w, --wait / --no-wait`
-  Wait for an asynchronous task to finish before returning. Default behaviour
-  varies by command.
+  Wait for an asynchronous task to finish before returning. Create commands
+  (`vm create`, `jail create`) wait by default; action commands
+  (`start`, `stop`, `restart`, `shutdown`, `reboot`) do not. Pass `--no-wait`
+  to skip waiting on a create, or `--wait` to wait on an action.
 - `-y, --yes`
   Skip interactive confirmation prompts on a terminal.
 

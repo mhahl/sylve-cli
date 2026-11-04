@@ -100,9 +100,8 @@ LongOption = Annotated[
 NodeOption = Annotated[
     str | None,
     typer.Option(
-        "-n",
         "--node",
-        help="Target cluster node hostname or UUID. List commands query all nodes unless given; other commands use the connected node.",
+        help="Target cluster node hostname or UUID. Overrides the global -n/--node for this command.",
     ),
 ]
 
@@ -124,7 +123,7 @@ FilterOption = Annotated[
     list[str] | None,
     typer.Option(
         "--filter",
-        help="Filter rows by COLUMN=VALUE (substring, repeatable) or by bare text.",
+        help="Filter rows: COLUMN==VALUE (exact), COLUMN!=VALUE (exclude), COLUMN~VALUE (substring), or bare text (match any field). Repeatable.",
     ),
 ]
 

@@ -133,7 +133,7 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 - `--start`
   Start the VM(s) as soon as creation finishes.
 - `-w, --wait / --no-wait`
-  Wait for template and start tasks (default: `--no-wait`).
+  Wait for template and start tasks (default: `--wait`, pass `--no-wait` to skip).
 - `--dry-run`
   Print the normalized API payload without creating anything.
 - `-y, --yes`
@@ -145,7 +145,8 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 
 - `list`: `-n, --node NODE`, `--long` (fetches CPU, RAM, VNC, autostart,
   and description), `-f, --format`, `-c, --column`, `--sort-column NAME`,
-  `--filter COLUMN=VALUE` (repeatable, substring match), `-l, --limit N`.
+  `--filter COLUMN==VALUE|COLUMN!=VALUE|COLUMN~VALUE` (repeatable;
+  exact, exclude, or substring), `-l, --limit N`.
 - `show VM`: `VM` (RID or name), `--long` (pretty-prints nested storage, network,
   and snapshot JSON and prints full multi-line cloud-init YAML instead of compact
   summaries), `-n, --node NODE`, `-f, --format`, `-c, --column`.
@@ -160,7 +161,8 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 - `-n, --node NODE`
   Target node.
 - `-w, --wait / --no-wait`
-  Wait for the lifecycle task (default: `--no-wait`).
+  Wait for the lifecycle task (default: `--no-wait`). Action commands start
+  immediately; pass `--wait` to block until the task finishes.
 - `-f, --format`
   Output format. With `json`/`yaml`/`csv`/`value` the command prints each VM's
   result (`rid`, `name`, `node`, `outcome`, `status`, `taskId`) instead of prose.

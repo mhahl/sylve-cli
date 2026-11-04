@@ -108,7 +108,7 @@ and jail templates.
 - `--start`
   Start the jail as soon as creation finishes.
 - `-w, --wait / --no-wait`
-  Wait for the start task (default: `--no-wait`).
+  Wait for the start task (default: `--wait`, pass `--no-wait` to skip).
 - `--dry-run`
   Print the normalized API payload without creating anything.
 - `-y, --yes`
@@ -126,7 +126,8 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 - `-n, --node NODE`
   Target node.
 - `-w, --wait / --no-wait`
-  Wait for the lifecycle task (default: `--no-wait`).
+  Wait for the lifecycle task (default: `--no-wait`). Action commands start
+  immediately; pass `--wait` to block until the task finishes.
 - `-f, --format`
   Output format. With `json`/`yaml`/`csv`/`value` the command prints each jail's
   result (`action`, `ctid`, `name`, `node`, `outcome`, `status`, `taskId`)
@@ -174,13 +175,13 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 ### `jail snapshot`, `jail bootstrap`, and `jail template`
 
 - `snapshot list JAIL`: `-n/--node`, `-f/--format`, `-c/--column`,
-  `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`, `--long`.
+  `--sort-column NAME`, `--filter COLUMN==VALUE|COLUMN!=VALUE|COLUMN~VALUE`, `-l/--limit N`, `--long`.
 - `snapshot create JAIL`: `--name, -m NAME` (required),
   `--description, -d TEXT`, `-n/--node`, `-f/--format`.
 - `snapshot rollback JAIL SNAPSHOT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
 - `snapshot delete JAIL SNAPSHOT_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
 - `bootstrap list`: `--pool, -p POOL` (required), `-n/--node`, `-f/--format`,
-  `-c/--column`, `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
+  `-c/--column`, `--sort-column NAME`, `--filter COLUMN==VALUE|COLUMN!=VALUE|COLUMN~VALUE`, `-l/--limit N`.
 - `bootstrap create`: `--pool, -p POOL` (required), `--major N` (required),
   `--minor N` (default: `0`), `--type TYPE` (default: `base`, e.g. `base` or
   `minimal`), `-n/--node`, `-f/--format`.

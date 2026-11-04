@@ -616,7 +616,7 @@ def register_jail_create_commands(app: typer.Typer) -> None:
             bool,
             typer.Option("--start", help="Start the jail after creation."),
         ] = False,
-        wait: WaitOption = False,
+        wait: WaitOption = True,
         dry_run: Annotated[
             bool,
             typer.Option("--dry-run", help="Print the API request without creating anything."),

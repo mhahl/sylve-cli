@@ -1324,7 +1324,7 @@ def register_vm_create_commands(app: typer.Typer) -> None:
         wait: Annotated[
             bool,
             typer.Option("-w", "--wait/--no-wait", help="Wait for template/start tasks."),
-        ] = False,
+        ] = True,
         dry_run: Annotated[
             bool,
             typer.Option("--dry-run", help="Print the API request without creating anything."),
@@ -1488,8 +1488,6 @@ def register_vm_create_commands(app: typer.Typer) -> None:
                 plan.append(f"Start after create: {'yes' if start else 'no'}")
                 _confirm(plan, "VM template creation plan", yes, fmt)
 
-                if start and not wait:
-                    wait = True
                 response = _post_template(client, host, template_id, request)
                 task_id = response.get("taskId") if isinstance(response, dict) else None
                 result: dict[str, Any] = {

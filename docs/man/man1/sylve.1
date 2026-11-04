@@ -152,6 +152,56 @@ A destructive command asks first on a terminal; pass
 to skip the question. Piped input never counts as yes: without
 .B \-y
 the command aborts instead of deleting.
+.SH "OUTPUT OPTIONS"
+Commands that print records accept these flags:
+.TP
+.BR \-f\~\fIFMT\fR
+Output format: BtableR, BjsonR, ByamlR, BvalueR, or BcsvR.
+Default: BtableR.
+.TP
+.BR \-c\~\fINAME\fR
+Column to include. Repeatable or comma-separated.
+.TP
+.BR \-\-sort\-column\~\fINAME\fR
+Sort by a column.
+.TP
+.BR \-\-filter\~\fIEXPR\fR
+Filter rows. Supported forms:
+.RS
+.TP
+.BI COLUMN == VALUE
+Exact match (case-insensitive).
+.TP
+.BI COLUMN != VALUE
+Exclude rows where the column matches exactly.
+.TP
+.BI COLUMN ~ VALUE
+Substring match (case-insensitive).
+.TP
+.BI COLUMN = VALUE
+Substring match (same as ~).
+.TP
+.BI TEXT
+Any-field substring (no operator).
+.RE
+Repeatable. Examples:
+.sp
+.RS
+sylve vm list --filter State==RUNNING
+sylve jail list --filter Name~dns
+sylve node list --filter State!=ONLINE
+.RE
+.TP
+.BR \-l\~\fIN\fR
+Show at most N rows after filtering.
+.TP
+.BR \-\-long
+Include lower-priority columns.
+.TP
+.BR \-w\~\-\-wait\~\-\-no\-wait
+Wait for asynchronous tasks.
+Create commands (Bvm createR, Bjail createR) wait by default;
+action commands (BstartR, BstopR, etc.) do not.
 .SH ENVIRONMENT
 .TP
 .B SYLVE_CONFIG
