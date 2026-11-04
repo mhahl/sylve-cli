@@ -39,6 +39,44 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('DELETE', '/container/images/{pool}/{id}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('DELETE', '/container/networks/{id}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('DELETE', '/container/registry-credentials/{id}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('DELETE', '/container/{ocid}'): {
+        "body": (
+        ),
+        "query": (
+            ('deleteVolumes', 'boolean', False, (
+            )),
+        ),
+    },
+    ('DELETE', '/directory-services/kerberos/keytabs/{id}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('DELETE', '/directory-services/kerberos/realms/{id}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('DELETE', '/disk/partitions/{partition}'): {
         "body": (
         ),
@@ -177,6 +215,14 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('DELETE', '/network/interface/{name}/l3'): {
+        "body": (
+        ),
+        "query": (
+            ('expectedRevision', 'integer', True, (
+            )),
+        ),
+    },
     ('DELETE', '/network/object'): {
         "body": (
             ('ids', 'array of integer', True, (
@@ -279,7 +325,21 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             )),
         ),
     },
+    ('DELETE', '/zfs/datasets/snapshot/periodic'): {
+        "body": (
+            ('ids', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('DELETE', '/zfs/datasets/snapshot/periodic/{id}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('DELETE', '/zfs/pools/scrub/schedules/{id}'): {
         "body": (
         ),
         "query": (
@@ -298,6 +358,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         ),
     },
     ('GET', '/auth/login/config'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/auth/preferences'): {
         "body": (
         ),
         "query": (
@@ -409,10 +475,144 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             )),
         ),
     },
+    ('GET', '/cluster/backups/targets/{id}/readiness'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('GET', '/cluster/backups/targets/{id}/running-jobs'): {
         "body": (
         ),
         "query": (
+        ),
+    },
+    ('GET', '/container'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/catalog'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/catalog/{source}/icon'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/catalog/{source}/{id}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/catalog/{source}/{id}/icon'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/images/{pool}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/networks'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/ports'): {
+        "body": (
+        ),
+        "query": (
+            ('ocid', 'integer', False, (
+            )),
+        ),
+    },
+    ('GET', '/container/registry-credentials'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/{ocid}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/{ocid}/image'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/{ocid}/logs'): {
+        "body": (
+        ),
+        "query": (
+            ('tail', 'integer', False, (
+            )),
+        ),
+    },
+    ('GET', '/container/{ocid}/stats'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/{ocid}/stats/{step}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/directory-services/active-directory'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/directory-services/active-directory/status'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/directory-services/kerberos/keytabs'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/directory-services/kerberos/realms'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/directory-services/kerberos/settings'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/directory-services/principals'): {
+        "body": (
+        ),
+        "query": (
+            ('kind', 'string', True, (
+            )),
+            ('q', 'string', True, (
+            )),
         ),
     },
     ('GET', '/disk'): {
@@ -503,6 +703,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('GET', '/iscsi/config'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('GET', '/iscsi/initiators'): {
         "body": (
         ),
@@ -533,6 +739,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('GET', '/jail/zfs-sources'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('GET', '/jail/{ctid}/root-mountpoint'): {
         "body": (
         ),
@@ -551,6 +763,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('GET', '/jail/{ctid}/stats/{step}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('GET', '/mdns/config'): {
         "body": (
         ),
@@ -558,6 +776,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         ),
     },
     ('GET', '/mdns/records'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/network/dhcp/config'): {
         "body": (
         ),
         "query": (
@@ -588,6 +812,18 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         ),
     },
     ('GET', '/network/firewall/traffic/counters'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/network/global-config'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/network/interface/l3/pending'): {
         "body": (
         ),
         "query": (
@@ -831,6 +1067,18 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('GET', '/zfs/pools/scrub/schedules'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/zfs/pools/{guid}/scrub/runs'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('PATCH', '/certificates/{id}'): {
         "body": (
             ('certificate', 'string', False, (
@@ -848,6 +1096,24 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('type', 'object', False, (
             )),
             ('validateDomain', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PATCH', '/container/{ocid}/options'): {
+        "body": (
+            ('cores', 'integer', False, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('memory', 'integer', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('startAtBoot', 'boolean', False, (
+            )),
+            ('startOrder', 'integer', False, (
             )),
         ),
         "query": (
@@ -993,6 +1259,7 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     ('PATCH', '/zfs/datasets/filesystem/{guid}'): {
         "body": (
             ('properties', 'object', True, (
+                ('**', 'string', False, ()),
             )),
         ),
         "query": (
@@ -1027,6 +1294,7 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     ('PATCH', '/zfs/datasets/volume/{guid}'): {
         "body": (
             ('properties', 'object', True, (
+                ('**', 'string', False, ()),
             )),
         ),
         "query": (
@@ -1035,6 +1303,7 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     ('PATCH', '/zfs/pools/{guid}'): {
         "body": (
             ('properties', 'object', False, (
+                ('**', 'string', False, ()),
             )),
             ('spares', 'array of string', False, (
             )),
@@ -1348,6 +1617,270 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('POST', '/container'): {
+        "body": (
+            ('name', 'string', True, (
+            )),
+            ('ocId', 'integer', True, (
+            )),
+            ('pool', 'string', True, (
+            )),
+            ('annotations', 'object', False, (
+                ('**', 'string', False, ()),
+            )),
+            ('catalogApp', 'string', False, (
+            )),
+            ('command', 'array of string', False, (
+            )),
+            ('cores', 'integer', False, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('entrypoint', 'array of string', False, (
+            )),
+            ('env', 'array of object', False, (
+                ('name', 'string', False, ()),
+                ('value', 'string', False, ()),
+            )),
+            ('extraHosts', 'array of string', False, (
+            )),
+            ('hostname', 'string', False, (
+            )),
+            ('image', 'string', False, (
+            )),
+            ('ip', 'string', False, (
+            )),
+            ('memory', 'integer', False, (
+            )),
+            ('mounts', 'array of object', False, (
+                ('guid', 'string', False, ()),
+                ('mode', 'string', False, ()),
+                ('owner', 'string', False, ()),
+                ('readOnly', 'boolean', False, ()),
+                ('source', 'string', False, ()),
+                ('target', 'string', False, ()),
+                ('type', 'MountType', False, ()),
+            )),
+            ('network', 'string', False, (
+            )),
+            ('os', 'string', False, (
+            )),
+            ('ports', 'array of object', False, (
+                ('containerPort', 'integer', False, ()),
+                ('hostIp', 'string', False, ()),
+                ('hostPort', 'integer', False, ()),
+                ('protocol', 'string', False, ()),
+            )),
+            ('pullImage', 'boolean', False, (
+            )),
+            ('restart', 'string', False, (
+            )),
+            ('restartRetries', 'integer', False, (
+            )),
+            ('shmSize', 'string', False, (
+            )),
+            ('stack', 'string', False, (
+            )),
+            ('startAfterCreate', 'boolean', False, (
+            )),
+            ('startAtBoot', 'boolean', False, (
+            )),
+            ('startOrder', 'integer', False, (
+            )),
+            ('stopTimeout', 'integer', False, (
+            )),
+            ('user', 'string', False, (
+            )),
+            ('webHttps', 'boolean', False, (
+            )),
+            ('webPort', 'integer', False, (
+            )),
+            ('workDir', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/catalog/{source}/{id}/render'): {
+        "body": (
+            ('choices', 'object', False, (
+                ('**', 'string', False, ()),
+            )),
+            ('values', 'object', False, (
+                ('**', 'string', False, ()),
+            )),
+            ('variant', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/images/{pool}/prune'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/images/{pool}/pull'): {
+        "body": (
+            ('image', 'string', True, (
+            )),
+            ('os', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/networks'): {
+        "body": (
+            ('name', 'string', True, (
+            )),
+            ('gateway', 'string', False, (
+            )),
+            ('rangeEnd', 'string', False, (
+            )),
+            ('rangeStart', 'string', False, (
+            )),
+            ('subnet', 'string', False, (
+            )),
+            ('switch', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/stack'): {
+        "body": (
+            ('containers', 'array of object', True, (
+                ('annotations', 'object', False, (('**', 'string', False, ()),)),
+                ('catalogApp', 'string', False, ()),
+                ('command', 'array of string', False, ()),
+                ('cores', 'integer', False, ()),
+                ('description', 'string', False, ()),
+                ('entrypoint', 'array of string', False, ()),
+                ('env', 'array of EnvVar', False, ()),
+                ('extraHosts', 'array of string', False, ()),
+                ('hostname', 'string', False, ()),
+                ('image', 'string', False, ()),
+                ('ip', 'string', False, ()),
+                ('memory', 'integer', False, ()),
+                ('mounts', 'array of Mount', False, ()),
+                ('name', 'string', True, ()),
+                ('network', 'string', False, ()),
+                ('ocId', 'integer', True, ()),
+                ('os', 'string', False, ()),
+                ('pool', 'string', True, ()),
+                ('ports', 'array of Port', False, ()),
+                ('pullImage', 'boolean', False, ()),
+                ('restart', 'string', False, ()),
+                ('restartRetries', 'integer', False, ()),
+                ('shmSize', 'string', False, ()),
+                ('stack', 'string', False, ()),
+                ('startAfterCreate', 'boolean', False, ()),
+                ('startAtBoot', 'boolean', False, ()),
+                ('startOrder', 'integer', False, ()),
+                ('stopTimeout', 'integer', False, ()),
+                ('user', 'string', False, ()),
+                ('webHttps', 'boolean', False, ()),
+                ('webPort', 'integer', False, ()),
+                ('workDir', 'string', False, ()),
+            )),
+            ('ocId', 'integer', True, (
+            )),
+            ('pool', 'string', True, (
+            )),
+            ('stack', 'string', True, (
+            )),
+            ('startAtBoot', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/{ocid}/actions/kill'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/{ocid}/actions/restart'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/{ocid}/actions/start'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/{ocid}/actions/stop'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/directory-services/active-directory/check'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/directory-services/active-directory/join'): {
+        "body": (
+            ('password', 'string', False, (
+            )),
+            ('username', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/directory-services/active-directory/leave'): {
+        "body": (
+            ('localOnly', 'boolean', False, (
+            )),
+            ('password', 'string', False, (
+            )),
+            ('username', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/directory-services/kerberos/keytabs'): {
+        "body": (
+            ('file', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/directory-services/kerberos/realms'): {
+        "body": (
+            ('adminServer', 'array of string', False, (
+            )),
+            ('kdc', 'array of string', False, (
+            )),
+            ('kpasswdServer', 'array of string', False, (
+            )),
+            ('realm', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/directory-services/kerberos/realms/discover'): {
+        "body": (
+            ('realm', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('POST', '/disk/smart/self-test'): {
         "body": (
             ('device', 'string', True, (
@@ -1405,10 +1938,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('provider', 'string', False, (
             )),
             ('providerSettings', 'object', False, (
+                ('**', 'string', False, ()),
             )),
             ('recordType', 'string', False, (
             )),
             ('sourceSettings', 'object', False, (
+                ('**', 'string', False, ()),
             )),
             ('sourceType', 'string', False, (
             )),
@@ -1524,6 +2059,102 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('POST', '/jail/validate'): {
+        "body": (
+            ('ctId', 'integer', True, (
+            )),
+            ('name', 'string', True, (
+            )),
+            ('pool', 'string', True, (
+            )),
+            ('type', 'object', True, (
+            )),
+            ('additionalOptions', 'string', False, (
+            )),
+            ('allowedOptions', 'array of string', False, (
+            )),
+            ('base', 'string', False, (
+            )),
+            ('bootstrapName', 'string', False, (
+            )),
+            ('cleanEnvironment', 'boolean', False, (
+            )),
+            ('cores', 'integer', False, (
+            )),
+            ('description', 'string', False, (
+            )),
+            ('devfsRuleset', 'string', False, (
+            )),
+            ('dhcp', 'boolean', False, (
+            )),
+            ('fstab', 'string', False, (
+            )),
+            ('hooks', 'object', False, (
+                ('poststart', 'object', False, (('enabled', 'boolean', False, ()), ('script', 'string', False, ()))),
+                ('poststop', 'object', False, (('enabled', 'boolean', False, ()), ('script', 'string', False, ()))),
+                ('prestart', 'object', False, (('enabled', 'boolean', False, ()), ('script', 'string', False, ()))),
+                ('prestop', 'object', False, (('enabled', 'boolean', False, ()), ('script', 'string', False, ()))),
+                ('start', 'object', False, (('enabled', 'boolean', False, ()), ('script', 'string', False, ()))),
+                ('stop', 'object', False, (('enabled', 'boolean', False, ()), ('script', 'string', False, ()))),
+            )),
+            ('hostname', 'string', False, (
+            )),
+            ('inheritIPv4', 'boolean', False, (
+            )),
+            ('inheritIPv6', 'boolean', False, (
+            )),
+            ('ipv4', 'integer', False, (
+            )),
+            ('ipv4Gw', 'integer', False, (
+            )),
+            ('ipv4GwRaw', 'string', False, (
+            )),
+            ('ipv4Raw', 'string', False, (
+            )),
+            ('ipv6', 'integer', False, (
+            )),
+            ('ipv6Gw', 'integer', False, (
+            )),
+            ('ipv6GwRaw', 'string', False, (
+            )),
+            ('ipv6Raw', 'string', False, (
+            )),
+            ('mac', 'integer', False, (
+            )),
+            ('macRaw', 'string', False, (
+            )),
+            ('memory', 'integer', False, (
+            )),
+            ('metadataEnv', 'string', False, (
+            )),
+            ('metadataMeta', 'string', False, (
+            )),
+            ('resolvConf', 'string', False, (
+            )),
+            ('resourceLimits', 'boolean', False, (
+            )),
+            ('slaac', 'boolean', False, (
+            )),
+            ('startAtBoot', 'boolean', False, (
+            )),
+            ('startOrder', 'integer', False, (
+            )),
+            ('switchName', 'string', False, (
+            )),
+            ('vlanPolicy', 'object', False, (
+                ('mode', 'string', False, ()),
+                ('taggedVlans', 'array of integer', False, ()),
+                ('untaggedVlan', 'integer', False, ()),
+            )),
+            ('zfsSource', 'object', False, (
+                ('dataset', 'string', False, ()),
+                ('guid', 'string', False, ()),
+                ('mode', 'string', False, ()),
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('POST', '/jail/{ctid}/networks'): {
         "body": (
             ('name', 'string', True, (
@@ -1582,6 +2213,7 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('port', 'integer', False, (
             )),
             ('txt', 'object', False, (
+                ('**', 'string', False, ()),
             )),
             ('type', 'string', False, (
             )),
@@ -1763,6 +2395,24 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             )),
             ('statePolicy', 'string', False, (
             )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/network/host-ip/pending/{id}/confirm'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/network/host-ip/pending/{id}/revert'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/network/interface/{name}/l3/reapply'): {
+        "body": (
         ),
         "query": (
         ),
@@ -2122,6 +2772,22 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('POST', '/utilities/downloads/detect-filename'): {
+        "body": (
+            ('url', 'string', True, (
+            )),
+            ('ignoreTLS', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/vm/{rid}/domain/reinitialize'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('POST', '/vm/{rid}/networks'): {
         "body": (
             ('emulation', 'string', True, (
@@ -2241,6 +2907,7 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('mountpoint', 'string', False, (
             )),
             ('properties', 'object', False, (
+                ('**', 'string', False, ()),
             )),
             ('spares', 'array of string', False, (
             )),
@@ -2249,6 +2916,18 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
                 ('name', 'string', False, ()),
                 ('raidType', 'RaidType', False, ()),
                 ('type', 'VdevType', False, ()),
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/zfs/pools/scrub/schedules'): {
+        "body": (
+            ('cronExpr', 'string', True, (
+            )),
+            ('poolGuid', 'string', True, (
+            )),
+            ('enabled', 'boolean', False, (
             )),
         ),
         "query": (
@@ -2426,6 +3105,171 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('PUT', '/container/registry-credentials'): {
+        "body": (
+            ('password', 'string', True, (
+            )),
+            ('registry', 'string', True, (
+            )),
+            ('username', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/container/{ocid}'): {
+        "body": (
+            ('annotations', 'object', False, (
+                ('**', 'string', False, ()),
+            )),
+            ('command', 'array of string', False, (
+            )),
+            ('entrypoint', 'array of string', False, (
+            )),
+            ('env', 'array of object', False, (
+                ('name', 'string', False, ()),
+                ('value', 'string', False, ()),
+            )),
+            ('extraHosts', 'array of string', False, (
+            )),
+            ('hostname', 'string', False, (
+            )),
+            ('image', 'string', False, (
+            )),
+            ('ip', 'string', False, (
+            )),
+            ('mounts', 'array of object', False, (
+                ('guid', 'string', False, ()),
+                ('mode', 'string', False, ()),
+                ('owner', 'string', False, ()),
+                ('readOnly', 'boolean', False, ()),
+                ('source', 'string', False, ()),
+                ('target', 'string', False, ()),
+                ('type', 'MountType', False, ()),
+            )),
+            ('network', 'string', False, (
+            )),
+            ('os', 'string', False, (
+            )),
+            ('ports', 'array of object', False, (
+                ('containerPort', 'integer', False, ()),
+                ('hostIp', 'string', False, ()),
+                ('hostPort', 'integer', False, ()),
+                ('protocol', 'string', False, ()),
+            )),
+            ('pullImage', 'boolean', False, (
+            )),
+            ('restart', 'string', False, (
+            )),
+            ('restartRetries', 'integer', False, (
+            )),
+            ('shmSize', 'string', False, (
+            )),
+            ('stopTimeout', 'integer', False, (
+            )),
+            ('user', 'string', False, (
+            )),
+            ('workDir', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/directory-services/active-directory'): {
+        "body": (
+            ('allowTrustedDomains', 'boolean', False, (
+            )),
+            ('clearJoinPassword', 'boolean', False, (
+            )),
+            ('computerName', 'string', False, (
+            )),
+            ('computerOU', 'string', False, (
+            )),
+            ('disableCache', 'boolean', False, (
+            )),
+            ('domain', 'string', False, (
+            )),
+            ('domainController', 'string', False, (
+            )),
+            ('idmapBackend', 'string', False, (
+            )),
+            ('idmapSchema', 'string', False, (
+            )),
+            ('joinPassword', 'string', False, (
+            )),
+            ('joinUsername', 'string', False, (
+            )),
+            ('kerberosPrincipal', 'string', False, (
+            )),
+            ('keytabId', 'integer', False, (
+            )),
+            ('rangeHigh', 'integer', False, (
+            )),
+            ('rangeLow', 'integer', False, (
+            )),
+            ('realmId', 'integer', False, (
+            )),
+            ('site', 'string', False, (
+            )),
+            ('skipDNSRegistration', 'boolean', False, (
+            )),
+            ('trustedDomains', 'array of object', False, (
+                ('backend', 'string', False, ()),
+                ('domain', 'string', False, ()),
+                ('rangeHigh', 'integer', False, ()),
+                ('rangeLow', 'integer', False, ()),
+                ('schema', 'string', False, ()),
+            )),
+            ('useDefaultDomain', 'boolean', False, (
+            )),
+            ('workgroup', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/directory-services/active-directory/enabled'): {
+        "body": (
+            ('enabled', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/directory-services/kerberos/keytabs/{id}'): {
+        "body": (
+            ('file', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/directory-services/kerberos/realms/{id}'): {
+        "body": (
+            ('adminServer', 'array of string', False, (
+            )),
+            ('kdc', 'array of string', False, (
+            )),
+            ('kpasswdServer', 'array of string', False, (
+            )),
+            ('realm', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/directory-services/kerberos/settings'): {
+        "body": (
+            ('appDefaults', 'string', False, (
+            )),
+            ('libDefaults', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('PUT', '/disk/smart/self-test/schedules/{id}'): {
         "body": (
             ('cronExpr', 'string', True, (
@@ -2451,10 +3295,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('provider', 'string', False, (
             )),
             ('providerSettings', 'object', False, (
+                ('**', 'string', False, ()),
             )),
             ('recordType', 'string', False, (
             )),
             ('sourceSettings', 'object', False, (
+                ('**', 'string', False, ()),
             )),
             ('sourceType', 'string', False, (
             )),
@@ -2469,6 +3315,14 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('content', 'string', True, (
             )),
             ('title', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/iscsi/config'): {
+        "body": (
+            ('extraTargetConfig', 'string', False, (
             )),
         ),
         "query": (
@@ -2661,6 +3515,7 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('port', 'integer', False, (
             )),
             ('txt', 'object', False, (
+                ('**', 'string', False, ()),
             )),
             ('type', 'string', False, (
             )),
@@ -2874,6 +3729,44 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('PUT', '/network/global-config'): {
+        "body": (
+            ('dnsMode', 'string', False, (
+            )),
+            ('dnsServers', 'array of string', False, (
+            )),
+            ('expectedRevision', 'integer', False, (
+            )),
+            ('hostAliases', 'array of object', False, (
+                ('address', 'string', False, ()),
+                ('aliases', 'array of string', False, ()),
+                ('hostname', 'string', False, ()),
+            )),
+            ('searchDomains', 'array of string', False, (
+            )),
+            ('searchDomainsOverride', 'boolean', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/network/interface/{name}/l3'): {
+        "body": (
+            ('addresses', 'array of object', False, (
+                ('address', 'string', True, ()),
+            )),
+            ('expectedRevision', 'integer', False, (
+            )),
+            ('ipv6Mode', 'string', False, (
+            )),
+            ('metric', 'integer', False, (
+            )),
+            ('mtu', 'integer', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('PUT', '/network/object/{id}'): {
         "body": (
             ('name', 'string', True, (
@@ -2976,6 +3869,7 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('network6Manual', 'string', False, (
             )),
             ('portPolicies', 'object', False, (
+                ('**', 'value', False, ()),
             )),
             ('ports', 'array of string', False, (
             )),
@@ -3371,6 +4265,18 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     ('PUT', '/vm/{rid}/options/wol'): {
         "body": (
             ('enabled', 'boolean', True, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/zfs/pools/scrub/schedules/{id}'): {
+        "body": (
+            ('cronExpr', 'string', True, (
+            )),
+            ('poolGuid', 'string', True, (
+            )),
+            ('enabled', 'boolean', False, (
             )),
         ),
         "query": (

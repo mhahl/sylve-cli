@@ -99,6 +99,7 @@ Output flags (`-f`, `-c`, `--filter`) and request flags (`--data`, `--set`,
 | [node](docs/commands/node.md) | Node inventory, telemetry, drain, reboot, audit logs |
 | [vm](docs/commands/vm.md) | Bhyve VMs, snapshots, and templates (alias: `server`) |
 | [jail](docs/commands/jail.md) | FreeBSD jails, snapshots, bootstraps, and templates |
+| [container](docs/commands/container.md) | OCI/Podman containers, images, networks, registries, and catalog apps |
 | [network](docs/commands/network.md) | Interfaces, switches, routes, DHCP, PF, WireGuard |
 | [download](docs/commands/download.md) | ISO and image downloads, uploads, signed URLs |
 | [replication](docs/commands/replication.md) | HA replication policies, failovers, and events |
@@ -114,6 +115,7 @@ Output flags (`-f`, `-c`, `--filter`) and request flags (`--data`, `--set`,
 | [user](docs/commands/user.md) | Local, PAM, and imported users, plus passkeys |
 | [group](docs/commands/group.md) | Authentication groups and membership |
 | [auth](docs/commands/auth.md) | Login configuration, SSE tokens, and passkeys |
+| [directory-services](docs/commands/directory-services.md) | Active Directory, Kerberos realms, keytabs, and principals |
 | [cloud-init](docs/commands/cloud-init.md) | Reusable cloud-init templates |
 
 ## ENVIRONMENT

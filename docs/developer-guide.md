@@ -42,7 +42,7 @@ make test lint type man schemas
 | `src/sylve_cli/commands/backup.py` | `backup` |
 | `src/sylve_cli/commands/zfs.py` | `zfs` |
 | `src/sylve_cli/commands/task.py` | `task` |
-| `src/sylve_cli/commands/extras.py` | `system`, `samba`, `iscsi`, `ddns`, `mdns`, `notifications`, `user`, `group`, `auth`, `cloud-init`, and generic API bindings |
+| `src/sylve_cli/commands/extras.py` | `container`, `system`, `samba`, `iscsi`, `ddns`, `mdns`, `notifications`, `user`, `group`, `auth`, `directory-services`, `cloud-init`, and generic API bindings |
 | `src/sylve_cli/body_schemas.py` | Generated `(METHOD, path)` to body/query field map for generic `--help` output. Do not edit; see below |
 
 ## ADDING A COMMAND

@@ -20,8 +20,8 @@ format.
 
 | Subcommand | Path Arguments | Description |
 |---|---|---|
-| `config` | none | Show global Samba configuration |
-| `config-set` | none | Update global Samba configuration |
+| `config show` | none | Show global Samba configuration |
+| `config set` | none | Update global Samba configuration |
 | `share list` | none | List configured SMB shares |
 | `share create` | none | Create a share |
 | `share set` | `ID` | Update share `ID` |
@@ -91,15 +91,15 @@ sylve samba share delete 2 --yes
 Inspect and update global Samba settings and read audit logs:
 
 ```sh
-sylve samba config -f json
-sylve samba config-set --set workgroup=WORKGROUP --set serverString=Sylve -f json
+sylve samba config show -f json
+sylve samba config set --set workgroup=WORKGROUP --set serverString=Sylve -f json
 sylve samba audit-logs --param size=20
 ```
 
 Preview a global config change and a share create with `--set`:
 
 ```sh
-sylve samba config-set --set workgroup=EXAMPLE --set serverString=Example --dry-run -f json
+sylve samba config set --set workgroup=EXAMPLE --set serverString=Example --dry-run -f json
 sylve samba share create \
   --set name=example-media --set dataset=tank/media --set enabled=true \
   --dry-run -f json

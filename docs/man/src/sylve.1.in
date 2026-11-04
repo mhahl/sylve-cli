@@ -78,6 +78,9 @@ manage templates.
 List, create, inspect, start, stop, migrate, snapshot, and configure jails;
 manage templates.
 .TP
+.BR "container " \fISUBCOMMAND\fR
+Manage OCI/Podman containers, images, networks, registries, and catalog apps.
+.TP
 .BR "network " \fISUBCOMMAND\fR
 Manage interfaces, switches, routes, DHCP, PF firewall, objects, and WireGuard.
 .TP
@@ -124,7 +127,10 @@ Manage local, PAM, and imported users, plus passkeys.
 Manage authentication groups and membership.
 .TP
 .BR "auth " \fISUBCOMMAND\fR
-Inspect login configuration, create SSE tokens, and use passkeys.
+Inspect user preferences and login configuration, create SSE tokens, and use passkeys.
+.TP
+.BR "directory-services " \fISUBCOMMAND\fR
+Manage Active Directory, Kerberos realms, keytabs, and principals.
 .TP
 .BR "cloud-init " \fISUBCOMMAND\fR
 Manage reusable cloud-init templates.

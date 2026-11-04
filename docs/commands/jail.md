@@ -36,7 +36,7 @@ and jail templates.
 | `description`, `hardware cpu/ram/resource-limits` | Generic jail hardware update commands |
 | `network inheritance/attach/detach/set` | Generic jail network commands |
 | `options additional/allowed/boot-order/devfs-rules/execution-timeout/fstab/lifecycle-hooks/metadata/resolv-conf/wol` | Generic jail option commands |
-| `root-mountpoint`, `state`, `stats` | Generic read commands |
+| `root-mountpoint`, `state`, `stats`, `stats-step`, `validate`, `zfs-sources` | Generic read and validation commands |
 
 ## OPTIONS
 
@@ -200,8 +200,10 @@ JSON: `sylve jail hardware cpu 201 --set cores=4`.
 | `network inheritance`, `network attach` | `ctid` |
 | `network detach`, `network set` | `ctid networkId` |
 | `options *`, `root-mountpoint`, `state`, `stats`, `template capture` | `ctid` |
+| `stats-step` | `ctid step` |
 | `template show`, `template delete`, `template deploy` | `templateId` |
 | `bootstrap delete` | `name` |
+| `validate`, `zfs-sources` | none |
 
 ## EXIT STATUS
 

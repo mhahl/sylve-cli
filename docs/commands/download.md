@@ -29,6 +29,7 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
 | `storage` | List download storage targets and default paths |
 | `set ID` | Update download metadata (generic API command) |
 | `utype` | List completed downloads by usage type (generic API command) |
+| `detect-filename` | Detect a remote filename from a URL (generic API command) |
 | `abort-upload ID` | Abort a staged upload (generic API command) |
 | `file UUID`, `file-with-name UUID FILENAME` | Download a completed file to a local path |
 

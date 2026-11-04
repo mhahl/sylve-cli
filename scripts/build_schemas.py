@@ -57,6 +57,11 @@ def _field(name: str, schema: dict, defs: dict, required: set, depth: int = 0) -
         if elem[3]:
             return (name, "array of object", name in required, elem[3])
         return (name, f"array of {elem[1]}", name in required, ())
+    if kind == "object":
+        addl = schema.get("additionalProperties", {})
+        if addl:
+            addl_kind = str(addl.get("type", "")) or "value"
+            return (name, "object", name in required, (("**", addl_kind, False, ()),))
     return (name, kind, name in required, ())
 
 

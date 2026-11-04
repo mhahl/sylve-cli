@@ -71,8 +71,9 @@ def html_l3_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Pat
 
 def test_interface_l3_html_returns_clean_error(html_l3_config: tuple[Path, dict[str, Any]]) -> None:
     """A phantom endpoint returning HTML must error cleanly, not print HTML."""
-    result = runner.invoke(app, ["network", "interface", "l3", "-f", "json"])
-    assert result.exit_code == 1
-    assert result.exception is not None
-    assert "not implemented" in str(result.exception)
-    assert "<html" not in result.stdout
+    for cmd in (["network", "interface", "l3"], ["container", "list"]):
+        result = runner.invoke(app, [*cmd, "-f", "json"])
+        assert result.exit_code == 1
+        assert result.exception is not None
+        assert "not implemented" in str(result.exception)
+        assert "<html" not in result.stdout

@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-auth` - inspect login configuration, create SSE tokens, and perform WebAuthn passkey flows
+`sylve-auth` - inspect user preferences and login configuration, create SSE tokens, and perform WebAuthn passkey flows
 
 ## SYNOPSIS
 
@@ -12,7 +12,7 @@ sylve auth COMMAND [ARGS ...]
 
 ## DESCRIPTION
 
-`sylve auth` queries server login capabilities, issues short-lived server-sent
+`sylve auth` queries user preferences and server login capabilities, issues short-lived server-sent
 event (`SSE`) tokens, and executes WebAuthn passkey login and registration
 handshakes via generic Sylve API bindings.
 
@@ -23,6 +23,7 @@ endpoints; the CLI does not send a bearer token when calling them.
 
 | Subcommand | Description |
 |---|---|
+| `preferences` | Show user preferences |
 | `login-config` | Show enabled authentication realms and passkey support |
 | `sse-token` | Create a short-lived token for SSE streams |
 | `passkey login-begin` | Begin a WebAuthn passkey login challenge |
@@ -56,6 +57,18 @@ Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands 
 - `2`: Command-line usage error.
 
 ## EXAMPLES
+
+Query user preferences:
+
+```sh
+sylve auth preferences -f json
+```
+```json
+{
+  "rowsPerPage": 50,
+  "terminalColumns": 120
+}
+```
 
 Query enabled login methods:
 

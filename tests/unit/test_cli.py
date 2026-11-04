@@ -731,3 +731,63 @@ def test_console_ws_auth_and_protocol() -> None:
     assert frame == (2, b"hello")
     assert len(encode_client_frame(b"\x00ls\n")) == 2 + 4 + 4
     assert len(build_resize_frame(80, 24)) > 10
+
+
+def test_container_and_directory_services_dry_run(cli_env: Path) -> None:
+    """New container, directory-services, L3, and scrub-schedule commands build typed payloads."""
+    cases = (
+        (
+            [
+                "container",
+                "create",
+                "--set",
+                "name=web",
+                "--set",
+                "ocId=301",
+                "--set",
+                "pool=zroot",
+            ],
+            "POST",
+            "/container",
+            {"name": "web", "ocId": 301, "pool": "zroot"},
+        ),
+        (
+            ["container", "start", "301"],
+            "POST",
+            "/container/301/actions/start",
+            None,
+        ),
+        (
+            ["directory-services", "ad", "config", "set", "--set", "domain=example.test"],
+            "PUT",
+            "/directory-services/active-directory",
+            {"domain": "example.test"},
+        ),
+        (
+            ["network", "interface", "l3-set", "em0", "--set", "addresses=address=10.0.0.10/24"],
+            "PUT",
+            "/network/interface/em0/l3",
+            {"addresses": [{"address": "10.0.0.10/24"}]},
+        ),
+        (
+            [
+                "zfs",
+                "pool",
+                "scrub-schedule-create",
+                "--set",
+                "poolGuid=g1",
+                "--set",
+                "cronExpr=0 2 * * 0",
+            ],
+            "POST",
+            "/zfs/pools/scrub/schedules",
+            {"poolGuid": "g1", "cronExpr": "0 2 * * 0"},
+        ),
+    )
+    for args, method, path, body in cases:
+        res = runner.invoke(app, [*args, "--dry-run", "-f", "json"])
+        assert res.exit_code == 0, (args, res.stdout)
+        payload = json.loads(res.stdout)
+        assert payload["method"] == method
+        assert payload["path"] == path
+        assert payload["body"] == body

@@ -50,7 +50,7 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 | `network attach/detach/set` | Generic NIC management commands |
 | `storage attach/from-image/set/delete` | Generic storage management commands |
 | `options boot-order/boot-rom/clock/cloud-init/extra-bhyve/ignore-umsrs/qemu-guest-agent/serial-console/shutdown-wait-time/tpm/wol` | Generic VM option update commands |
-| `registration-purge` | Purge an orphaned VM registration |
+| `registration-purge`, `domain-reinitialize` | Purge or reinitialize an orphaned VM registration/domain |
 
 ## OPTIONS
 
@@ -281,7 +281,7 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 | `network attach`, `storage attach`, `storage from-image` | `rid` |
 | `network detach`, `network set` | `rid networkId` |
 | `storage set`, `storage delete` | `rid storageId` |
-| `options *`, `registration-purge` | `rid` |
+| `options *`, `registration-purge`, `domain-reinitialize` | `rid` |
 
 ## EXIT STATUS
 

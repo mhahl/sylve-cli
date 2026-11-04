@@ -18,7 +18,9 @@ from sylve_cli.commands.download import download_app
 from sylve_cli.commands.extras import (
     auth_app,
     cloud_init_app,
+    container_app,
     ddns_app,
+    directory_services_app,
     group_app,
     iscsi_app,
     mdns_app,
@@ -148,6 +150,7 @@ app.add_typer(node_app, name="node")
 app.add_typer(vm_app, name="vm")
 app.add_typer(vm_app, name="server", hidden=True)
 app.add_typer(jail_app, name="jail")
+app.add_typer(container_app, name="container")
 app.add_typer(network_app, name="network")
 app.add_typer(download_app, name="download")
 app.add_typer(replication_app, name="replication")
@@ -163,6 +166,7 @@ app.add_typer(notifications_app, name="notifications")
 app.add_typer(user_app, name="user")
 app.add_typer(group_app, name="group")
 app.add_typer(auth_app, name="auth")
+app.add_typer(directory_services_app, name="directory-services")
 app.add_typer(cloud_init_app, name="cloud-init")
 
 

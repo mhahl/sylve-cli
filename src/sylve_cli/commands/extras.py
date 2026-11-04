@@ -32,6 +32,8 @@ from sylve_cli.commands.network import (
     firewall_advanced_app,
     firewall_nat_app,
     firewall_traffic_app,
+    iface_app,
+    network_app,
     object_app,
     route_app,
     switch_app,
@@ -126,6 +128,18 @@ cloud_init_app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode=None,
 )
+container_app = typer.Typer(
+    name="container",
+    help="Manage OCI/Podman containers, images, networks, registries, and catalog apps.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+directory_services_app = typer.Typer(
+    name="directory-services",
+    help="Manage Active Directory, Kerberos realms, keytabs, and principals.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
 
 
 def _subapp(parent: typer.Typer, name: str, help_text: str) -> typer.Typer:
@@ -167,6 +181,29 @@ auth_passkey_app = _subapp(
 cloud_init_template_app = _subapp(
     cloud_init_app, "template", "Manage reusable cloud-init templates."
 )
+container_image_app = _subapp(container_app, "image", "Manage container images on a ZFS pool.")
+container_network_app = _subapp(container_app, "network", "Manage container networks.")
+container_registry_app = _subapp(
+    container_app, "registry", "Manage container registry credentials."
+)
+container_catalog_app = _subapp(
+    container_app, "catalog", "Browse and render container catalog applications."
+)
+ds_ad_app = _subapp(
+    directory_services_app, "ad", "Manage Active Directory configuration and domain membership."
+)
+ds_kerberos_app = _subapp(
+    directory_services_app, "kerberos", "Manage Kerberos settings, realms, and keytabs."
+)
+
+# Singleton configuration groups: `config show` reads, `config set` updates.
+network_config_app = _subapp(network_app, "config", "Show or update network-wide configuration.")
+dhcp_config_app = _subapp(dhcp_app, "config", "Show or update DHCP service configuration.")
+samba_config_app = _subapp(samba_app, "config", "Show or update global Samba configuration.")
+iscsi_config_app = _subapp(iscsi_app, "config", "Show or update iSCSI global configuration.")
+mdns_config_app = _subapp(mdns_app, "config", "Show or update mDNS daemon configuration.")
+ds_ad_config_app = _subapp(ds_ad_app, "config", "Show or update Active Directory configuration.")
+ds_kerberos_config_app = _subapp(ds_kerberos_app, "config", "Show or update Kerberos defaults.")
 
 _PUBLIC_PATHS = {
     "/auth/login/config",
@@ -266,6 +303,8 @@ def _parse_kv_object(raw: str, children_map: dict[str, str]) -> dict[str, Any]:
         if not sub_k:
             raise SylveError("--set must use KEY=VALUE format with a non-empty key.")
         sub_type = children_map.get(sub_k)
+        if sub_type is None and "**" in children_map:
+            sub_type = children_map["**"]
         if sub_type and sub_type.startswith("array of ") and not sub_v.lstrip().startswith("["):
             elem_type = sub_type.removeprefix("array of ")
             obj[sub_k] = [_coerce_scalar(x, elem_type) for x in _split_csv_items(sub_v)]
@@ -299,7 +338,20 @@ def _lookup_schema(fields: tuple[Any, ...], parts: list[str]) -> tuple[str | Non
                 matched = entry
                 break
         if matched is None:
-            return None, {}
+            # Fall back to additionalProperties sentinel ("**") if present
+            for entry in current or ():
+                if isinstance(entry, (list, tuple)) and len(entry) >= 4 and entry[0] == "**":
+                    field_type = entry[1]
+                    current = entry[3] if len(entry) > 3 else ()
+                    children_map = {
+                        c[0]: c[1]
+                        for c in (current or ())
+                        if isinstance(c, (list, tuple)) and len(c) >= 2
+                    }
+                    break
+            else:
+                return None, {}
+            continue
         _, field_type, _req, current = matched
         children_map = {
             c[0]: c[1] for c in (current or ()) if isinstance(c, (list, tuple)) and len(c) >= 2
@@ -487,7 +539,12 @@ def _render_field_lines(fields: object, indent: str) -> list[str]:
             continue
         name, field_type, required, children = field
         marker = ", required" if required else ""
-        display_name = f"{name}[]" if field_type == "array of object" else name
+        if name == "**":
+            display_name = "<any key>"
+        elif field_type == "array of object":
+            display_name = f"{name}[]"
+        else:
+            display_name = name
         if isinstance(children, (list, tuple)) and children:
             lines.append(f"{indent}{display_name} ({field_type}{marker}):")
             lines.extend(_render_field_lines(children, indent + "  "))
@@ -614,6 +671,11 @@ def _execute_generic(
             json_body=body,
             node=node,
             require_auth=path not in _PUBLIC_PATHS,
+        )
+    if isinstance(result, str) and result.lstrip().lower().startswith(("<!doctype html", "<html")):
+        raise SylveError(
+            f"{method} {target_path} returned a non-JSON body; "
+            "this endpoint is not implemented on the target server."
         )
     _print_result(result, fmt, title, selected, sort_column, filters, limit, long=long)
 
@@ -996,6 +1058,14 @@ for spec in [  # type: ignore[assignment]
         "Purge an orphaned VM registration.",
         "rid",
     ),
+    (
+        vm_app,
+        "domain-reinitialize",
+        "POST",
+        "/vm/{rid}/domain/reinitialize",
+        "Reinitialize a VM libvirt domain.",
+        "rid",
+    ),
 ]:
     _add(*spec)
 
@@ -1197,14 +1267,98 @@ for spec in [  # type: ignore[assignment]
         "Delete a pkgbase Jail bootstrap.",
         "name",
     ),
+    (
+        jail_app,
+        "stats-step",
+        "GET",
+        "/jail/{ctid}/stats/{step}",
+        "Show Jail statistics for a step.",
+        "ctid step",
+    ),
+    (
+        jail_app,
+        "validate",
+        "POST",
+        "/jail/validate",
+        "Validate a Jail creation request.",
+    ),
+    (
+        jail_app,
+        "zfs-sources",
+        "GET",
+        "/jail/zfs-sources",
+        "List existing Jail root datasets.",
+    ),
 ]:
     _add(*spec)
 
 # ---------------------------------------------------------------------------
-# Network writes
+# Network config, interface L3, DHCP, firewall, network-object, route, WireGuard
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
-    (dhcp_app, "config-set", "PUT", "/network/dhcp/config", "Update DHCP configuration."),
+    (
+        network_config_app,
+        "show",
+        "GET",
+        "/network/global-config",
+        "Show network-wide configuration.",
+    ),
+    (
+        network_config_app,
+        "set",
+        "PUT",
+        "/network/global-config",
+        "Update network-wide configuration.",
+    ),
+    (
+        iface_app,
+        "l3-pending",
+        "GET",
+        "/network/interface/l3/pending",
+        "List pending host interface L3 operations.",
+    ),
+    (
+        iface_app,
+        "l3-set",
+        "PUT",
+        "/network/interface/{name}/l3",
+        "Stage a host interface L3 configuration change.",
+        "name",
+    ),
+    (
+        iface_app,
+        "l3-delete",
+        "DELETE",
+        "/network/interface/{name}/l3",
+        "Stage deletion of host interface L3 configuration.",
+        "name",
+    ),
+    (
+        iface_app,
+        "l3-reapply",
+        "POST",
+        "/network/interface/{name}/l3/reapply",
+        "Reapply host interface L3 configuration.",
+        "name",
+    ),
+    (
+        iface_app,
+        "l3-confirm",
+        "POST",
+        "/network/host-ip/pending/{id}/confirm",
+        "Confirm a pending host interface L3 operation.",
+        "id",
+    ),
+    (
+        iface_app,
+        "l3-revert",
+        "POST",
+        "/network/host-ip/pending/{id}/revert",
+        "Revert a pending host interface L3 operation.",
+        "id",
+    ),
+    (dhcp_config_app, "show", "GET", "/network/dhcp/config", "Show DHCP service configuration."),
+    (dhcp_config_app, "set", "PUT", "/network/dhcp/config", "Update DHCP service configuration."),
     (dhcp_range_app, "create", "POST", "/network/dhcp/range", "Create a DHCP range."),
     (dhcp_range_app, "set", "PUT", "/network/dhcp/range/{id}", "Update a DHCP range.", "id"),
     (dhcp_range_app, "delete", "DELETE", "/network/dhcp/range/{id}", "Delete a DHCP range.", "id"),
@@ -1507,6 +1661,44 @@ for spec in [  # type: ignore[assignment]
     ),
     (pool_app, "disks-usage", "GET", "/zfs/pools/disks-usage", "Show disk usage."),
     (
+        pool_app,
+        "scrub-runs",
+        "GET",
+        "/zfs/pools/{guid}/scrub/runs",
+        "List ZFS pool scrub runs.",
+        "guid",
+    ),
+    (
+        pool_app,
+        "scrub-schedules",
+        "GET",
+        "/zfs/pools/scrub/schedules",
+        "List ZFS scrub schedules.",
+    ),
+    (
+        pool_app,
+        "scrub-schedule-create",
+        "POST",
+        "/zfs/pools/scrub/schedules",
+        "Create a ZFS scrub schedule.",
+    ),
+    (
+        pool_app,
+        "scrub-schedule-set",
+        "PUT",
+        "/zfs/pools/scrub/schedules/{id}",
+        "Update a ZFS scrub schedule.",
+        "id",
+    ),
+    (
+        pool_app,
+        "scrub-schedule-delete",
+        "DELETE",
+        "/zfs/pools/scrub/schedules/{id}",
+        "Delete a ZFS scrub schedule.",
+        "id",
+    ),
+    (
         dataset_app,
         "set",
         "PATCH",
@@ -1556,6 +1748,13 @@ for spec in [  # type: ignore[assignment]
         "id",
     ),
     (
+        periodic_app,
+        "bulk-delete",
+        "DELETE",
+        "/zfs/datasets/snapshot/periodic",
+        "Bulk-delete periodic snapshot jobs.",
+    ),
+    (
         zfs_app,
         "dashboard-snapshot",
         "GET",
@@ -1580,6 +1779,14 @@ for spec in [  # type: ignore[assignment]
 for spec in [  # type: ignore[assignment]
     (target_app, "create", "POST", "/cluster/backups/targets", "Create a backup target."),
     (target_app, "set", "PUT", "/cluster/backups/targets/{id}", "Update a backup target.", "id"),
+    (
+        target_app,
+        "readiness",
+        "GET",
+        "/cluster/backups/targets/{id}/readiness",
+        "Show backup target readiness.",
+        "id",
+    ),
     (
         target_app,
         "running-jobs",
@@ -1676,6 +1883,13 @@ for spec in [  # type: ignore[assignment]
         "GET",
         "/utilities/downloads/utype",
         "List completed download choices.",
+    ),
+    (
+        download_app,
+        "detect-filename",
+        "POST",
+        "/utilities/downloads/detect-filename",
+        "Detect a remote filename from a URL.",
     ),
     (
         download_app,
@@ -2064,8 +2278,8 @@ def system_terminal(
 # Samba
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
-    (samba_app, "config", "GET", "/samba/config", "Show Samba global configuration."),
-    (samba_app, "config-set", "PUT", "/samba/config", "Update Samba global configuration."),
+    (samba_config_app, "show", "GET", "/samba/config", "Show global Samba configuration."),
+    (samba_config_app, "set", "PUT", "/samba/config", "Update global Samba configuration."),
     (samba_share_app, "list", "GET", "/samba/shares", "List Samba shares."),
     (samba_share_app, "create", "POST", "/samba/shares", "Create a Samba share."),
     (samba_share_app, "set", "PUT", "/samba/shares/{id}", "Update a Samba share.", "id"),
@@ -2087,6 +2301,8 @@ for spec in [  # type: ignore[assignment]
 # iSCSI
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
+    (iscsi_config_app, "show", "GET", "/iscsi/config", "Show iSCSI global configuration."),
+    (iscsi_config_app, "set", "PUT", "/iscsi/config", "Update iSCSI global configuration."),
     (iscsi_initiator_app, "list", "GET", "/iscsi/initiators", "List iSCSI initiators."),
     (iscsi_initiator_app, "create", "POST", "/iscsi/initiators", "Create an iSCSI initiator."),
     (
@@ -2192,8 +2408,8 @@ for spec in [  # type: ignore[assignment]
         "Synchronize a dynamic DNS entry.",
         "id",
     ),
-    (mdns_app, "config", "GET", "/mdns/config", "Show mDNS settings."),
-    (mdns_app, "config-set", "PUT", "/mdns/config", "Update mDNS settings."),
+    (mdns_config_app, "show", "GET", "/mdns/config", "Show mDNS daemon configuration."),
+    (mdns_config_app, "set", "PUT", "/mdns/config", "Update mDNS daemon configuration."),
     (mdns_record_app, "list", "GET", "/mdns/records", "List mDNS records."),
     (mdns_record_app, "create", "POST", "/mdns/records", "Create an mDNS record."),
     (mdns_record_app, "set", "PUT", "/mdns/records/{id}", "Update an mDNS record.", "id"),
@@ -2364,6 +2580,7 @@ for spec in [  # type: ignore[assignment]
         "groupId",
     ),
     (auth_app, "login-config", "GET", "/auth/login/config", "Show login configuration."),
+    (auth_app, "preferences", "GET", "/auth/preferences", "Show user preferences."),
     (auth_app, "sse-token", "POST", "/auth/sse-tokens", "Create an SSE token."),
     (
         auth_passkey_app,
@@ -2422,6 +2639,355 @@ for spec in [  # type: ignore[assignment]
         "/utilities/cloud-init/templates/{templateId}",
         "Delete a cloud-init template.",
         "templateId",
+    ),
+]:
+    _add(*spec)
+
+
+# ---------------------------------------------------------------------------
+# Containers (OCI / Podman)
+# ---------------------------------------------------------------------------
+for spec in [  # type: ignore[assignment]
+    (container_app, "list", "GET", "/container", "List containers."),
+    (container_app, "create", "POST", "/container", "Create a container."),
+    (container_app, "show", "GET", "/container/{ocid}", "Show a container.", "ocid"),
+    (container_app, "set", "PUT", "/container/{ocid}", "Update a container.", "ocid"),
+    (container_app, "delete", "DELETE", "/container/{ocid}", "Delete a container.", "ocid"),
+    (
+        container_app,
+        "start",
+        "POST",
+        "/container/{ocid}/actions/start",
+        "Start a container.",
+        "ocid",
+    ),
+    (
+        container_app,
+        "stop",
+        "POST",
+        "/container/{ocid}/actions/stop",
+        "Stop a container.",
+        "ocid",
+    ),
+    (
+        container_app,
+        "restart",
+        "POST",
+        "/container/{ocid}/actions/restart",
+        "Restart a container.",
+        "ocid",
+    ),
+    (
+        container_app,
+        "kill",
+        "POST",
+        "/container/{ocid}/actions/kill",
+        "Kill a container.",
+        "ocid",
+    ),
+    (
+        container_app,
+        "image-info",
+        "GET",
+        "/container/{ocid}/image",
+        "Show container image metadata.",
+        "ocid",
+    ),
+    (container_app, "logs", "GET", "/container/{ocid}/logs", "Show container logs.", "ocid"),
+    (
+        container_app,
+        "options",
+        "PATCH",
+        "/container/{ocid}/options",
+        "Update container boot and web options.",
+        "ocid",
+    ),
+    (
+        container_app,
+        "stats",
+        "GET",
+        "/container/{ocid}/stats",
+        "Show current container statistics.",
+        "ocid",
+    ),
+    (
+        container_app,
+        "stats-step",
+        "GET",
+        "/container/{ocid}/stats/{step}",
+        "Show container statistics for a step.",
+        "ocid step",
+    ),
+    (container_app, "ports", "GET", "/container/ports", "List used host ports."),
+    (container_app, "stack", "POST", "/container/stack", "Create a catalog app stack."),
+    (
+        container_image_app,
+        "list",
+        "GET",
+        "/container/images/{pool}",
+        "List container images on a pool.",
+        "pool",
+    ),
+    (
+        container_image_app,
+        "pull",
+        "POST",
+        "/container/images/{pool}/pull",
+        "Pull a container image to a pool.",
+        "pool",
+    ),
+    (
+        container_image_app,
+        "prune",
+        "POST",
+        "/container/images/{pool}/prune",
+        "Remove unused container images from a pool.",
+        "pool",
+    ),
+    (
+        container_image_app,
+        "delete",
+        "DELETE",
+        "/container/images/{pool}/{id}",
+        "Remove a container image from a pool.",
+        "pool id",
+    ),
+    (container_network_app, "list", "GET", "/container/networks", "List container networks."),
+    (container_network_app, "create", "POST", "/container/networks", "Create a container network."),
+    (
+        container_network_app,
+        "delete",
+        "DELETE",
+        "/container/networks/{id}",
+        "Delete a container network.",
+        "id",
+    ),
+    (
+        container_registry_app,
+        "list",
+        "GET",
+        "/container/registry-credentials",
+        "List container registry credentials.",
+    ),
+    (
+        container_registry_app,
+        "set",
+        "PUT",
+        "/container/registry-credentials",
+        "Save a container registry credential.",
+    ),
+    (
+        container_registry_app,
+        "delete",
+        "DELETE",
+        "/container/registry-credentials/{id}",
+        "Delete a container registry credential.",
+        "id",
+    ),
+    (container_catalog_app, "list", "GET", "/container/catalog", "List catalog applications."),
+    (
+        container_catalog_app,
+        "show",
+        "GET",
+        "/container/catalog/{source}/{id}",
+        "Show catalog application settings.",
+        "source id",
+    ),
+    (
+        container_catalog_app,
+        "render",
+        "POST",
+        "/container/catalog/{source}/{id}/render",
+        "Render a catalog application plan.",
+        "source id",
+    ),
+]:
+    _add(*spec)
+
+_add(
+    container_catalog_app,
+    "source-icon",
+    "GET",
+    "/container/catalog/{source}/icon",
+    "Download a catalog source logo.",
+    args_help="source",
+    binary=True,
+)
+_add(
+    container_catalog_app,
+    "icon",
+    "GET",
+    "/container/catalog/{source}/{id}/icon",
+    "Download a catalog application icon.",
+    args_help="source id",
+    binary=True,
+)
+
+
+@container_app.command("console")
+def container_console(
+    ctx: typer.Context,
+    ocid: Annotated[int, typer.Argument(help="Container OCID.")],
+    shell: Annotated[
+        str | None,
+        typer.Option("--shell", help="Shell executable inside the container."),
+    ] = None,
+    node: NodeOption = None,
+) -> None:
+    """Attach to a running container's interactive console over WebSocket."""
+    state: CLIState = ctx.obj
+    extra_params: dict[str, Any] | None = {"shell": shell} if shell else None
+    with state.get_client(node_override=node) as client:
+        attach_console(
+            client,
+            f"/container/{ocid}/console",
+            node=node,
+            extra_params=extra_params,
+            takeover=False,
+            banner=f"Attached to container {ocid} console",
+        )
+
+
+# ---------------------------------------------------------------------------
+# Directory services (Active Directory and Kerberos)
+# ---------------------------------------------------------------------------
+for spec in [  # type: ignore[assignment]
+    (
+        directory_services_app,
+        "principals",
+        "GET",
+        "/directory-services/principals",
+        "Search Active Directory user or group principals.",
+    ),
+    (
+        ds_ad_config_app,
+        "show",
+        "GET",
+        "/directory-services/active-directory",
+        "Show Active Directory configuration.",
+    ),
+    (
+        ds_ad_config_app,
+        "set",
+        "PUT",
+        "/directory-services/active-directory",
+        "Update Active Directory configuration.",
+    ),
+    (
+        ds_ad_app,
+        "status",
+        "GET",
+        "/directory-services/active-directory/status",
+        "Show cached Active Directory status.",
+    ),
+    (
+        ds_ad_app,
+        "check",
+        "POST",
+        "/directory-services/active-directory/check",
+        "Check Active Directory trust and Winbind health.",
+    ),
+    (
+        ds_ad_app,
+        "enable",
+        "PUT",
+        "/directory-services/active-directory/enabled",
+        "Enable or disable Active Directory.",
+    ),
+    (
+        ds_ad_app,
+        "join",
+        "POST",
+        "/directory-services/active-directory/join",
+        "Join the configured Active Directory domain.",
+    ),
+    (
+        ds_ad_app,
+        "leave",
+        "POST",
+        "/directory-services/active-directory/leave",
+        "Leave the Active Directory domain.",
+    ),
+    (
+        ds_kerberos_config_app,
+        "show",
+        "GET",
+        "/directory-services/kerberos/settings",
+        "Show Kerberos defaults.",
+    ),
+    (
+        ds_kerberos_config_app,
+        "set",
+        "PUT",
+        "/directory-services/kerberos/settings",
+        "Update Kerberos defaults.",
+    ),
+    (
+        ds_kerberos_app,
+        "realm-list",
+        "GET",
+        "/directory-services/kerberos/realms",
+        "List Kerberos realms.",
+    ),
+    (
+        ds_kerberos_app,
+        "realm-create",
+        "POST",
+        "/directory-services/kerberos/realms",
+        "Create a Kerberos realm.",
+    ),
+    (
+        ds_kerberos_app,
+        "realm-discover",
+        "POST",
+        "/directory-services/kerberos/realms/discover",
+        "Discover Kerberos servers via DNS SRV records.",
+    ),
+    (
+        ds_kerberos_app,
+        "realm-set",
+        "PUT",
+        "/directory-services/kerberos/realms/{id}",
+        "Update a Kerberos realm.",
+        "id",
+    ),
+    (
+        ds_kerberos_app,
+        "realm-delete",
+        "DELETE",
+        "/directory-services/kerberos/realms/{id}",
+        "Delete a Kerberos realm.",
+        "id",
+    ),
+    (
+        ds_kerberos_app,
+        "keytab-list",
+        "GET",
+        "/directory-services/kerberos/keytabs",
+        "List Kerberos keytabs.",
+    ),
+    (
+        ds_kerberos_app,
+        "keytab-create",
+        "POST",
+        "/directory-services/kerberos/keytabs",
+        "Upload a Kerberos keytab.",
+    ),
+    (
+        ds_kerberos_app,
+        "keytab-set",
+        "PUT",
+        "/directory-services/kerberos/keytabs/{id}",
+        "Update a Kerberos keytab.",
+        "id",
+    ),
+    (
+        ds_kerberos_app,
+        "keytab-delete",
+        "DELETE",
+        "/directory-services/kerberos/keytabs/{id}",
+        "Delete a Kerberos keytab.",
+        "id",
     ),
 ]:
     _add(*spec)

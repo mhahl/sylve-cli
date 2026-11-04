@@ -19,10 +19,10 @@ manual snapshots, and scheduled periodic snapshot jobs across Sylve nodes.
 
 | Group | Subcommands |
 |---|---|
-| `pool` | `list`, `show`, `status`, `scrub`, `create`, `delete`, `set`, `detach`, `replace-device`, `disks-usage` |
+| `pool` | `list`, `show`, `status`, `scrub`, `scrub-runs`, `scrub-schedules`, `scrub-schedule-create`, `scrub-schedule-set`, `scrub-schedule-delete`, `create`, `delete`, `set`, `detach`, `replace-device`, `disks-usage` |
 | `dataset` | `list`, `create-fs`, `create-vol`, `delete`, `set`, `bulk-delete`, `paginated`, `volume-set`, `volume-flash` |
 | `snapshot` | `list`, `create`, `rollback`, `delete` |
-| `periodic` | `list`, `create`, `set`, `delete` |
+| `periodic` | `list`, `create`, `set`, `delete`, `bulk-delete` |
 | top-level | `dashboard-snapshot`, `dashboard-history`, `dashboard-delta` |
 
 ## OPTIONS
@@ -74,10 +74,11 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
-| `pool delete`, `pool set`, `pool detach`, `pool replace-device` | `guid` |
+| `pool delete`, `pool set`, `pool detach`, `pool replace-device`, `pool scrub-runs` | `guid` |
+| `pool scrub-schedule-set`, `pool scrub-schedule-delete` | `id` |
 | `dataset set`, `dataset volume-set`, `dataset volume-flash` | `guid` |
 | `periodic set`, `periodic delete` | `id` |
-| `pool create`, `pool disks-usage`, `dataset bulk-delete`, `dataset paginated`, `periodic create`, `dashboard-*` | none |
+| `pool create`, `pool disks-usage`, `pool scrub-schedules`, `pool scrub-schedule-create`, `dataset bulk-delete`, `dataset paginated`, `periodic create`, `periodic bulk-delete`, `dashboard-*` | none |
 
 ## EXIT STATUS
 

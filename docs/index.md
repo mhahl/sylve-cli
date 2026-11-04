@@ -29,6 +29,7 @@ as `man(1)` pages.
 | [node](commands/node.md) | Node inventory, telemetry, drain, reboot, and audit logs |
 | [vm](commands/vm.md) | Bhyve VMs, snapshots, and templates (hidden alias: `server`) |
 | [jail](commands/jail.md) | FreeBSD jails, snapshots, bootstraps, and templates |
+| [container](commands/container.md) | OCI/Podman containers, images, networks, registries, and catalog apps |
 | [network](commands/network.md) | Interfaces, switches, routes, DHCP, PF, and WireGuard |
 | [download](commands/download.md) | ISO and image downloads, uploads, and signed URLs |
 | [replication](commands/replication.md) | HA replication policies, failovers, and events |
@@ -44,6 +45,7 @@ as `man(1)` pages.
 | [user](commands/user.md) | Local, PAM, and imported users, plus passkeys |
 | [group](commands/group.md) | Authentication groups and members |
 | [auth](commands/auth.md) | Login configuration, SSE tokens, and passkeys |
+| [directory-services](commands/directory-services.md) | Active Directory, Kerberos realms, keytabs, and principals |
 | [cloud-init](commands/cloud-init.md) | Reusable cloud-init templates |
 
 ## INSTALLED MANUAL PAGES

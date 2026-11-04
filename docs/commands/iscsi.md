@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-iscsi` - manage iSCSI initiators, targets, LUNs, and portals
+`sylve-iscsi` - manage iSCSI configuration, initiators, targets, LUNs, and portals
 
 ## SYNOPSIS
 
@@ -12,7 +12,7 @@ sylve iscsi COMMAND [ARGS ...]
 
 ## DESCRIPTION
 
-`sylve iscsi` manages iSCSI initiators, targets, LUNs, portals, and active
+`sylve iscsi` manages iSCSI global configuration, initiators, targets, LUNs, portals, and active
 sessions via generic Sylve API bindings. Supply request payloads with
 `--data` in JSON or YAML format.
 
@@ -20,6 +20,8 @@ sessions via generic Sylve API bindings. Supply request payloads with
 
 | Subcommand | Path Arguments | Description |
 |---|---|---|
+| `config show` | none | Show iSCSI global configuration |
+| `config set` | none | Update iSCSI global configuration |
 | `initiator list` | none | List iSCSI initiators |
 | `initiator create` | none | Create an initiator |
 | `initiator set` | `ID` | Update initiator `ID` |
@@ -93,6 +95,13 @@ sylve iscsi target lun-add 2 --set zvol=zroot/iscsi/disk0 --set lunNumber=0
 sylve iscsi target portal-add 2 --set address=10.0.0.11 --set port=3260
 sylve iscsi target lun-remove 2 0 --yes
 sylve iscsi target portal-remove 2 1 --yes
+```
+
+Read and update iSCSI global configuration:
+
+```sh
+sylve iscsi config show -f json
+sylve iscsi config set --set extraTargetConfig='{"timeout": 30}' --dry-run -f json
 ```
 
 Create and connect an initiator and check subsystem status:

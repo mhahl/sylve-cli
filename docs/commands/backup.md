@@ -25,7 +25,7 @@ backup execution events.
 | `target datasets TARGET_ID` | List restorable datasets on a target |
 | `target validate TARGET_ID` | Validate SSH/storage connectivity to a target |
 | `target delete TARGET_ID` | Delete a disabled backup target |
-| `target create`, `target set ID`, `target running-jobs ID`, `target dataset-snapshots ID`, `target vm-metadata ID`, `target jail-metadata ID`, `target restore ID` | Generic target API commands |
+| `target create`, `target set ID`, `target readiness ID`, `target running-jobs ID`, `target dataset-snapshots ID`, `target vm-metadata ID`, `target jail-metadata ID`, `target restore ID` | Generic target API commands |
 | `job list` | List scheduled backup jobs |
 | `job run JOB_ID` | Queue an immediate backup job run |
 | `job snapshots JOB_ID` | List restorable snapshots for a job |
@@ -75,7 +75,7 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
-| `target set`, `target running-jobs`, `target dataset-snapshots`, `target vm-metadata`, `target jail-metadata`, `target restore` | `id` |
+| `target set`, `target readiness`, `target running-jobs`, `target dataset-snapshots`, `target vm-metadata`, `target jail-metadata`, `target restore` | `id` |
 | `job set` | `id` |
 | `target create`, `job create`, `event remote-list` | none |
 

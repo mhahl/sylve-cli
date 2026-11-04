@@ -2,7 +2,7 @@
 
 ## NAME
 
-`sylve-network` - manage interfaces, switches, routes, DHCP, PF firewall rules, network objects, and WireGuard
+`sylve-network` - manage global settings, interfaces, switches, routes, DHCP, PF firewall rules, network objects, and WireGuard
 
 ## SYNOPSIS
 
@@ -13,7 +13,7 @@ sylve network GROUP COMMAND [ARGS ...]
 ## DESCRIPTION
 
 `sylve network` configures host and guest networking on Sylve nodes, including
-physical/virtual interfaces, standard and manual bridge switches, static
+physical/virtual interfaces, global settings, standard and manual bridge switches, static
 routes, DHCP scopes and leases, PF traffic/NAT firewall rules and live logs,
 reusable network objects, and WireGuard VPN servers, peers, and clients.
 
@@ -21,10 +21,11 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
 
 | Group | Subcommands |
 |---|---|
-| `interface` | `list`, `l3` |
+| (top-level) | `config show`, `config set` |
+| `interface` | `list`, `l3`, `l3-pending`, `l3-set`, `l3-delete`, `l3-reapply`, `l3-confirm`, `l3-revert` |
 | `switch` | `list`, `create-standard`, `create-manual`, `set-standard`, `delete`, `sync` |
 | `route` | `list`, `create`, `set`, `delete` |
-| `dhcp` | `config`, `config-set`, `range list/create/set/delete`, `lease list/create/set/delete/delete-dynamic` |
+| `dhcp` | `config show/set`, `range list/create/set/delete`, `lease list/create/set/delete/delete-dynamic` |
 | `firewall` | `logs`, `traffic list/create/set/delete/bulk-delete/reorder/counters`, `nat list/create/set/delete/bulk-delete/reorder/counters/route-suggestions`, `advanced show/set/preview/rendered` |
 | `object` | `list`, `create`, `set`, `delete`, `bulk-delete` |
 | `wireguard` | `status`, `server init/set/state/delete`, `peer add/set/state/remove`, `client list/create/set/state/delete` |
@@ -61,12 +62,14 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
   `-y, --yes`, `-n, --node NODE`, `-f, --format`.
 - `sync`: `-n, --node NODE`, `-f, --format`.
 
-### `route`, `dhcp`, `firewall`, `object`, and `wireguard`
+### `config`, `route`, `dhcp`, `firewall`, `object`, and `wireguard`
 
+- `config show`: `-n/--node`, `-f/--format`, `-c/--column`, `--sort-column NAME`,
+  `--filter COLUMN=VALUE`, `-l/--limit N`.
 - `route list`: `-n/--node`, `-f/--format`, `-c/--column`, `--sort-column NAME`,
   `--filter COLUMN=VALUE`, `-l/--limit N`, `--long`.
 - `route delete ROUTE_ID`: `-y/--yes`, `-n/--node`, `-f/--format`.
-- `dhcp config`: `-n/--node`, `-f/--format`, `-c/--column`.
+- `dhcp config show`: `-n/--node`, `-f/--format`, `-c/--column`.
 - `dhcp range list`, `dhcp lease list`: `-n/--node`, `-f/--format`, `-c/--column`,
   `--sort-column NAME`, `--filter COLUMN=VALUE`, `-l/--limit N`.
 - `firewall traffic list`, `firewall nat list`: `-n/--node`, `-f/--format`,
@@ -97,6 +100,8 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 
 | Subcommand | Path Arguments |
 |---|---|
+| `interface l3-set`, `interface l3-delete`, `interface l3-reapply` | `name` |
+| `interface l3-confirm`, `interface l3-revert` | `id` |
 | `switch set-standard`, `route set`, `object set` | `id` |
 | `dhcp range set`, `range delete`, `lease set`, `lease delete` | `id` |
 | `firewall traffic set`, `traffic delete`, `nat set`, `nat delete`, `nat route-suggestions` | `id` |
@@ -149,7 +154,7 @@ sylve network switch sync --node node1.example.test
 Inspect DHCP configuration and blocked PF firewall log entries:
 
 ```sh
-sylve network dhcp config --node node1.example.test -f json
+sylve network dhcp config show --node node1.example.test -f json
 sylve network firewall logs --limit 20 --action block --interface em0
 sylve network firewall logs --follow --rule-type traffic --direction in
 ```
@@ -211,6 +216,14 @@ sylve network firewall nat create --node node1.example.test \
   --set natType=snat --set protocol=any --dry-run -f json
 ```
 
+Read and update network-wide configuration:
+
+```sh
+sylve network config show -f json
+sylve network config set -n node1.example.test \
+  --set dnsServers=10.0.0.1 --set searchDomains=example.test --dry-run -f json
+```
+
 Bring up WireGuard and tune DHCP or PF advanced rules:
 
 ```sh
@@ -221,7 +234,7 @@ sylve network wireguard peer add --node node1.example.test \
 sylve network wireguard peer set peer1 --node node1.example.test \
   --set name=laptop --set clientIPs=10.99.0.2/32 --set routableIPs=10.99.0.0/24 --dry-run -f json
 # body: {"name":"laptop","clientIPs":["10.99.0.2/32"],"routableIPs":["10.99.0.0/24"]}
-sylve network dhcp config-set --node node1.example.test --set domain=example.test
+sylve network dhcp config set --node node1.example.test --set domain=example.test
 sylve network firewall advanced set --node node1.example.test --set preRules="pass all" --dry-run -f json
 ```
 

@@ -20,8 +20,8 @@ records via generic Sylve API bindings. Supply request payloads with
 
 | Subcommand | Path Arguments | Description |
 |---|---|---|
-| `config` | none | Show mDNS daemon configuration |
-| `config-set` | none | Update mDNS daemon configuration |
+| `config show` | none | Show mDNS daemon configuration |
+| `config set` | none | Update mDNS daemon configuration |
 | `record list` | none | List mDNS records |
 | `record create` | none | Create an mDNS record |
 | `record set` | `ID` | Update record `ID` |
@@ -83,14 +83,14 @@ sylve mdns record create \
 
 sylve mdns record set 2 --set interfaces=em0,em1 -f json
 sylve mdns record delete 2 --yes
-sylve mdns config -f json
-sylve mdns config-set --set hostname=example-host --set interfaces=em0 -f json
+sylve mdns config show -f json
+sylve mdns config set --set hostname=example-host --set interfaces=em0 -f json
 ```
 
 Preview a daemon config change and a record create with `--set`:
 
 ```sh
-sylve mdns config-set --set hostname=example-host --set interfaces=em0 --dry-run -f json
+sylve mdns config set --set hostname=example-host --set interfaces=em0 --dry-run -f json
 sylve mdns record create \
   --set name=example-service --set type=_http._tcp \
   --set port=8080 --set interfaces=em0 \

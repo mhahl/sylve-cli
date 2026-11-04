@@ -576,21 +576,6 @@ def route_delete(
 # ------------------------------------------------------------------
 # DHCP
 # ------------------------------------------------------------------
-@dhcp_app.command("config")
-def dhcp_config(
-    ctx: typer.Context,
-    node: NodeOption = None,
-    fmt: FormatOption = OutputFormat.table,
-    columns: ColumnsOption = None,
-) -> None:
-    """Show DHCP service configuration."""
-    state: CLIState = ctx.obj
-    with state.get_client(node_override=node) as client:
-        data = client.get("/network/dhcp/config", node=node) or {}
-    if isinstance(data, dict):
-        print_dict(data, fmt=fmt, selected_columns=columns, title="DHCP Configuration")
-
-
 @dhcp_range_app.command("list")
 def dhcp_range_list(
     ctx: typer.Context,
