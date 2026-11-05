@@ -27,11 +27,11 @@ templates via generic Sylve API bindings. Supply request payloads with
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -98,12 +98,12 @@ sylve cloud-init template create \
 sylve cloud-init template delete 2 --yes
 ```
 
-Preview a create with `--set` fields and show the request:
+Preview a create with `--property` fields and show the request:
 
 ```sh
 sylve cloud-init template create \
-  --set name=example-base --set user=example-user \
-  --set meta=example-meta --set networkConfig=example-net \
+  --property name=example-base --property user=example-user \
+  --property meta=example-meta --property networkConfig=example-net \
   --dry-run -f json
 ```
 
@@ -111,8 +111,8 @@ Update a template, narrow the list to a few columns, and delete:
 
 ```sh
 sylve cloud-init template set 1 \
-  --set name=example-base-v2 --set user=example-user \
-  --set meta=example-meta --set networkConfig=example-net \
+  --property name=example-base-v2 --property user=example-user \
+  --property meta=example-meta --property networkConfig=example-net \
   --dry-run -f json
 sylve cloud-init template list -c id -c name --sort-column name -l 5
 sylve cloud-init template delete 1 --yes

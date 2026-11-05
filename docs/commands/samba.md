@@ -31,11 +31,11 @@ format.
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -79,12 +79,12 @@ Create, update, disable, and delete a share:
 
 ```sh
 sylve samba share create \
-  --set name=media --set dataset=zroot/media --set enabled=true \
+  --property name=media --property dataset=zroot/media --property enabled=true \
   --node node1.example.test \
   --format json
 
-sylve samba share set 2 --set guest=enabled=true,writeable=false -f json
-sylve samba share enable 2 --set enabled=false -f json
+sylve samba share set 2 --property guest=enabled=true,writeable=false -f json
+sylve samba share enable 2 --property enabled=false -f json
 sylve samba share delete 2 --yes
 ```
 
@@ -92,24 +92,24 @@ Inspect and update global Samba settings and read audit logs:
 
 ```sh
 sylve samba config show -f json
-sylve samba config set --set workgroup=WORKGROUP --set serverString=Sylve -f json
+sylve samba config set --property workgroup=WORKGROUP --property serverString=Sylve -f json
 sylve samba audit-logs --param size=20
 ```
 
-Preview a global config change and a share create with `--set`:
+Preview a global config change and a share create with `--property`:
 
 ```sh
-sylve samba config set --set workgroup=EXAMPLE --set serverString=Example --dry-run -f json
+sylve samba config set --property workgroup=EXAMPLE --property serverString=Example --dry-run -f json
 sylve samba share create \
-  --set name=example-media --set dataset=tank/media --set enabled=true \
+  --property name=example-media --property dataset=tank/media --property enabled=true \
   --dry-run -f json
 ```
 
 Update, disable, and delete a share, and narrow list output:
 
 ```sh
-sylve samba share set 2 --set enabled=true --set timeMachine=false --dry-run -f json
-sylve samba share enable 2 --set enabled=false --dry-run -f json
+sylve samba share set 2 --property enabled=true --property timeMachine=false --dry-run -f json
+sylve samba share enable 2 --property enabled=false --dry-run -f json
 sylve samba share list -c id -c name -c dataset --sort-column name -l 10
 sylve samba audit-logs -c id -c share -l 5
 sylve samba share delete 2 --yes

@@ -42,11 +42,11 @@ Sylve API bindings.
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -73,18 +73,18 @@ Inspect Active Directory status and discover a Kerberos realm:
 
 ```sh
 sylve directory-services ad status -f json
-sylve directory-services kerberos realm-discover --set realm=EXAMPLE.TEST --dry-run -f json
+sylve directory-services kerberos realm-discover --property realm=EXAMPLE.TEST --dry-run -f json
 ```
 
 Configure Active Directory, join a domain, and search principals:
 
 ```sh
 sylve directory-services ad config set \
-  --set domain=example.test --set workgroup=EXAMPLE \
-  --set idmapBackend=rid --set rangeLow=10000 --set rangeHigh=99999 \
+  --property domain=example.test --property workgroup=EXAMPLE \
+  --property idmapBackend=rid --property rangeLow=10000 --property rangeHigh=99999 \
   --dry-run -f json
 sylve directory-services ad join \
-  --set username=Administrator --set password=secret --dry-run -f json
+  --property username=Administrator --property password=secret --dry-run -f json
 sylve directory-services principals --param q=admins --param kind=group -f json
 ```
 

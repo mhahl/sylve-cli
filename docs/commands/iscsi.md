@@ -40,11 +40,11 @@ sessions via generic Sylve API bindings. Supply request payloads with
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -87,12 +87,12 @@ Create a target, attach and remove a LUN and portal:
 
 ```sh
 sylve iscsi target create \
-  --set targetName=iqn.2026-10.test.sylve:storage --set alias=storage \
+  --property targetName=iqn.2026-10.test.sylve:storage --property alias=storage \
   --node node1.example.test \
   --format json
 
-sylve iscsi target lun-add 2 --set zvol=zroot/iscsi/disk0 --set lunNumber=0
-sylve iscsi target portal-add 2 --set address=10.0.0.11 --set port=3260
+sylve iscsi target lun-add 2 --property zvol=zroot/iscsi/disk0 --property lunNumber=0
+sylve iscsi target portal-add 2 --property address=10.0.0.11 --property port=3260
 sylve iscsi target lun-remove 2 0 --yes
 sylve iscsi target portal-remove 2 1 --yes
 ```
@@ -101,35 +101,35 @@ Read and update iSCSI global configuration:
 
 ```sh
 sylve iscsi config show -f json
-sylve iscsi config set --set extraTargetConfig='{"timeout": 30}' --dry-run -f json
+sylve iscsi config set --property extraTargetConfig='{"timeout": 30}' --dry-run -f json
 ```
 
 Create and connect an initiator and check subsystem status:
 
 ```sh
-sylve iscsi initiator create --set nickname=web-01 --set targetName=iqn.2026-10.test.sylve:storage --set targetAddress=10.0.0.11
+sylve iscsi initiator create --property nickname=web-01 --property targetName=iqn.2026-10.test.sylve:storage --property targetAddress=10.0.0.11
 sylve iscsi initiator connect 1
 sylve iscsi status -f json
 ```
 
-Preview target and initiator creates and updates with `--set`:
+Preview target and initiator creates and updates with `--property`:
 
 ```sh
 sylve iscsi target create \
-  --set targetName=iqn.2026-11.example.test:storage --set alias=example-storage \
+  --property targetName=iqn.2026-11.example.test:storage --property alias=example-storage \
   --dry-run -f json
-sylve iscsi target set 1 --set alias=example-storage-v2 --dry-run -f json
+sylve iscsi target set 1 --property alias=example-storage-v2 --dry-run -f json
 sylve iscsi initiator create \
-  --set nickname=example-web --set targetName=iqn.2026-11.example.test:storage \
-  --set targetAddress=10.0.0.11 --dry-run -f json
-sylve iscsi initiator set 1 --set nickname=example-web-v2 --dry-run -f json
+  --property nickname=example-web --property targetName=iqn.2026-11.example.test:storage \
+  --property targetAddress=10.0.0.11 --dry-run -f json
+sylve iscsi initiator set 1 --property nickname=example-web-v2 --dry-run -f json
 ```
 
 Wire up a LUN and portal, narrow list output, and clean up:
 
 ```sh
-sylve iscsi target lun-add 1 --set zvol=tank/iscsi/disk0 --set lunNumber=0 --dry-run -f json
-sylve iscsi target portal-add 1 --set address=10.0.0.11 --set port=3260 --dry-run -f json
+sylve iscsi target lun-add 1 --property zvol=tank/iscsi/disk0 --property lunNumber=0 --dry-run -f json
+sylve iscsi target portal-add 1 --property address=10.0.0.11 --property port=3260 --dry-run -f json
 sylve iscsi target list -c id -c targetName --sort-column targetName -l 10
 sylve iscsi sessions -c id -c targetName -l 5
 sylve iscsi initiator connect 1 --dry-run -f json

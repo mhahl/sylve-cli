@@ -1,7 +1,7 @@
 """Additional command groups backed by the Sylve v0.3.1 HTTP API.
 
 The commands here accept request bodies through ``--data`` (a JSON/YAML blob
-or ``@FILE``) with per-field ``--set KEY=VALUE`` overrides, plus query
+or ``@FILE``) with per-field ``--property KEY=VALUE`` overrides, plus query
 parameters through ``--param``. That keeps the CLI thin: the API remains the
 source of truth for request shapes, and new fields do not need a new flag.
 """
@@ -297,11 +297,11 @@ def _parse_kv_object(raw: str, children_map: dict[str, str]) -> dict[str, Any]:
     obj: dict[str, Any] = {}
     for pair in _split_csv_items(raw):
         if "=" not in pair:
-            raise SylveError(f"--set object entry '{pair}' must use KEY=VALUE format.")
+            raise SylveError(f"--property object entry '{pair}' must use KEY=VALUE format.")
         sub_k, sub_v = pair.split("=", 1)
         sub_k = sub_k.strip()
         if not sub_k:
-            raise SylveError("--set must use KEY=VALUE format with a non-empty key.")
+            raise SylveError("--property must use KEY=VALUE format with a non-empty key.")
         sub_type = children_map.get(sub_k)
         if sub_type is None and "**" in children_map:
             sub_type = children_map["**"]
@@ -318,9 +318,9 @@ def _parse_bracketed_list(raw: str, elem_type: str | None = None) -> list[Any]:
     try:
         parsed = yaml.safe_load(raw)
     except yaml.YAMLError as exc:
-        raise SylveError(f"Invalid --set list '{raw}': {exc}") from exc
+        raise SylveError(f"Invalid --property list '{raw}': {exc}") from exc
     if not isinstance(parsed, list):
-        raise SylveError(f"--set list value '{raw}' must be a YAML/JSON list.")
+        raise SylveError(f"--property list value '{raw}' must be a YAML/JSON list.")
     if elem_type == "string":
         return [str(x) for x in parsed]
     return parsed
@@ -364,7 +364,7 @@ def _parse_set(
     schema_fields: tuple[Any, ...] = (),
     label: str = "",
 ) -> dict[str, Any]:
-    """Parse ``--set KEY=VALUE`` overrides into a (possibly nested) dict.
+    """Parse ``--property KEY=VALUE`` overrides into a (possibly nested) dict.
 
     Dotted keys address nested objects (``vlanPolicy.mode=tagged``),
     OpenStack-style repeatable ``k1=v1,k2=v2`` builds ``array of object``
@@ -378,11 +378,11 @@ def _parse_set(
     warned: set[str] = set()
     for item in values or []:
         if "=" not in item:
-            raise SylveError("--set must use KEY=VALUE format.")
+            raise SylveError("--property must use KEY=VALUE format.")
         key, value = item.split("=", 1)
         raw_parts = [part.strip() for part in key.split(".")]
         if not key.strip() or any(not part or part == "[]" for part in raw_parts):
-            raise SylveError("--set must use KEY=VALUE format with a non-empty key.")
+            raise SylveError("--property must use KEY=VALUE format with a non-empty key.")
         explicit_list = raw_parts[-1].endswith("[]")
         parts = [part[:-2] if part.endswith("[]") else part for part in raw_parts]
         top = parts[0]
@@ -468,10 +468,10 @@ def _merge_body(
     schema_fields: tuple[Any, ...] = (),
     label: str = "",
 ) -> Any:
-    """Combine ``--data`` with ``--set`` overrides.
+    """Combine ``--data`` with ``--property`` overrides.
 
-    ``--set`` wins field by field; nested dicts merge instead of replacing.
-    ``--set`` needs a JSON object body to merge into.
+    ``--property`` wins field by field; nested dicts merge instead of replacing.
+    ``--property`` needs a JSON object body to merge into.
     """
 
     def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
@@ -489,7 +489,7 @@ def _merge_body(
     if base is None:
         return overrides
     if not isinstance(base, dict):
-        raise SylveError("--set needs a JSON object body; use --data '{\"key\": ...}' first.")
+        raise SylveError("--property needs a JSON object body; use --data '{\"key\": ...}' first.")
     return _deep_merge(base, overrides)
 
 
@@ -556,7 +556,7 @@ def _render_field_lines(fields: object, indent: str) -> list[str]:
 def _schema_epilog(method: str, path: str) -> str | None:
     """Build the ``--help`` appendix listing settable fields.
 
-    Generic commands take free-form ``--set`` keys, so the schema is the
+    Generic commands take free-form ``--property`` keys, so the schema is the
     only in-terminal discovery. Shapes come from the checked-in
     ``body_schemas`` module (built from ``docs/swagger.json``), never from
     the network, so ``--help`` stays offline-fast. Required fields sort
@@ -568,7 +568,7 @@ def _schema_epilog(method: str, path: str) -> str | None:
     sections: list[str] = []
     body = entry.get("body")
     if body:
-        sections.append("Settable body fields (--set):")
+        sections.append("Settable body fields (--property):")
         sections.extend(_render_field_lines(body, "  "))
     query = entry.get("query")
     if query:
@@ -692,7 +692,6 @@ DataOption = Annotated[
 SetOption = Annotated[
     list[str] | None,
     typer.Option(
-        "--set",
         "--property",
         "-s",
         help="Set a body field KEY=VALUE (repeatable; dotted keys nest; "

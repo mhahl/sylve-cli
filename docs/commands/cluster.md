@@ -139,7 +139,7 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 ### Generic Subcommands
 
 `accept-join`, `note set ID`, and `note bulk-delete` accept `--data/-d`,
-`--set/--property/-s`, `--param/-p`, `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and
+`--property/--property/-s`, `--param/-p`, `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and
 `-f/--format`. Small updates need no JSON; see
 [sylve-options(7)](../global-options.md).
 
@@ -243,14 +243,14 @@ sylve cluster note delete 1
 Execute generic cluster API endpoints:
 
 ```sh
-sylve cluster accept-join --set nodeId=2b7c... --set nodeIp=10.0.0.12 --set nodeVersion=0.3.1 --param dryRun=0 --node node1.example.test -f json
-sylve cluster note bulk-delete --set ids=1,2 --yes
+sylve cluster accept-join --property nodeId=2b7c... --property nodeIp=10.0.0.12 --property nodeVersion=0.3.1 --param dryRun=0 --node node1.example.test -f json
+sylve cluster note bulk-delete --property ids=1,2 --yes
 ```
 
 Preview a note update without sending it:
 
 ```sh
-sylve cluster note set 1 --set title=Maintenance --set content="node2 drains at 22:00" --dry-run
+sylve cluster note set 1 --property title=Maintenance --property content="node2 drains at 22:00" --dry-run
 ```
 
 ```text
@@ -265,16 +265,16 @@ Dry run: PUT /cluster/notes/1
 Preview a bulk delete before confirming it:
 
 ```sh
-sylve cluster note bulk-delete --set ids=1,2 --dry-run
-sylve cluster note bulk-delete --set ids=1,2 --yes
+sylve cluster note bulk-delete --property ids=1,2 --dry-run
+sylve cluster note bulk-delete --property ids=1,2 --yes
 # Deleted 2 cluster note(s).
 ```
 
 Preview an accept-join request, including the preflight check:
 
 ```sh
-sylve cluster accept-join --set nodeId=2b7c... --set nodeIp=10.0.0.12 --set nodeVersion=0.3.1 --dry-run
-sylve cluster accept-join --set nodeId=2b7c... --set nodeIp=10.0.0.12 --set nodeVersion=0.3.1 --set preflight=true --dry-run
+sylve cluster accept-join --property nodeId=2b7c... --property nodeIp=10.0.0.12 --property nodeVersion=0.3.1 --dry-run
+sylve cluster accept-join --property nodeId=2b7c... --property nodeIp=10.0.0.12 --property nodeVersion=0.3.1 --property preflight=true --dry-run
 ```
 
 Filter the note list and select columns:

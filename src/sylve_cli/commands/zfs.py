@@ -270,7 +270,6 @@ def pool_set(
     set_value: Annotated[
         list[str] | None,
         typer.Option(
-            "--set",
             "--property",
             "-s",
             help="Set a property KEY=VALUE (repeatable), e.g. properties.compress=on.",
@@ -357,7 +356,6 @@ def pool_detach(
     set_value: Annotated[
         list[str] | None,
         typer.Option(
-            "--set",
             "--property",
             "-s",
             help="Set a body field KEY=VALUE (repeatable).",
@@ -406,7 +404,6 @@ def pool_replace_device(
     set_value: Annotated[
         list[str] | None,
         typer.Option(
-            "--set",
             "--property",
             "-s",
             help="Set a body field KEY=VALUE (repeatable).",
@@ -602,7 +599,6 @@ def dataset_set(
     set_value: Annotated[
         list[str] | None,
         typer.Option(
-            "--set",
             "--property",
             "-s",
             help="Set a property KEY=VALUE (repeatable), e.g. properties.compression=lz4.",
@@ -657,7 +653,6 @@ def dataset_volume_set(
     set_value: Annotated[
         list[str] | None,
         typer.Option(
-            "--set",
             "--property",
             "-s",
             help="Set a property KEY=VALUE (repeatable), e.g. properties.volsize=10G.",
@@ -712,7 +707,6 @@ def dataset_volume_flash(
     set_value: Annotated[
         list[str] | None,
         typer.Option(
-            "--set",
             "--property",
             "-s",
             help="Set a body field KEY=VALUE (repeatable).",

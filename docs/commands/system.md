@@ -38,11 +38,11 @@ Most subcommands are generic API bindings that take their request payloads from
 
 ### Generic Subcommands
 
-All write subcommands accept `--data/-d` and `--set/--property/-s`, and all generic subcommands except `file upload`, `file download`, `cert archive`, `events`, `terminal`, and `note show` accept:
+All write subcommands accept `--data/-d` and `--property/--property/-s`, and all generic subcommands except `file upload`, `file download`, `cert archive`, `events`, `terminal`, and `note show` accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -103,7 +103,7 @@ Set a kernel tunable:
 
 ```sh
 sylve system tunable set \
-  --set name=kern.maxfiles --set value=200000 \
+  --property name=kern.maxfiles --property value=200000 \
   --node node1.example.test \
   --format json
 ```
@@ -111,7 +111,7 @@ sylve system tunable set \
 Create, list, show, and delete host notes:
 
 ```sh
-sylve system note create --set title=Maintenance --set 'content=Disk replacement 22:00'
+sylve system note create --property title=Maintenance --property 'content=Disk replacement 22:00'
 sylve system note list -f json
 sylve system note show 3 -f json
 sylve system note delete 3 --yes
@@ -132,7 +132,7 @@ Preview a tunable change before sending it:
 
 ```sh
 sylve system tunable set \
-  --set name=kern.maxfiles --set value=200000 \
+  --property name=kern.maxfiles --property value=200000 \
   --dry-run -f json
 ```
 
@@ -161,12 +161,12 @@ Schedule SMART self-tests, then adjust and remove the schedule:
 
 ```sh
 sylve system disk smart-schedule-create \
-  --set device=ada0 --set testType=long --set 'cronExpr=0 2 * * 0' \
+  --property device=ada0 --property testType=long --property 'cronExpr=0 2 * * 0' \
   --dry-run -f json
 sylve system disk smart-schedule-set 1 \
-  --set device=ada0 --set testType=short --set 'cronExpr=0 3 * * 0' \
+  --property device=ada0 --property testType=short --property 'cronExpr=0 3 * * 0' \
   --dry-run -f json
-sylve system disk smart-start --set device=ada0 --set testType=short --dry-run -f json
+sylve system disk smart-start --property device=ada0 --property testType=short --dry-run -f json
 sylve system disk smart-schedule-delete 1 --yes --dry-run -f json
 ```
 
@@ -186,9 +186,9 @@ sylve system disk smart-schedule-delete 1 --yes --dry-run -f json
 Enable a service, create a file, and delete files with confirmation skipped:
 
 ```sh
-sylve system service sshd --set enabled=true --dry-run -f json
-sylve system file create --set path=/root --set name=notes.txt --set isFolder=false --dry-run -f json
-sylve system file delete --set paths=/root/old.iso --yes --dry-run -f json
+sylve system service sshd --property enabled=true --dry-run -f json
+sylve system file create --property path=/root --property name=notes.txt --property isFolder=false --dry-run -f json
+sylve system file delete --property paths=/root/old.iso --yes --dry-run -f json
 ```
 
 ```json
@@ -205,8 +205,8 @@ sylve system file delete --set paths=/root/old.iso --yes --dry-run -f json
 Full certificate lifecycle with dry-run previews and a confirmation-safe delete:
 
 ```sh
-sylve system cert create --set name=web --set domain=example.test --dry-run -f json
-sylve system cert set 7 --set name=web-renamed --dry-run -f json
+sylve system cert create --property name=web --property domain=example.test --dry-run -f json
+sylve system cert set 7 --property name=web-renamed --dry-run -f json
 sylve system cert activate 7 --dry-run -f json
 sylve system cert renew 7 --dry-run -f json
 sylve system cert delete 7 --yes --dry-run -f json
@@ -227,8 +227,8 @@ sylve system cert delete 7 --yes --dry-run -f json
 Update a host note and delete it without a prompt:
 
 ```sh
-sylve system note create --set title=Maintenance --set 'content=Disk replacement 22:00' --dry-run -f json
-sylve system note set 3 --set title=Maintenance --set content=Done --dry-run -f json
+sylve system note create --property title=Maintenance --property 'content=Disk replacement 22:00' --dry-run -f json
+sylve system note set 3 --property title=Maintenance --property content=Done --dry-run -f json
 sylve system note delete 3 --yes --dry-run -f json
 ```
 

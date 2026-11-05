@@ -117,7 +117,7 @@ resolves the block.
 ### Generic History Subcommands
 
 `cpu-history`, `ram-history`, `swap-history`, `network-history`,
-`summary-history`, and `summary-delta` accept `--data/-d`, `--set/-s`,
+`summary-history`, and `summary-delta` accept `--data/-d`, `--property/-s`,
 `--param/-p`, `--dry-run`, `-n/--node`, `-f/--format`, `-c/--column`,
 `--sort-column`, `--filter`, and `-l/--limit`. Small updates need no JSON; see
 [sylve-options(7)](../global-options.md).

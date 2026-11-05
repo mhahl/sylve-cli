@@ -2,7 +2,7 @@
 """Bake swagger request shapes into a checked-in lookup for ``--help`` output.
 
 Generic commands (``src/sylve_cli/commands/extras.py``) accept arbitrary
-``--set KEY=VALUE`` fields, so users need a per-command field list. The
+``--property KEY=VALUE`` fields, so users need a per-command field list. The
 installed package does not ship ``docs/swagger.json``, so this script reads
 the spec at build time and writes ``src/sylve_cli/body_schemas.py``. Run
 ``make schemas`` after changing ``docs/swagger.json`` or the spec lists;
@@ -27,7 +27,7 @@ SPEC_RE = re.compile(r'\(\s*\w+_app,\s*"([^"]+)",\s*"(GET|POST|PUT|PATCH|DELETE)
 def _field(name: str, schema: dict, defs: dict, required: set, depth: int = 0) -> tuple:
     """Build a ``(name, type, required, children)`` tuple.
 
-    Objects and arrays of objects expand two levels so ``--set`` dotted
+    Objects and arrays of objects expand two levels so ``--property`` dotted
     keys stay discoverable; deeper nesting is a bare name.
     """
     if "$ref" in schema:

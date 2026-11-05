@@ -142,7 +142,7 @@ JSON or YAML, or
 .I @FILE
 to read it from disk.
 .TP
-.BR \-\-set ", " \-\-property " " \fIKEY=VALUE\fR
+.BR \-\-property ", " \-\-set " " \fIKEY=VALUE\fR
 Set one body field. Repeat it; dotted keys nest, and repeating a list field
 appends items. The CLI uses each field's schema type to coerce values, so
 small updates need no JSON.
@@ -250,7 +250,7 @@ sylve login https://sylve.example.test
 sylve node list
 sylve vm list -f json
 sylve vm show 101
-sylve vm hardware cpu 101 --set cpuCores=4 --set cpuSockets=1 --set cpuThreads=1
+sylve vm hardware cpu 101 --property cpuCores=4 --property cpuSockets=1 --property cpuThreads=1
 sylve vm create web-01 --pool zroot --memory 2G --disk-size 20G
 sylve vm create --template debian-13 --rid 120 --start --wait
 sylve jail list -f table

@@ -33,11 +33,11 @@ accounts, and user WebAuthn passkeys via generic Sylve API bindings.
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -85,15 +85,15 @@ Import a Unix user, create a PAM account, and query the next UID:
 
 ```sh
 sylve user importable -f json
-sylve user import --set username=mark --set admin=false
-sylve user pam-create --set username=ops-pam
+sylve user import --property username=mark --property admin=false
+sylve user pam-create --property username=ops-pam
 sylve user next-uid
 ```
 
 Update a user, manage passkeys, and delete an account:
 
 ```sh
-sylve user set 2 --set fullName=Operations -f json
+sylve user set 2 --property fullName=Operations -f json
 sylve user passkey list 2
 sylve user passkey delete 2 cred-abc
 sylve user delete 2 --yes
@@ -118,10 +118,10 @@ sylve user list -c id -c username -c admin --sort-column username -l 10
 Preview an update, import a host user, and register a PAM account:
 
 ```sh
-sylve user set 2 --set fullName=Operations --set admin=false --dry-run -f json
-sylve user import --set username=ops --set admin=false --dry-run -f json
+sylve user set 2 --property fullName=Operations --property admin=false --dry-run -f json
+sylve user import --property username=ops --property admin=false --dry-run -f json
 sylve user pam-create \
-  --set username=ops-pam --set admin=false --set uid=1001 --set homeDirPerms=755 \
+  --property username=ops-pam --property admin=false --property uid=1001 --property homeDirPerms=755 \
   --dry-run -f json
 sylve user importable -c username -c uid --filter username=ops -l 5
 ```
@@ -129,7 +129,7 @@ sylve user importable -c username -c uid --filter username=ops -l 5
 Group memberships take an array of IDs:
 
 ```sh
-sylve user set 2 --set admin=false --set auxGroupIds=1001,1002 --dry-run -f json
+sylve user set 2 --property admin=false --property auxGroupIds=1001,1002 --dry-run -f json
 # body: {"admin":false,"auxGroupIds":[1001,1002]}
 ```
 

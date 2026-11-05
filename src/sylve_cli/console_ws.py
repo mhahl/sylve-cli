@@ -58,7 +58,7 @@ CTRL_EXTRA = b"\x02"
 _ERROR_HINTS: dict[str, str] = {
     "vm_serial_console_disabled": (
         "The VM serial console is disabled. Enable it with "
-        "'sylve vm options serial-console <rid> --set enabled=true'."
+        "'sylve vm options serial-console <rid> --property enabled=true'."
     ),
     "vm_console_requires_running_vm": (
         "The VM is not running. Start it with 'sylve vm start <vm>' first."

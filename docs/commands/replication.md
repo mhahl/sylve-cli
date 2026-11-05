@@ -68,7 +68,7 @@ failovers, and monitors replication events.
     node (default: `--move-pinned-source`).
   - `--confirm-data-loss`: required acknowledgement when you set `--mode force`.
 - `delete POLICY_ID`: `-y, --yes`.
-- `set POLICY_ID`: `-d, --data BODY`, `-s, --set, --property KEY=VALUE`,
+- `set POLICY_ID`: `-d, --data BODY`, `-s, --property, --property KEY=VALUE`,
   `-p, --param KEY=VALUE`, `--dry-run`,
   `-n, --node NODE`, `-f, --format`.
 
@@ -135,7 +135,7 @@ sylve replication event show 9 --wait
 Disable or delete a policy:
 
 ```sh
-sylve replication policy set 1 --set enabled=false -f json
+sylve replication policy set 1 --property enabled=false -f json
 sylve replication policy delete 1 --yes
 ```
 
@@ -143,19 +143,19 @@ Preview a policy rename before sending it:
 
 ```sh
 sylve replication policy set 1 \
-  --set name=web-ha \
-  --set guestType=vm \
-  --set guestId=101 \
-  --set enabled=false \
+  --property name=web-ha \
+  --property guestType=vm \
+  --property guestId=101 \
+  --property enabled=false \
   --dry-run -f json
 ```
 
-Remap a policy's target nodes with repeatable `--set` object entries or inline YAML:
+Remap a policy's target nodes with repeatable `--property` object entries or inline YAML:
 
 ```sh
 sylve replication policy set 1 \
-  --set name=web-ha \
-  --set targets=nodeId=2b7c-uuid,weight=100 \
+  --property name=web-ha \
+  --property targets=nodeId=2b7c-uuid,weight=100 \
   --dry-run -f json
 # body: {"name":"web-ha","targets":[{"nodeId":"2b7c-uuid","weight":100}]}
 ```

@@ -67,7 +67,7 @@ manual snapshots, and scheduled periodic snapshot jobs across Sylve nodes.
 
 ### Generic Subcommands
 
-All remaining write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
+All remaining write subcommands accept `--data/-d`, `--property/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md). Pool and dataset
@@ -132,7 +132,7 @@ Create a periodic snapshot schedule via the generic endpoint:
 
 ```sh
 sylve zfs periodic create --node node1.example.test \
-  --set guid=zroot --set prefix=auto --set keepLast=24 --set recursive=true \
+  --property guid=zroot --property prefix=auto --property keepLast=24 --property recursive=true \
   -f json
 ```
 
@@ -155,20 +155,20 @@ sylve zfs snapshot create zroot/data --name pre-upgrade --node node1.example.tes
 sylve zfs snapshot list --filter Name=pre-upgrade
 sylve zfs snapshot rollback zroot/data@pre-upgrade --destroy-more-recent --yes
 sylve zfs periodic create --node node1.example.test \
-  --set guid=zroot --set prefix=auto --set keepLast=24 --set recursive=true
+  --property guid=zroot --property prefix=auto --property keepLast=24 --property recursive=true
 sylve zfs periodic list --filter Prefix=auto
 sylve zfs snapshot delete zroot/data@pre-upgrade --yes
 ```
 
 Tune a dataset or volume without JSON, previewing the exact request
-first. Dotted `--set` keys nest into the `properties` object:
+first. Dotted `--property` keys nest into the `properties` object:
 
 ```sh
-sylve zfs dataset set <guid> --set properties.compression=lz4 --dry-run -f json
-sylve zfs dataset set <guid> --set properties.compression=lz4
-sylve zfs dataset volume-set <guid> --set properties.volsize=10737418240 --dry-run -f json
+sylve zfs dataset set <guid> --property properties.compression=lz4 --dry-run -f json
+sylve zfs dataset set <guid> --property properties.compression=lz4
+sylve zfs dataset volume-set <guid> --property properties.volsize=10737418240 --dry-run -f json
 # 10737418240 bytes = 10 GiB
-sylve zfs pool detach <guid> --set device=/dev/da1 --dry-run -f json
+sylve zfs pool detach <guid> --property device=/dev/da1 --dry-run -f json
 ```
 
 ## SEE ALSO

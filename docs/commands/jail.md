@@ -101,10 +101,10 @@ and jail templates.
   Read the create configuration from a YAML or JSON file. Keys may be flat
   (`cores`, `memory`, `switch`, `pool`) or grouped under `cpu`, `network`,
   `boot`, and `options`. Command-line flags override file values.
-- `--set KEY=VALUE`
+- `--property KEY=VALUE`
   Set any other API field without JSON (repeatable, dotted keys nest), e.g.
-  `--set hooks.prestart.enabled=true`. Values go through the same parsing as
-  flags, so `--set memory=2G` works.
+  `--property hooks.prestart.enabled=true`. Values go through the same parsing as
+  flags, so `--property memory=2G` works.
 - `--start`
   Start the jail as soon as creation finishes.
 - `-w, --wait / --no-wait`
@@ -190,9 +190,9 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 
 ### Generic Subcommands
 
-All generic jail write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
+All generic jail write subcommands accept `--data/-d`, `--property/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format`. Small updates need no
-JSON: `sylve jail hardware cpu 201 --set cores=4`.
+JSON: `sylve jail hardware cpu 201 --property cores=4`.
 
 | Subcommand | Path Arguments |
 |---|---|
@@ -270,7 +270,7 @@ sylve jail create --file jail.yaml --memory 4G --yes
 
 Migrating from the old raw-body syntax: `--data @jail.yaml` becomes
 `--file jail.yaml`, and inline `--data '{"cores":4}'` becomes
-`--set cores=4`.
+`--property cores=4`.
 
 Create and list a jail snapshot:
 
@@ -307,8 +307,8 @@ Migrate, update CPU limits, deploy a template, or delete a jail:
 ```sh
 sylve jail migrate 201 --target node2.example.test --dry-run
 sylve jail migrate 201 --target node2.example.test --wait
-sylve jail hardware cpu 201 --set cores=4 --node node1.example.test -f json
-sylve jail template deploy 3 --set name=dns-02 --set ctid=203 -f json
+sylve jail hardware cpu 201 --property cores=4 --node node1.example.test -f json
+sylve jail template deploy 3 --property name=dns-02 --property ctid=203 -f json
 sylve jail delete 201 --keep-rootfs --keep-macs --yes
 ```
 
@@ -316,23 +316,23 @@ Resize jail RAM or CPU without JSON, previewing the exact request first.
 Integer byte fields take raw byte counts, so `2147483648` means 2 GiB:
 
 ```sh
-sylve jail hardware ram 201 --set memory=2147483648 --dry-run -f json
+sylve jail hardware ram 201 --property memory=2147483648 --dry-run -f json
 # {"method":"PUT","path":"/jail/201/hardware/ram","body":{"memory":2147483648}}
 
-sylve jail hardware ram 201 --set memory=2147483648     # 2 GiB
-sylve jail hardware cpu 201 --set cores=4
-sylve jail hardware resource-limits 201 --set enabled=true
-sylve jail options boot-order 201 --set bootOrder=5 --set startAtBoot=true
+sylve jail hardware ram 201 --property memory=2147483648     # 2 GiB
+sylve jail hardware cpu 201 --property cores=4
+sylve jail hardware resource-limits 201 --property enabled=true
+sylve jail options boot-order 201 --property bootOrder=5 --property startAtBoot=true
 ```
 
 Arrays take comma-separated values or one YAML value; nested objects take dotted keys:
 
 ```sh
-sylve jail options allowed 201 --set allowedOptions=exec,mount --dry-run -f json
+sylve jail options allowed 201 --property allowedOptions=exec,mount --dry-run -f json
 # body: {"allowedOptions":["exec","mount"]}
 
 sylve jail options lifecycle-hooks 201 \
-  --set hooks.prestart.enabled=true --set hooks.prestart.script=/bin/true \
+  --property hooks.prestart.enabled=true --property hooks.prestart.script=/bin/true \
   --dry-run -f json
 # body: {"hooks":{"prestart":{"enabled":true,"script":"/bin/true"}}}
 ```
@@ -355,10 +355,10 @@ Full snapshot and template lifecycle for a jail:
 sylve jail snapshot create 201 --name pre-upgrade --description "before package update"
 sylve jail snapshot list 201 --long
 sylve jail snapshot rollback 201 1 --yes
-sylve jail template capture 201 --set name=dns-tmpl --dry-run -f json
-sylve jail template capture 201 --set name=dns-tmpl
-sylve jail template deploy 3 --set name=dns-02 --set ctid=203 --dry-run -f json
-sylve jail template deploy 3 --set name=dns-02 --set ctid=203
+sylve jail template capture 201 --property name=dns-tmpl --dry-run -f json
+sylve jail template capture 201 --property name=dns-tmpl
+sylve jail template deploy 3 --property name=dns-02 --property ctid=203 --dry-run -f json
+sylve jail template deploy 3 --property name=dns-02 --property ctid=203
 sylve jail snapshot delete 201 1 --yes
 ```
 
@@ -366,10 +366,10 @@ Attach a NIC or set jail options without JSON. The dry run shows the
 exact request body before anything changes:
 
 ```sh
-sylve jail network attach 201 --set name=vnet0 --set switchName=vm-switch --set dhcp=true --dry-run -f json
-sylve jail network attach 201 --set name=vnet0 --set switchName=vm-switch --set dhcp=true
-sylve jail network inheritance 201 --set ipv4=false --set ipv6=false
-sylve jail options resolv-conf 201 --set resolvConf="nameserver 10.0.0.1"
+sylve jail network attach 201 --property name=vnet0 --property switchName=vm-switch --property dhcp=true --dry-run -f json
+sylve jail network attach 201 --property name=vnet0 --property switchName=vm-switch --property dhcp=true
+sylve jail network inheritance 201 --property ipv4=false --property ipv6=false
+sylve jail options resolv-conf 201 --property resolvConf="nameserver 10.0.0.1"
 ```
 
 Preview a ready-made definition file, overriding values on the command

@@ -93,7 +93,7 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
 
 ### Generic Subcommands
 
-All remaining write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
+All remaining write subcommands accept `--data/-d`, `--property/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
@@ -170,9 +170,9 @@ sylve network object create \
   --node node1.example.test
 
 sylve network route create --node node1.example.test \
-  --set name=lab --set destinationType=network --set family=inet \
-  --set nextHopMode=gateway --set destinationRaw=10.99.0.0/16 \
-  --set gatewayRaw=10.0.0.1 --dry-run --format json
+  --property name=lab --property destinationType=network --property family=inet \
+  --property nextHopMode=gateway --property destinationRaw=10.99.0.0/16 \
+  --property gatewayRaw=10.0.0.1 --dry-run --format json
 ```
 
 Slice list output to the rows and columns you need. The interface,
@@ -192,13 +192,13 @@ Build a DHCP scope and pin a lease to it, previewing each request first:
 
 ```sh
 sylve network dhcp range create --node node1.example.test \
-  --set type=ipv4 --set expiry=86400 \
-  --set startIp=10.0.10.100 --set endIp=10.0.10.200 --dry-run -f json
+  --property type=ipv4 --property expiry=86400 \
+  --property startIp=10.0.10.100 --property endIp=10.0.10.200 --dry-run -f json
 sylve network dhcp range create --node node1.example.test \
-  --set type=ipv4 --set expiry=86400 \
-  --set startIp=10.0.10.100 --set endIp=10.0.10.200
+  --property type=ipv4 --property expiry=86400 \
+  --property startIp=10.0.10.100 --property endIp=10.0.10.200
 sylve network dhcp lease create --node node1.example.test \
-  --set dhcpRangeId=1 --set hostname=web-01 --set ipRaw=10.0.10.21
+  --property dhcpRangeId=1 --property hostname=web-01 --property ipRaw=10.0.10.21
 sylve network dhcp lease list --filter Hostname=web-01
 ```
 
@@ -208,12 +208,12 @@ also needs `family`, `natType`, and `protocol`:
 
 ```sh
 sylve network firewall traffic create --node node1.example.test \
-  --set name=allow-web --set ingressInterfaces=vm-public \
-  --set egressInterfaces=em0 --set 'icmpTypes=[]' --dry-run -f json
+  --property name=allow-web --property ingressInterfaces=vm-public \
+  --property egressInterfaces=em0 --property 'icmpTypes=[]' --dry-run -f json
 sylve network firewall nat create --node node1.example.test \
-  --set name=guest-nat --set ingressInterfaces=vm-public \
-  --set egressInterfaces=em0 --set family=inet \
-  --set natType=snat --set protocol=any --dry-run -f json
+  --property name=guest-nat --property ingressInterfaces=vm-public \
+  --property egressInterfaces=em0 --property family=inet \
+  --property natType=snat --property protocol=any --dry-run -f json
 ```
 
 Read and update network-wide configuration:
@@ -221,21 +221,21 @@ Read and update network-wide configuration:
 ```sh
 sylve network config show -f json
 sylve network config set -n node1.example.test \
-  --set dnsServers=10.0.0.1 --set searchDomains=example.test --dry-run -f json
+  --property dnsServers=10.0.0.1 --property searchDomains=example.test --dry-run -f json
 ```
 
 Bring up WireGuard and tune DHCP or PF advanced rules:
 
 ```sh
-sylve network wireguard server init --node node1.example.test --set port=51820 --dry-run -f json
-sylve network wireguard server init --node node1.example.test --set port=51820
+sylve network wireguard server init --node node1.example.test --property port=51820 --dry-run -f json
+sylve network wireguard server init --node node1.example.test --property port=51820
 sylve network wireguard peer add --node node1.example.test \
-  --set name=laptop --set clientIPs=10.99.0.2/32
+  --property name=laptop --property clientIPs=10.99.0.2/32
 sylve network wireguard peer set peer1 --node node1.example.test \
-  --set name=laptop --set clientIPs=10.99.0.2/32 --set routableIPs=10.99.0.0/24 --dry-run -f json
+  --property name=laptop --property clientIPs=10.99.0.2/32 --property routableIPs=10.99.0.0/24 --dry-run -f json
 # body: {"name":"laptop","clientIPs":["10.99.0.2/32"],"routableIPs":["10.99.0.0/24"]}
-sylve network dhcp config set --node node1.example.test --set domain=example.test
-sylve network firewall advanced set --node node1.example.test --set preRules="pass all" --dry-run -f json
+sylve network dhcp config set --node node1.example.test --property domain=example.test
+sylve network firewall advanced set --node node1.example.test --property preRules="pass all" --dry-run -f json
 ```
 
 ## SEE ALSO

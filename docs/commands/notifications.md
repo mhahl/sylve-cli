@@ -31,7 +31,7 @@ generic Sylve API bindings.
 | `rule delete` | `ID` | Delete rule `ID` |
 | `rule bulk-delete` | none | Delete multiple rules |
 | `rule bulk-set` | none | Update multiple rules |
-| `rule test` | none | Send a test notification using a `--data` or `--set` payload |
+| `rule test` | none | Send a test notification using a `--data` or `--property` payload |
 | `transport list` | none | List notification transports |
 | `transport create` | none | Create a notification transport |
 | `transport set` | `ID` | Update transport `ID` |
@@ -40,11 +40,11 @@ generic Sylve API bindings.
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -85,37 +85,37 @@ Create, update, test, and delete rules and transports:
 
 ```sh
 sylve notifications rule create \
-  --set templateKey=node-offline --set targetKey=mail --set uiEnabled=true --set emailEnabled=true
-sylve notifications rule set 2 --set emailEnabled=false --set uiEnabled=true -f json
+  --property templateKey=node-offline --property targetKey=mail --property uiEnabled=true --property emailEnabled=true
+sylve notifications rule set 2 --property emailEnabled=false --property uiEnabled=true -f json
 sylve notifications rule test \
-  --set templateKey=node-offline --set targetKey=mail --set severity=warning
+  --property templateKey=node-offline --property targetKey=mail --property severity=warning
 
 sylve notifications transport create \
-  --set name=mail --set type=email --set enabled=true
+  --property name=mail --property type=email --property enabled=true
 sylve notifications transport test 1
 sylve notifications transport delete 1 --yes
 ```
 
-Preview rule and transport creates and updates with `--set`:
+Preview rule and transport creates and updates with `--property`:
 
 ```sh
 sylve notifications rule create \
-  --set templateKey=node-offline --set targetKey=mail \
-  --set uiEnabled=true --set emailEnabled=true \
+  --property templateKey=node-offline --property targetKey=mail \
+  --property uiEnabled=true --property emailEnabled=true \
   --dry-run -f json
-sylve notifications rule set 2 --set emailEnabled=false --set uiEnabled=true --dry-run -f json
+sylve notifications rule set 2 --property emailEnabled=false --property uiEnabled=true --dry-run -f json
 sylve notifications transport create \
-  --set name=example-mail --set type=email --set enabled=true \
+  --property name=example-mail --property type=email --property enabled=true \
   --dry-run -f json
-sylve notifications transport set 1 --set enabled=false --dry-run -f json
+sylve notifications transport set 1 --property enabled=false --dry-run -f json
 ```
 
 Configure a nested object with dotted keys, one field at a time:
 
 ```sh
 sylve notifications transport create \
-  --set name=mail --set type=email \
-  --set email.smtpHost=mail.example.test --set email.smtpPort=587 \
+  --property name=mail --property type=email \
+  --property email.smtpHost=mail.example.test --property email.smtpPort=587 \
   --dry-run -f json
 # body: {"name":"mail","type":"email","email":{"smtpHost":"mail.example.test","smtpPort":587}}
 ```
@@ -124,12 +124,12 @@ Test delivery, bulk-update rules, and clean up:
 
 ```sh
 sylve notifications rule test \
-  --set templateKey=node-offline --set targetKey=mail --set severity=warning \
+  --property templateKey=node-offline --property targetKey=mail --property severity=warning \
   --dry-run -f json
 sylve notifications transport test 1 --dry-run -f json
 sylve notifications rule list -c id -c templateKey -c targetKey -l 10
-sylve notifications rule bulk-set --set ids=1,2 --set emailEnabled=false --dry-run -f json
-sylve notifications rule bulk-delete --set ids=3,4 --dry-run -f json
+sylve notifications rule bulk-set --property ids=1,2 --property emailEnabled=false --dry-run -f json
+sylve notifications rule bulk-delete --property ids=3,4 --dry-run -f json
 sylve notifications rule delete 2 --yes
 sylve notifications transport delete 1 --yes
 ```

@@ -359,9 +359,9 @@ def test_generic_set_replaces_inline_json() -> None:
             "system",
             "tunable",
             "set",
-            "--set",
+            "--property",
             "name=kern.maxfiles",
-            "--set",
+            "--property",
             "value=200000",
             "--dry-run",
             "-f",
@@ -405,11 +405,11 @@ def test_generic_set_openstack_lists_and_objects() -> None:
             "switch",
             "set-standard",
             "1",
-            "--set",
+            "--property",
             "private=false",
-            "--set",
+            "--property",
             "addresses4=cidr=10.0.0.1/24,objectId=0",
-            "--set",
+            "--property",
             "addresses4=cidr=10.0.1.1/24,objectId=0",
             "--dry-run",
             "-f",
@@ -432,9 +432,9 @@ def test_generic_set_openstack_lists_and_objects() -> None:
             "hardware",
             "pci",
             "101",
-            "--set",
+            "--property",
             "pciDevices=1,2",
-            "--set",
+            "--property",
             "pciDevices=3",
             "--dry-run",
             "-f",
@@ -449,7 +449,7 @@ def test_generic_help_lists_settable_fields(cli_env: Path) -> None:
     """--help must show the settable body fields so users never guess keys."""
     cpu = runner.invoke(app, ["vm", "hardware", "cpu", "--help"])
     assert cpu.exit_code == 0
-    assert "Settable body fields (--set):" in cpu.stdout
+    assert "Settable body fields (--property):" in cpu.stdout
     flat = " ".join(cpu.stdout.split())
     assert "cpuCores (integer, required)" in flat
     # Required fields sort first; nested array of objects renders with [] and indented children.
@@ -462,12 +462,12 @@ def test_generic_help_lists_settable_fields(cli_env: Path) -> None:
     assert "name (string, required)" in flat
     assert "value (string, required)" in flat
 
-    # Reads advertise query parameters instead of body fields or --data/--set.
+    # Reads advertise query parameters instead of body fields or --data/--property.
     tunables = runner.invoke(app, ["system", "tunable", "list", "--help"])
     assert tunables.exit_code == 0
     assert "Query parameters (--param):" in tunables.stdout
     assert "Settable body fields" not in tunables.stdout
-    assert "--set" not in tunables.stdout
+    assert "--property" not in tunables.stdout
     assert "--data" not in tunables.stdout
 
 
@@ -485,7 +485,7 @@ def test_generic_bare_command_shows_help(cli_env: Path) -> None:
     assert "Settable body fields" in bare_tunable.stdout
 
     # Options but no path argument is a usage error, not an API failure.
-    partial = runner.invoke(app, ["vm", "hardware", "cpu", "--set", "cpuCores=4"])
+    partial = runner.invoke(app, ["vm", "hardware", "cpu", "--property", "cpuCores=4"])
     assert partial.exit_code == 2
 
     # Read commands without path placeholders still execute when bare.
@@ -496,13 +496,13 @@ def test_generic_bare_command_shows_help(cli_env: Path) -> None:
 
 def test_generic_set_rejects_bad_input() -> None:
     missing_equals = runner.invoke(
-        app, ["vm", "hardware", "cpu", "101", "--set", "oops", "--dry-run", "-f", "json"]
+        app, ["vm", "hardware", "cpu", "101", "--property", "oops", "--dry-run", "-f", "json"]
     )
     assert missing_equals.exit_code == 1
 
     non_object = runner.invoke(
         app,
-        ["vm", "hardware", "cpu", "101", "--data", "[1, 2]", "--set", "a=1", "--dry-run"],
+        ["vm", "hardware", "cpu", "101", "--data", "[1, 2]", "--property", "a=1", "--dry-run"],
     )
     assert non_object.exit_code == 1
 
@@ -740,11 +740,11 @@ def test_container_and_directory_services_dry_run(cli_env: Path) -> None:
             [
                 "container",
                 "create",
-                "--set",
+                "--property",
                 "name=web",
-                "--set",
+                "--property",
                 "ocId=301",
-                "--set",
+                "--property",
                 "pool=zroot",
             ],
             "POST",
@@ -758,13 +758,20 @@ def test_container_and_directory_services_dry_run(cli_env: Path) -> None:
             None,
         ),
         (
-            ["directory-services", "ad", "config", "set", "--set", "domain=example.test"],
+            ["directory-services", "ad", "config", "set", "--property", "domain=example.test"],
             "PUT",
             "/directory-services/active-directory",
             {"domain": "example.test"},
         ),
         (
-            ["network", "interface", "l3-set", "em0", "--set", "addresses=address=10.0.0.10/24"],
+            [
+                "network",
+                "interface",
+                "l3-set",
+                "em0",
+                "--property",
+                "addresses=address=10.0.0.10/24",
+            ],
             "PUT",
             "/network/interface/em0/l3",
             {"addresses": [{"address": "10.0.0.10/24"}]},
@@ -774,9 +781,9 @@ def test_container_and_directory_services_dry_run(cli_env: Path) -> None:
                 "zfs",
                 "pool",
                 "scrub-schedule-create",
-                "--set",
+                "--property",
                 "poolGuid=g1",
-                "--set",
+                "--property",
                 "cronExpr=0 2 * * 0",
             ],
             "POST",

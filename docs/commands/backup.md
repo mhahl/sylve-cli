@@ -68,7 +68,7 @@ backup execution events.
 
 ### Generic Subcommands
 
-All generic backup write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
+All generic backup write subcommands accept `--data/-d`, `--property/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
@@ -126,10 +126,10 @@ anything else at creation time:
 
 ```sh
 sylve backup target create \
-  --set name=offsite \
-  --set sshHost=backup.example.test \
-  --set backupRoot=tank/backups \
-  --set sshPort=22 \
+  --property name=offsite \
+  --property sshHost=backup.example.test \
+  --property backupRoot=tank/backups \
+  --property sshPort=22 \
   --dry-run -f json
 ```
 
@@ -151,12 +151,12 @@ Preview a new backup job before sending it:
 
 ```sh
 sylve backup job create \
-  --set name=vm101-nightly \
-  --set mode=vm \
-  --set targetId=1 \
-  --set sourceDataset=zroot/vm/101 \
-  --set 'cronExpr=0 2 * * *' \
-  --set recursive=true \
+  --property name=vm101-nightly \
+  --property mode=vm \
+  --property targetId=1 \
+  --property sourceDataset=zroot/vm/101 \
+  --property 'cronExpr=0 2 * * *' \
+  --property recursive=true \
   --dry-run -f json
 ```
 
@@ -176,11 +176,11 @@ sylve backup job create \
 }
 ```
 
-Disable a job and rename a target with small `--set` updates:
+Disable a job and rename a target with small `--property` updates:
 
 ```sh
-sylve backup job set 3 --set mode=vm --set name=vm101-nightly --set targetId=1 --set enabled=false --dry-run -f json
-sylve backup target set 1 --set 'description=Nightly offsite' --set enabled=true --dry-run -f json
+sylve backup job set 3 --property mode=vm --property name=vm101-nightly --property targetId=1 --property enabled=false --dry-run -f json
+sylve backup target set 1 --property 'description=Nightly offsite' --property enabled=true --dry-run -f json
 ```
 
 Run the full validate -> run -> follow-progress flow for one job:
@@ -206,9 +206,9 @@ Queue a dataset restore from a target and clean up with confirmation skipped:
 
 ```sh
 sylve backup target restore 1 \
-  --set remoteDataset=tank/backups/vm-101 \
-  --set 'snapshot=zroot/vm/101@auto-2026-10-28' \
-  --set destinationDataset=zroot/vm/101-restored \
+  --property remoteDataset=tank/backups/vm-101 \
+  --property 'snapshot=zroot/vm/101@auto-2026-10-28' \
+  --property destinationDataset=zroot/vm/101-restored \
   --dry-run -f json
 sylve backup job delete 3 --yes
 # Deleted backup job #3.

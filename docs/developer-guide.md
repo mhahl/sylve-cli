@@ -53,7 +53,7 @@ make test lint type man schemas
    related annotations from `src/sylve_cli/state.py`.
 4. For thin wrappers around endpoints in `docs/swagger.json`, register a
    generic command in `src/sylve_cli/commands/extras.py` with `_add(...)`; it
-   provides `--data`, `--set`, `--param`, `--dry-run`, `--node`,
+   provides `--data`, `--property`, `--param`, `--dry-run`, `--node`,
    `--format`, output selection on reads, and `-y` on destructive commands.
    Its `--help` lists the settable body/query fields from
    `src/sylve_cli/body_schemas.py`; regenerate that file with `make schemas`
@@ -104,8 +104,8 @@ make tox
 
 ### Generated Help Schemas
 
-Generic commands accept free-form `--set` keys, so `--help` shows the valid
-fields per command (types, `required` markers, one nested level for `--set`
+Generic commands accept free-form `--property` keys, so `--help` shows the valid
+fields per command (types, `required` markers, one nested level for `--property`
 dotted keys, plus query parameters on reads). The text comes from
 `src/sylve_cli/body_schemas.py`, generated from `docs/swagger.json`:
 

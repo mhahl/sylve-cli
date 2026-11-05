@@ -65,7 +65,7 @@ def test_parse_params_rejects_missing_equals() -> None:
 
 
 # ---------------------------------------------------------------------------
-# --set parsing: YAML coercion, dotted nesting, and body merging.
+# --property parsing: YAML coercion, dotted nesting, and body merging.
 # ---------------------------------------------------------------------------
 def test_parse_set_coerces_scalars_and_nests_dotted_keys() -> None:
     assert _parse_set(None) == {}
@@ -145,7 +145,7 @@ def test_parse_set_rejects_bad_format() -> None:
         _parse_set([".a=1"])
     with pytest.raises(SylveError, match="KEY=VALUE"):
         _parse_set(["a..b=1"])
-    with pytest.raises(SylveError, match="Invalid --set list"):
+    with pytest.raises(SylveError, match="Invalid --property list"):
         _parse_set(["ids=[1, 2"], schema_fields=(("ids", "array of integer", False, ()),))
 
 

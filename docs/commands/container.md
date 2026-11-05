@@ -67,11 +67,11 @@ nodes via generic API bindings and an interactive WebSocket console.
 
 ### Generic Subcommands
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all generic subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all generic subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -98,15 +98,15 @@ List containers and pull an image onto a ZFS pool:
 
 ```sh
 sylve container list
-sylve container image pull zroot --set image=docker.io/library/nginx:alpine --dry-run -f json
+sylve container image pull zroot --property image=docker.io/library/nginx:alpine --dry-run -f json
 ```
 
-Create a container with `--set`, start it, and attach to its console:
+Create a container with `--property`, start it, and attach to its console:
 
 ```sh
 sylve container create \
-  --set name=web --set ocId=301 --set pool=zroot \
-  --set image=docker.io/library/nginx:alpine --set startAfterCreate=true \
+  --property name=web --property ocId=301 --property pool=zroot \
+  --property image=docker.io/library/nginx:alpine --property startAfterCreate=true \
   --dry-run -f json
 sylve container start 301
 sylve container console 301 --shell /bin/sh

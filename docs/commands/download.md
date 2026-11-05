@@ -118,7 +118,7 @@ nodes. It supports remote HTTP(S) and magnet downloads, local file uploads,
 
 - `file UUID` and `file-with-name UUID FILENAME` require `--output, -o PATH` and
   accept `--param, -p KEY=VALUE` and `-n, --node NODE`.
-- `set ID`, `utype`, and `abort-upload ID` accept `--data/-d` (write commands), `--set/--property/-s` (write commands),
+- `set ID`, `utype`, and `abort-upload ID` accept `--data/-d` (write commands), `--property/--property/-s` (write commands),
   `--param/-p`, `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format`
   (reads also take `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`).
   Small updates need no JSON; see [sylve-options(7)](../global-options.md).
@@ -177,13 +177,13 @@ sylve download file 8f14... --param sig=SIGNATURE --param expires=1790000000 --p
 Update download metadata via the generic endpoint:
 
 ```sh
-sylve download set 1 --set name=debian-13-cloudinit.iso --node node1.example.test -f json
+sylve download set 1 --property name=debian-13-cloudinit.iso --node node1.example.test -f json
 ```
 
 Preview a metadata rename before sending it:
 
 ```sh
-sylve download set 1 --set name=debian-13-cloudinit.iso --dry-run -f json
+sylve download set 1 --property name=debian-13-cloudinit.iso --dry-run -f json
 ```
 
 ```json
@@ -200,7 +200,7 @@ sylve download set 1 --set name=debian-13-cloudinit.iso --dry-run -f json
 Preview extraction and format-conversion flags before sending them:
 
 ```sh
-sylve download set 1 --set automaticExtraction=false --set automaticRawConversion=true --dry-run -f json
+sylve download set 1 --property automaticExtraction=false --property automaticRawConversion=true --dry-run -f json
 ```
 
 ```json

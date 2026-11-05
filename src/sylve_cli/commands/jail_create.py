@@ -2,7 +2,7 @@
 
 This mirrors ``vm create``: flags and ``--file`` build the request, sizes like
 ``2G`` are parsed to bytes, names are resolved against the server, and
-``--dry-run`` prints the payload without creating anything. ``--set KEY=VALUE``
+``--dry-run`` prints the payload without creating anything. ``--property KEY=VALUE``
 covers the remaining API fields (for example ``hooks``) without raw JSON.
 """
 
@@ -180,7 +180,7 @@ def _config_to_payload(cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def _apply_set_overrides(payload: dict[str, Any], values: list[str] | None) -> None:
-    """Deep-merge ``--set KEY=VALUE`` overrides so exotic fields need no JSON."""
+    """Deep-merge ``--property KEY=VALUE`` overrides so exotic fields need no JSON."""
     from sylve_cli.commands.extras import _parse_set
 
     def _merge(target: dict[str, Any], overrides: dict[str, Any]) -> None:
@@ -606,7 +606,6 @@ def register_jail_create_commands(app: typer.Typer) -> None:
         set_value: Annotated[
             list[str] | None,
             typer.Option(
-                "--set",
                 "--property",
                 "-s",
                 help="Set any other API field KEY=VALUE (repeatable, dotted keys nest).",

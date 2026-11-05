@@ -29,11 +29,11 @@ records via generic Sylve API bindings. Supply request payloads with
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -77,23 +77,23 @@ Create, update, and delete a record, and configure the mDNS service:
 
 ```sh
 sylve mdns record create \
-  --set name=sylve.local --set type=A --set interfaces=em0 \
+  --property name=sylve.local --property type=A --property interfaces=em0 \
   --node node1.example.test \
   --format json
 
-sylve mdns record set 2 --set interfaces=em0,em1 -f json
+sylve mdns record set 2 --property interfaces=em0,em1 -f json
 sylve mdns record delete 2 --yes
 sylve mdns config show -f json
-sylve mdns config set --set hostname=example-host --set interfaces=em0 -f json
+sylve mdns config set --property hostname=example-host --property interfaces=em0 -f json
 ```
 
-Preview a daemon config change and a record create with `--set`:
+Preview a daemon config change and a record create with `--property`:
 
 ```sh
-sylve mdns config set --set hostname=example-host --set interfaces=em0 --dry-run -f json
+sylve mdns config set --property hostname=example-host --property interfaces=em0 --dry-run -f json
 sylve mdns record create \
-  --set name=example-service --set type=_http._tcp \
-  --set port=8080 --set interfaces=em0 \
+  --property name=example-service --property type=_http._tcp \
+  --property port=8080 --property interfaces=em0 \
   --dry-run -f json
 ```
 
@@ -101,7 +101,7 @@ Filter the record list, preview an update, and delete:
 
 ```sh
 sylve mdns record list -c id -c name -c type --filter type=_http -l 10
-sylve mdns record set 2 --set port=9090 --dry-run -f json
+sylve mdns record set 2 --property port=9090 --dry-run -f json
 sylve mdns record delete 2 --yes
 ```
 

@@ -246,7 +246,7 @@ settings request 16- or 8-bit pixels and show a black screen.
 Enable VNC first if you created the VM without it:
 
 ```sh
-sylve vm hardware vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --set vncWait=false
+sylve vm hardware vnc 101 --property vncEnabled=true --property vncResolution=1024x768 --property vncWait=false
 ```
 
 ### `vm snapshot` and `vm template`
@@ -267,7 +267,7 @@ sylve vm hardware vnc 101 --set vncEnabled=true --set vncResolution=1024x768 --s
 
 ### Generic Subcommands
 
-All generic VM write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
+All generic VM write subcommands accept `--data/-d`, `--property/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
 need no JSON; see [sylve-options(7)](../global-options.md):
@@ -441,7 +441,7 @@ sylve vm migrate 101 --target node2.example.test --wait
 sylve vm snapshot create 101 --name pre-upgrade --description "before 0.4"
 sylve vm snapshot rollback 101 1 --yes
 sylve vm template capture 101 --name debian-web --wait
-sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2 -f json
+sylve vm hardware cpu 101 --property cpuSockets=1 --property cpuCores=4 --property cpuThreads=2 -f json
 sylve vm delete 101 --keep-volumes --keep-raw-disks --keep-macs --yes
 ```
 
@@ -449,25 +449,25 @@ Resize RAM or CPU without JSON, previewing the exact request first.
 Integer byte fields take raw byte counts, so `4294967296` means 4 GiB:
 
 ```sh
-sylve vm hardware ram 101 --set ram=4294967296 --dry-run -f json
+sylve vm hardware ram 101 --property ram=4294967296 --dry-run -f json
 # {"method":"PUT","path":"/vm/101/hardware/ram","body":{"ram":4294967296}}
 
-sylve vm hardware ram 101 --set ram=4294967296        # 4 GiB
-sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=2
-sylve vm options boot-order 101 --set bootOrder=10 --set startAtBoot=true
-sylve vm options shutdown-wait-time 101 --set waitTime=60
+sylve vm hardware ram 101 --property ram=4294967296        # 4 GiB
+sylve vm hardware cpu 101 --property cpuSockets=1 --property cpuCores=4 --property cpuThreads=2
+sylve vm options boot-order 101 --property bootOrder=10 --property startAtBoot=true
+sylve vm options shutdown-wait-time 101 --property waitTime=60
 ```
 
-Arrays and arrays of objects accept repeatable `--set` flags (with `k=v` pairs for objects) or inline YAML:
+Arrays and arrays of objects accept repeatable `--property` flags (with `k=v` pairs for objects) or inline YAML:
 
 ```sh
-sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=1 \
-  --set 'cpuPinning=cores=[0, 1],socket=0' --dry-run -f json
+sylve vm hardware cpu 101 --property cpuSockets=1 --property cpuCores=4 --property cpuThreads=1 \
+  --property 'cpuPinning=cores=[0, 1],socket=0' --dry-run -f json
 # body: {"cpuSockets":1,"cpuCores":4,"cpuThreads":1,"cpuPinning":[{"cores":[0,1],"socket":0}]}
 
-sylve vm options extra-bhyve 101 --set extraBhyveOptions=-A,-H
-sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=1 \
-  --set 'cpuPinning=[{cores: [0, 1], socket: 0}]'
+sylve vm options extra-bhyve 101 --property extraBhyveOptions=-A,-H
+sylve vm hardware cpu 101 --property cpuSockets=1 --property cpuCores=4 --property cpuThreads=1 \
+  --property 'cpuPinning=[{cores: [0, 1], socket: 0}]'
 ```
 
 Slice list output to the rows and columns you need. `vm list` and

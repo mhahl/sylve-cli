@@ -109,40 +109,40 @@ applicable:
 
 ## GENERIC API OPTIONS
 
-Generic API commands accept `--data`, `--set`, `--param`, and `--dry-run`.
+Generic API commands accept `--data`, `--property`, `--param`, and `--dry-run`.
 Run one with nothing supplied and it prints its
 own `--help` instead of erroring. A wrong or missing path argument with
 anything else supplied is a usage error (exit `2`).
 
 - `-d, --data BODY`
   Base JSON or YAML request body, or `@FILE` to read the body from disk.
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable). Dotted keys address nested objects, comma-separated `k=v` pairs populate nested objects or append to `array of object` lists, and the CLI uses each field's schema type to preserve strings while coercing numbers, booleans, and lists.
   Every command's `--help` lists its settable fields with types and required
   markers, so key names are visible:
   ```sh
   sylve system tunable set --help    # Settable body fields: name, value
-  sylve system tunable set --set name=vfs.zfs.prefetch_disable --set value=0
-  sylve vm hardware cpu 101 --set cpuSockets=1 --set cpuCores=4 --set cpuThreads=1
+  sylve system tunable set --property name=vfs.zfs.prefetch_disable --property value=0
+  sylve vm hardware cpu 101 --property cpuSockets=1 --property cpuCores=4 --property cpuThreads=1
   ```
-  `--set` (or `--property`) merges over `--data` (nested objects merge key by key) and is the
+  `--property` (or `--property`) merges over `--data` (nested objects merge key by key) and is the
   preferred way to send small updates.
 
-  For `array of object` or `array of scalar` fields, repeat `--set` (or pass comma-separated values) to build the list, or pass inline YAML:
+  For `array of object` or `array of scalar` fields, repeat `--property` (or pass comma-separated values) to build the list, or pass inline YAML:
   ```sh
-  sylve vm hardware cpu 101 --set cpuCores=4 --set cpuSockets=1 --set cpuThreads=1 \
-    --set 'cpuPinning=cores=[0, 1],socket=0'
-  sylve network switch set-standard 1 --set private=false \
-    --set addresses4=cidr=10.0.0.1/24,objectId=0 \
-    --set addresses4=cidr=10.0.1.1/24,objectId=0
-  sylve notifications transport create --set name=mail --set type=email \
-    --set email.smtpHost=mail.example.test --set email.smtpPort=587
+  sylve vm hardware cpu 101 --property cpuCores=4 --property cpuSockets=1 --property cpuThreads=1 \
+    --property 'cpuPinning=cores=[0, 1],socket=0'
+  sylve network switch set-standard 1 --property private=false \
+    --property addresses4=cidr=10.0.0.1/24,objectId=0 \
+    --property addresses4=cidr=10.0.1.1/24,objectId=0
+  sylve notifications transport create --property name=mail --property type=email \
+    --property email.smtpHost=mail.example.test --property email.smtpPort=587
   ```
-  If quoting gets awkward, put the body in a file and keep `--set` for the
-  small tweaks: `--data @body.yaml --set enabled=true`.
+  If quoting gets awkward, put the body in a file and keep `--property` for the
+  small tweaks: `--data @body.yaml --property enabled=true`.
 - `--dry-run`
   Print the request (`method`, `path`, `params`, `body`) without sending it.
-  Useful with `-f json` to preview the request that `--set` and `--data` build.
+  Useful with `-f json` to preview the request that `--property` and `--data` build.
 - `-p, --param KEY=VALUE`
   Query string parameter. Repeatable; the CLI parses each value as a YAML scalar.
 - `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
@@ -161,7 +161,7 @@ value: "0"
 sylve system tunable set --data @tunable.yaml
 ```
 
-`--data` sends the body verbatim; `--set` overrides individual fields on top
+`--data` sends the body verbatim; `--property` overrides individual fields on top
 of it. `vm create --file` and `jail create --file` are different: they read a
 create configuration that the CLI normalizes first (defaults, aliases,
 `2G`-style sizes). Two names for two behaviours. `-f` always means `--format`,

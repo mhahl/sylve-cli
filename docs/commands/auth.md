@@ -33,11 +33,11 @@ endpoints; the CLI does not send a bearer token when calling them.
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -113,10 +113,10 @@ ceremonies need a live server and a WebAuthn response):
 
 ```sh
 sylve auth passkey login-begin --dry-run -f json
-sylve auth passkey login-finish --set requestId=example-request --dry-run -f json
-sylve auth passkey register-begin --set userId=2 --dry-run -f json
+sylve auth passkey login-finish --property requestId=example-request --dry-run -f json
+sylve auth passkey register-begin --property userId=2 --dry-run -f json
 sylve auth passkey register-finish \
-  --set requestId=example-request --set label=example-key --dry-run -f json
+  --property requestId=example-request --property label=example-key --dry-run -f json
 ```
 
 ## SEE ALSO

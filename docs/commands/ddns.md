@@ -28,11 +28,11 @@ or YAML format.
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -76,22 +76,22 @@ Create, update, synchronize, and delete an entry:
 
 ```sh
 sylve ddns create \
-  --set hostname=home.example.test --set provider=cloudflare --set recordType=A \
-  --set intervalMinutes=5 --set enabled=true \
+  --property hostname=home.example.test --property provider=cloudflare --property recordType=A \
+  --property intervalMinutes=5 --property enabled=true \
   --node node1.example.test \
   --format json
 
-sylve ddns set 2 --set enabled=false -f json
+sylve ddns set 2 --property enabled=false -f json
 sylve ddns sync 2
 sylve ddns delete 2 --yes
 ```
 
-Preview a create with `--set` fields and show the request:
+Preview a create with `--property` fields and show the request:
 
 ```sh
 sylve ddns create \
-  --set hostname=example.example.test --set provider=example-provider \
-  --set recordType=A --set intervalMinutes=5 --set enabled=true \
+  --property hostname=example.example.test --property provider=example-provider \
+  --property recordType=A --property intervalMinutes=5 --property enabled=true \
   --dry-run -f json
 ```
 
@@ -99,7 +99,7 @@ Filter the list, preview an update, then sync and delete:
 
 ```sh
 sylve ddns list -c id -c hostname -c provider --filter provider=example-provider -l 10
-sylve ddns set 2 --set intervalMinutes=10 --set enabled=true --dry-run -f json
+sylve ddns set 2 --property intervalMinutes=10 --property enabled=true --dry-run -f json
 sylve ddns sync 2 --dry-run -f json
 sylve ddns delete 2 --yes
 ```

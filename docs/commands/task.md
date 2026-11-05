@@ -74,7 +74,7 @@ queue background work return task IDs.
 
 - `GUEST_TYPE GUEST_ID` (required)
   Guest type (`vm` or `jail`) and guest ID.
-- `-d, --data`, `-s, --set`, `-p, --param`, `--dry-run`, `-n, --node`,
+- `-d, --data`, `-s, --property`, `-p, --param`, `--dry-run`, `-n, --node`,
   `-f, --format`, `-c, --column`, `--sort-column`, `--filter`, `-l, --limit`
   Generic API options. `task active` only reads and takes no `--yes`.
 

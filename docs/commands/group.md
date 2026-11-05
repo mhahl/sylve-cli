@@ -27,11 +27,11 @@ entire member list. It does not append.
 
 ## OPTIONS
 
-Write subcommands accept `--data/-d` and `--set/--property/-s`; all subcommands accept:
+Write subcommands accept `--data/-d` and `--property/--property/-s`; all subcommands accept:
 
 - `-d, --data BODY`
   JSON or YAML request body, or `@FILE` (write commands).
-- `-s, --set, --property KEY=VALUE`
+- `-s, --property, --property KEY=VALUE`
   Set one body field (repeatable, dotted keys nest); overrides `--data` (write commands).
 - `-p, --param KEY=VALUE`
   Query parameter (repeatable).
@@ -74,19 +74,19 @@ Create a group, replace its member list, and delete it:
 
 ```sh
 sylve group create \
-  --set name=operators --set members=1,2 \
+  --property name=operators --property members=1,2 \
   --node node1.example.test \
   --format json
 
-sylve group members 2 --set usernames=ops,admin -f json
+sylve group members 2 --property usernames=ops,admin -f json
 sylve group delete 2 --yes
 ```
 
 Preview a create with the required `members` field, then replace a full member list:
 
 ```sh
-sylve group create --set name=operators --set members=1,2 --dry-run -f json
-sylve group members 2 --set usernames=ops,admin --dry-run -f json
+sylve group create --property name=operators --property members=1,2 --dry-run -f json
+sylve group members 2 --property usernames=ops,admin --dry-run -f json
 ```
 
 List a few columns and delete with confirmation skipped:
