@@ -70,13 +70,14 @@ manual snapshots, and scheduled periodic snapshot jobs across Sylve nodes.
 All remaining write subcommands accept `--data/-d`, `--set/--property/-s`, `--param/-p`,
 `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and `-f/--format` (reads also take
 `-c/--column`, `--sort-column`, `--filter`, and `-l/--limit`). Small updates
-need no JSON; see [sylve-options(7)](../global-options.md):
+need no JSON; see [sylve-options(7)](../global-options.md). Pool and dataset
+subcommands that take a `pool` or `dataset` positional accept a **name or GUID**.
 
 | Subcommand | Path Arguments |
 |---|---|
-| `pool delete`, `pool set`, `pool detach`, `pool replace-device`, `pool scrub-runs` | `guid` |
+| `pool delete`, `pool set`, `pool detach`, `pool replace-device`, `pool scrub-runs` | `pool` (name or GUID) |
 | `pool scrub-schedule-set`, `pool scrub-schedule-delete` | `id` |
-| `dataset set`, `dataset volume-set`, `dataset volume-flash` | `guid` |
+| `dataset set`, `dataset volume-set`, `dataset volume-flash` | `dataset` (name or GUID) |
 | `periodic set`, `periodic delete` | `id` |
 | `pool create`, `pool disks-usage`, `pool scrub-schedules`, `pool scrub-schedule-create`, `dataset bulk-delete`, `dataset paginated`, `periodic create`, `periodic bulk-delete`, `dashboard-*` | none |
 

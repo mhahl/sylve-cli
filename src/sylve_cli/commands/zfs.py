@@ -107,6 +107,42 @@ def _resolve_dataset_guid(
     return ident, client.resolve_node_hostname(node) or ""
 
 
+def _zfs_request(
+    ctx: typer.Context,
+    method: str,
+    path: str,
+    data: str | None,
+    set_value: list[str] | None,
+    param: list[str] | None,
+    dry_run: bool,
+    node: str | None,
+    fmt: OutputFormat,
+    schema_key: tuple[str, str],
+    title: str,
+) -> None:
+    """Run a generic ZFS request against an already-resolved guid path."""
+    from sylve_cli.body_schemas import BODY_SCHEMAS
+    from sylve_cli.commands.extras import _merge_body, _parse_params, _print_result
+
+    schema = BODY_SCHEMAS.get(schema_key, {})
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        body = _merge_body(
+            data, set_value, schema_fields=schema.get("body") or (), label=f"{method} {path}"
+        )
+        params = _parse_params(param)
+        if dry_run:
+            _print_result(
+                {"method": method, "path": path, "params": params, "body": body},
+                fmt,
+                f"Dry run: {method} {path}",
+                long=True,
+            )
+            return
+        result = client.request(method, path, params=params, json_body=body, node=node)
+    _print_result(result, fmt, title)
+
+
 # ------------------------------------------------------------------
 # ZFS Pools
 # ------------------------------------------------------------------
@@ -218,6 +254,221 @@ def pool_scrub(
         {"pool": pool, "node": host or "local", "action": "scrub"},
         fmt,
         f"Started scrub on ZFS pool '{pool}' ({host or 'local'}).",
+    )
+
+
+@pool_app.command("set")
+def pool_set(
+    ctx: typer.Context,
+    pool: Annotated[str, typer.Argument(help="ZFS pool name or GUID.")],
+    data: Annotated[
+        str | None,
+        typer.Option(
+            "--data", "-d", help="Base JSON or YAML request body, or @FILE to read it from disk."
+        ),
+    ] = None,
+    set_value: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            "--property",
+            "-s",
+            help="Set a property KEY=VALUE (repeatable), e.g. properties.compress=on.",
+        ),
+    ] = None,
+    param: Annotated[
+        list[str] | None,
+        typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print the request without sending it."),
+    ] = False,
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+) -> None:
+    """Edit ZFS pool properties by pool name or GUID."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        guid, host = _resolve_pool_guid(client, pool, node=node)
+    _zfs_request(
+        ctx,
+        "PATCH",
+        f"/zfs/pools/{guid}",
+        data,
+        set_value,
+        param,
+        dry_run,
+        host or node,
+        fmt,
+        ("PATCH", "/zfs/pools/{guid}"),
+        f"Updated ZFS pool '{pool}'.",
+    )
+
+
+@pool_app.command("delete")
+def pool_delete(
+    ctx: typer.Context,
+    pool: Annotated[str, typer.Argument(help="ZFS pool name or GUID.")],
+    data: Annotated[
+        str | None,
+        typer.Option(
+            "--data", "-d", help="Base JSON or YAML request body, or @FILE to read it from disk."
+        ),
+    ] = None,
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation prompt.")] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print the request without sending it."),
+    ] = False,
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+) -> None:
+    """Delete a ZFS pool by name or GUID."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        guid, host = _resolve_pool_guid(client, pool, node=node)
+        confirm_destructive(f"Delete ZFS pool '{pool}' ({guid}) on {host or 'local'}?", yes=yes)
+        if dry_run:
+            print_result(
+                {"method": "DELETE", "path": f"/zfs/pools/{guid}"},
+                fmt,
+                f"Dry run: DELETE /zfs/pools/{guid}",
+            )
+            return
+        result = client.delete(f"/zfs/pools/{guid}", node=host or None)
+    print_result(
+        {**result, "pool": pool} if isinstance(result, dict) else result,
+        fmt,
+        f"Deleted ZFS pool '{pool}'.",
+    )
+
+
+@pool_app.command("detach")
+def pool_detach(
+    ctx: typer.Context,
+    pool: Annotated[str, typer.Argument(help="ZFS pool name or GUID.")],
+    data: Annotated[
+        str | None,
+        typer.Option(
+            "--data", "-d", help="Base JSON or YAML request body, or @FILE to read it from disk."
+        ),
+    ] = None,
+    set_value: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            "--property",
+            "-s",
+            help="Set a body field KEY=VALUE (repeatable).",
+        ),
+    ] = None,
+    param: Annotated[
+        list[str] | None,
+        typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print the request without sending it."),
+    ] = False,
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+) -> None:
+    """Detach a device from a ZFS pool by pool name or GUID."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        guid, host = _resolve_pool_guid(client, pool, node=node)
+    _zfs_request(
+        ctx,
+        "POST",
+        f"/zfs/pools/{guid}/detach",
+        data,
+        set_value,
+        param,
+        dry_run,
+        host or node,
+        fmt,
+        ("POST", "/zfs/pools/{guid}/detach"),
+        f"Detached device from ZFS pool '{pool}'.",
+    )
+
+
+@pool_app.command("replace-device")
+def pool_replace_device(
+    ctx: typer.Context,
+    pool: Annotated[str, typer.Argument(help="ZFS pool name or GUID.")],
+    data: Annotated[
+        str | None,
+        typer.Option(
+            "--data", "-d", help="Base JSON or YAML request body, or @FILE to read it from disk."
+        ),
+    ] = None,
+    set_value: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            "--property",
+            "-s",
+            help="Set a body field KEY=VALUE (repeatable).",
+        ),
+    ] = None,
+    param: Annotated[
+        list[str] | None,
+        typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print the request without sending it."),
+    ] = False,
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+) -> None:
+    """Replace a device in a ZFS pool by pool name or GUID."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        guid, host = _resolve_pool_guid(client, pool, node=node)
+    _zfs_request(
+        ctx,
+        "POST",
+        f"/zfs/pools/{guid}/replace-device",
+        data,
+        set_value,
+        param,
+        dry_run,
+        host or node,
+        fmt,
+        ("POST", "/zfs/pools/{guid}/replace-device"),
+        f"Replaced device in ZFS pool '{pool}'.",
+    )
+
+
+@pool_app.command("scrub-runs")
+def pool_scrub_runs(
+    ctx: typer.Context,
+    pool: Annotated[str, typer.Argument(help="ZFS pool name or GUID.")],
+    param: Annotated[
+        list[str] | None,
+        typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+    ] = None,
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+) -> None:
+    """List ZFS pool scrub runs by pool name or GUID."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        guid, host = _resolve_pool_guid(client, pool, node=node)
+    _zfs_request(
+        ctx,
+        "GET",
+        f"/zfs/pools/{guid}/scrub/runs",
+        None,
+        None,
+        param,
+        False,
+        host or node,
+        fmt,
+        ("GET", "/zfs/pools/{guid}/scrub/runs"),
+        "ZFS Pool Scrub Runs",
     )
 
 
@@ -335,6 +586,165 @@ def dataset_create_vol(
         {"name": f"{parent}/{name}", "type": "volume", "size": size},
         fmt,
         f"Created ZFS volume '{parent}/{name}' ({size}).",
+    )
+
+
+@dataset_app.command("set")
+def dataset_set(
+    ctx: typer.Context,
+    dataset: Annotated[str, typer.Argument(help="ZFS filesystem dataset name or GUID.")],
+    data: Annotated[
+        str | None,
+        typer.Option(
+            "--data", "-d", help="Base JSON or YAML request body, or @FILE to read it from disk."
+        ),
+    ] = None,
+    set_value: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            "--property",
+            "-s",
+            help="Set a property KEY=VALUE (repeatable), e.g. properties.compression=lz4.",
+        ),
+    ] = None,
+    param: Annotated[
+        list[str] | None,
+        typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print the request without sending it."),
+    ] = False,
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+) -> None:
+    """Edit ZFS filesystem properties by dataset name or GUID."""
+    from sylve_cli.body_schemas import BODY_SCHEMAS
+    from sylve_cli.commands.extras import _merge_body, _parse_params, _print_result
+
+    schema = BODY_SCHEMAS.get(("PATCH", "/zfs/datasets/filesystem/{guid}"), {})
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        guid, host = _resolve_dataset_guid(client, dataset, dtype="FILESYSTEM", node=node)
+        path = f"/zfs/datasets/filesystem/{guid}"
+        body = _merge_body(
+            data, set_value, schema_fields=schema.get("body") or (), label=f"PATCH {path}"
+        )
+        params = _parse_params(param)
+        if dry_run:
+            _print_result(
+                {"method": "PATCH", "path": path, "params": params, "body": body},
+                fmt,
+                f"Dry run: PATCH {path}",
+                long=True,
+            )
+            return
+        result = client.request("PATCH", path, params=params, json_body=body, node=host or None)
+    _print_result(result, fmt, f"Updated ZFS filesystem '{dataset}'.")
+
+
+@dataset_app.command("volume-set")
+def dataset_volume_set(
+    ctx: typer.Context,
+    dataset: Annotated[str, typer.Argument(help="ZFS volume (zvol) dataset name or GUID.")],
+    data: Annotated[
+        str | None,
+        typer.Option(
+            "--data", "-d", help="Base JSON or YAML request body, or @FILE to read it from disk."
+        ),
+    ] = None,
+    set_value: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            "--property",
+            "-s",
+            help="Set a property KEY=VALUE (repeatable), e.g. properties.volsize=10G.",
+        ),
+    ] = None,
+    param: Annotated[
+        list[str] | None,
+        typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print the request without sending it."),
+    ] = False,
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+) -> None:
+    """Edit ZFS volume (zvol) properties by dataset name or GUID."""
+    from sylve_cli.body_schemas import BODY_SCHEMAS
+    from sylve_cli.commands.extras import _merge_body, _parse_params, _print_result
+
+    schema = BODY_SCHEMAS.get(("PATCH", "/zfs/datasets/volume/{guid}"), {})
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        guid, host = _resolve_dataset_guid(client, dataset, dtype="VOLUME", node=node)
+        path = f"/zfs/datasets/volume/{guid}"
+        body = _merge_body(
+            data, set_value, schema_fields=schema.get("body") or (), label=f"PATCH {path}"
+        )
+        params = _parse_params(param)
+        if dry_run:
+            _print_result(
+                {"method": "PATCH", "path": path, "params": params, "body": body},
+                fmt,
+                f"Dry run: PATCH {path}",
+                long=True,
+            )
+            return
+        result = client.request("PATCH", path, params=params, json_body=body, node=host or None)
+    _print_result(result, fmt, f"Updated ZFS volume '{dataset}'.")
+
+
+@dataset_app.command("volume-flash")
+def dataset_volume_flash(
+    ctx: typer.Context,
+    dataset: Annotated[str, typer.Argument(help="ZFS volume (zvol) dataset name or GUID.")],
+    data: Annotated[
+        str | None,
+        typer.Option(
+            "--data", "-d", help="Base JSON or YAML request body, or @FILE to read it from disk."
+        ),
+    ] = None,
+    set_value: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            "--property",
+            "-s",
+            help="Set a body field KEY=VALUE (repeatable).",
+        ),
+    ] = None,
+    param: Annotated[
+        list[str] | None,
+        typer.Option("--param", "-p", help="Query parameter KEY=VALUE (repeatable)."),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Print the request without sending it."),
+    ] = False,
+    node: NodeOption = None,
+    fmt: FormatOption = OutputFormat.table,
+) -> None:
+    """Flash a ZFS volume by dataset name or GUID."""
+    state: CLIState = ctx.obj
+    with state.get_client(node_override=node) as client:
+        guid, host = _resolve_dataset_guid(client, dataset, dtype="VOLUME", node=node)
+    _zfs_request(
+        ctx,
+        "POST",
+        f"/zfs/datasets/volume/{guid}/flash",
+        data,
+        set_value,
+        param,
+        dry_run,
+        host or node,
+        fmt,
+        ("POST", "/zfs/datasets/volume/{guid}/flash"),
+        f"Flashed ZFS volume '{dataset}'.",
     )
 
 

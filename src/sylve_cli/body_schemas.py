@@ -345,12 +345,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
-    ('DELETE', '/zfs/pools/{guid}'): {
-        "body": (
-        ),
-        "query": (
-        ),
-    },
     ('GET', '/auth/groups'): {
         "body": (
         ),
@@ -1073,12 +1067,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
-    ('GET', '/zfs/pools/{guid}/scrub/runs'): {
-        "body": (
-        ),
-        "query": (
-        ),
-    },
     ('PATCH', '/certificates/{id}'): {
         "body": (
             ('certificate', 'string', False, (
@@ -1256,15 +1244,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
-    ('PATCH', '/zfs/datasets/filesystem/{guid}'): {
-        "body": (
-            ('properties', 'object', True, (
-                ('**', 'string', False, ()),
-            )),
-        ),
-        "query": (
-        ),
-    },
     ('PATCH', '/zfs/datasets/snapshot/periodic/{id}'): {
         "body": (
             ('cronExpr', 'string', False, (
@@ -1286,26 +1265,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('maxAgeDays', 'integer', False, (
             )),
             ('retentionType', 'string', False, (
-            )),
-        ),
-        "query": (
-        ),
-    },
-    ('PATCH', '/zfs/datasets/volume/{guid}'): {
-        "body": (
-            ('properties', 'object', True, (
-                ('**', 'string', False, ()),
-            )),
-        ),
-        "query": (
-        ),
-    },
-    ('PATCH', '/zfs/pools/{guid}'): {
-        "body": (
-            ('properties', 'object', False, (
-                ('**', 'string', False, ()),
-            )),
-            ('spares', 'array of string', False, (
             )),
         ),
         "query": (
@@ -2890,14 +2849,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
-    ('POST', '/zfs/datasets/volume/{guid}/flash'): {
-        "body": (
-            ('uuid', 'string', True, (
-            )),
-        ),
-        "query": (
-        ),
-    },
     ('POST', '/zfs/pools'): {
         "body": (
             ('name', 'string', True, (
@@ -2928,24 +2879,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('poolGuid', 'string', True, (
             )),
             ('enabled', 'boolean', False, (
-            )),
-        ),
-        "query": (
-        ),
-    },
-    ('POST', '/zfs/pools/{guid}/detach'): {
-        "body": (
-            ('device', 'string', True, (
-            )),
-        ),
-        "query": (
-        ),
-    },
-    ('POST', '/zfs/pools/{guid}/replace-device'): {
-        "body": (
-            ('new', 'string', True, (
-            )),
-            ('old', 'string', True, (
             )),
         ),
         "query": (
