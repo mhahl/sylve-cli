@@ -118,7 +118,10 @@ group_app = typer.Typer(
 )
 auth_app = typer.Typer(
     name="auth",
-    help="Authentication configuration, passkeys, and SSE tokens.",
+    help=(
+        "Manage authentication configuration, permissions, roles, grants, "
+        "realms, OIDC, passkeys, and SSE tokens."
+    ),
     no_args_is_help=True,
     rich_markup_mode=None,
 )
@@ -178,6 +181,11 @@ user_passkey_app = _subapp(user_app, "passkey", "List and delete user passkeys."
 auth_passkey_app = _subapp(
     auth_app, "passkey", "Run WebAuthn passkey login and registration flows."
 )
+auth_role_app = _subapp(auth_app, "role", "Manage built-in and custom authorization roles.")
+auth_acl_group_app = _subapp(auth_app, "acl-group", "Manage cluster-wide permission groups.")
+auth_grant_app = _subapp(auth_app, "grant", "Manage role grants on cluster paths.")
+auth_realm_app = _subapp(auth_app, "realm", "Manage OpenID Connect authentication realms.")
+auth_oidc_app = _subapp(auth_app, "oidc", "Run OpenID Connect sign-in flows.")
 cloud_init_template_app = _subapp(
     cloud_init_app, "template", "Manage reusable cloud-init templates."
 )
@@ -207,9 +215,12 @@ ds_kerberos_config_app = _subapp(ds_kerberos_app, "config", "Show or update Kerb
 
 _PUBLIC_PATHS = {
     "/auth/login/config",
+    "/auth/oidc/{realm}/start",
+    "/auth/oidc/callback",
     "/auth/passkeys/login/begin",
     "/auth/passkeys/login/finish",
     "/basic/initialize",
+    "/cluster/rebuild",
 }
 
 
@@ -1065,6 +1076,14 @@ for spec in [  # type: ignore[assignment]
         "Reinitialize a VM libvirt domain.",
         "rid",
     ),
+    (
+        vm_app,
+        "simple",
+        "GET",
+        "/vm/simple/{rid}",
+        "Show a brief VM summary.",
+        "rid",
+    ),
 ]:
     _add(*spec)
 
@@ -1287,6 +1306,21 @@ for spec in [  # type: ignore[assignment]
         "GET",
         "/jail/zfs-sources",
         "List existing Jail root datasets.",
+    ),
+    (
+        jail_app,
+        "list-full",
+        "GET",
+        "/jail",
+        "List full Jail configurations.",
+    ),
+    (
+        jail_app,
+        "simple",
+        "GET",
+        "/jail/simple/{ctid}",
+        "Show a brief Jail summary.",
+        "ctid",
     ),
 ]:
     _add(*spec)
@@ -1597,6 +1631,13 @@ for spec in [  # type: ignore[assignment]
         "Update a standard switch.",
         "id",
     ),
+    (
+        switch_app,
+        "sync-status",
+        "GET",
+        "/network/switch/sync",
+        "Show switch reconciliation status.",
+    ),
     (object_app, "set", "PUT", "/network/object/{id}", "Update a network object.", "id"),
     (object_app, "bulk-delete", "DELETE", "/network/object", "Bulk-delete network objects."),
 ]:
@@ -1815,6 +1856,34 @@ for spec in [  # type: ignore[assignment]
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
     (cluster_app, "accept-join", "POST", "/cluster/accept-join", "Accept a pending cluster join."),
+    (
+        cluster_app,
+        "next-guest-id",
+        "GET",
+        "/cluster/guest-ids/next",
+        "Show the next free guest ID.",
+    ),
+    (
+        cluster_app,
+        "join-key-generate",
+        "POST",
+        "/cluster/join-key",
+        "Generate a new cluster join key.",
+    ),
+    (
+        cluster_app,
+        "leave-cancel",
+        "POST",
+        "/cluster/leave/cancel",
+        "Cancel an unfinished cluster leave.",
+    ),
+    (
+        cluster_app,
+        "rebuild",
+        "POST",
+        "/cluster/rebuild",
+        "Rebuild the cluster from an older Raft format.",
+    ),
     (cluster_note_app, "set", "PUT", "/cluster/notes/{id}", "Update a cluster note.", "id"),
     (
         cluster_note_app,
@@ -1889,6 +1958,13 @@ _add(
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
     (system_app, "init", "POST", "/basic/initialize", "Initialize Sylve."),
+    (
+        system_app,
+        "init-host-state",
+        "GET",
+        "/basic/initialize/host-state",
+        "Show host configuration affected by initialization.",
+    ),
     (
         system_app,
         "basic-settings",
@@ -2543,7 +2619,110 @@ for spec in [  # type: ignore[assignment]
     ),
     (auth_app, "login-config", "GET", "/auth/login/config", "Show login configuration."),
     (auth_app, "preferences", "GET", "/auth/preferences", "Show user preferences."),
+    (
+        auth_app,
+        "permissions",
+        "GET",
+        "/auth/permissions",
+        "Show the signed-in user's permissions.",
+    ),
     (auth_app, "sse-token", "POST", "/auth/sse-tokens", "Create an SSE token."),
+    (auth_role_app, "list", "GET", "/auth/roles", "List built-in and custom roles."),
+    (
+        auth_role_app,
+        "set",
+        "PUT",
+        "/auth/roles/{name}",
+        "Create or update a custom role.",
+        "name",
+    ),
+    (
+        auth_role_app,
+        "delete",
+        "DELETE",
+        "/auth/roles/{name}",
+        "Delete a custom role.",
+        "name",
+    ),
+    (auth_acl_group_app, "list", "GET", "/auth/acl-groups", "List permission groups."),
+    (
+        auth_acl_group_app,
+        "set",
+        "PUT",
+        "/auth/acl-groups/{name}",
+        "Create or update a permission group.",
+        "name",
+    ),
+    (
+        auth_acl_group_app,
+        "delete",
+        "DELETE",
+        "/auth/acl-groups/{name}",
+        "Delete a permission group.",
+        "name",
+    ),
+    (auth_grant_app, "list", "GET", "/auth/grants", "List role grants."),
+    (
+        auth_grant_app,
+        "set",
+        "POST",
+        "/auth/grants",
+        "Grant a role to a user or group on a path.",
+    ),
+    (
+        auth_grant_app,
+        "delete",
+        "DELETE",
+        "/auth/grants",
+        "Revoke a role grant from a user or group on a path.",
+    ),
+    (auth_realm_app, "list", "GET", "/auth/realms", "List OpenID Connect realms."),
+    (
+        auth_realm_app,
+        "discover",
+        "POST",
+        "/auth/realms/discover",
+        "Discover an OpenID Connect provider.",
+    ),
+    (
+        auth_realm_app,
+        "set",
+        "PUT",
+        "/auth/realms/{name}",
+        "Create or update an OpenID Connect realm.",
+        "name",
+    ),
+    (
+        auth_realm_app,
+        "delete",
+        "DELETE",
+        "/auth/realms/{name}",
+        "Delete an OpenID Connect realm.",
+        "name",
+    ),
+    (
+        auth_realm_app,
+        "user-add",
+        "POST",
+        "/auth/realms/{name}/users",
+        "Pre-register a user in an OpenID Connect realm.",
+        "name",
+    ),
+    (
+        auth_oidc_app,
+        "start",
+        "POST",
+        "/auth/oidc/{realm}/start",
+        "Start an OpenID Connect sign-in.",
+        "realm",
+    ),
+    (
+        auth_oidc_app,
+        "callback",
+        "POST",
+        "/auth/oidc/callback",
+        "Finish an OpenID Connect sign-in.",
+    ),
     (
         auth_passkey_app,
         "login-begin",
@@ -2611,6 +2790,7 @@ for spec in [  # type: ignore[assignment]
 # ---------------------------------------------------------------------------
 for spec in [  # type: ignore[assignment]
     (container_app, "list", "GET", "/container", "List containers."),
+    (container_app, "simple", "GET", "/container/simple", "List containers in brief."),
     (container_app, "create", "POST", "/container", "Create a container."),
     (container_app, "show", "GET", "/container/{ocid}", "Show a container.", "ocid"),
     (container_app, "set", "PUT", "/container/{ocid}", "Update a container.", "ocid"),
@@ -2682,6 +2862,21 @@ for spec in [  # type: ignore[assignment]
     ),
     (container_app, "ports", "GET", "/container/ports", "List used host ports."),
     (container_app, "stack", "POST", "/container/stack", "Create a catalog app stack."),
+    (
+        container_app,
+        "stack-rename",
+        "PATCH",
+        "/container/stack/{stack}",
+        "Rename a container stack.",
+        "stack",
+    ),
+    (
+        container_app,
+        "updates-check",
+        "POST",
+        "/container/updates/check",
+        "Check for container image updates.",
+    ),
     (
         container_image_app,
         "list",

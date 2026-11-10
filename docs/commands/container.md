@@ -21,6 +21,7 @@ nodes via generic API bindings and an interactive WebSocket console.
 | Subcommand | Path Arguments | Description |
 |---|---|---|
 | `list` | none | List containers |
+| `simple` | none | List containers in brief (ID, name, and live state) |
 | `create` | none | Create a container |
 | `show` | `OCID` | Show container `OCID` |
 | `set` | `OCID` | Update container `OCID` |
@@ -34,6 +35,8 @@ nodes via generic API bindings and an interactive WebSocket console.
 | `options` | `OCID` | Update container boot and web options |
 | `ports` | none | List used host ports |
 | `stack` | none | Create a catalog application stack |
+| `stack-rename` | `STACK` | Rename container stack `STACK` |
+| `updates-check` | none | Check registries for container image updates |
 | `image list` | `POOL` | List container images on `POOL` |
 | `image pull` | `POOL` | Pull a container image to `POOL` |
 | `image prune` | `POOL` | Remove unused container images from `POOL` |
@@ -115,8 +118,11 @@ sylve container console 301 --shell /bin/sh
 Inspect logs, stats, networks, and catalog apps:
 
 ```sh
+sylve container simple -f json
 sylve container logs 301 --param tail=100 -f json
 sylve container stats 301 -f json
+sylve container stack-rename media --property title="Media Stack" --dry-run -f json
+sylve container updates-check --dry-run -f json
 sylve container network list -f json
 sylve container catalog list -f json
 ```

@@ -16,6 +16,21 @@ chmod 600 ~/.config/sylve/config.yaml
 
 For CI, skip the file and set `SYLVE_SERVER` and `SYLVE_TOKEN` instead.
 
+Manage roles, permission groups, path grants, and OIDC realms with `sylve auth`:
+
+```sh
+sylve auth permissions -f json
+sylve auth role set vm-operator --property privileges=VM.Audit,VM.PowerMgmt --dry-run -f json
+sylve auth acl-group set ops --property members=alice@sylve,bob@pam --dry-run -f json
+sylve auth grant set \
+  --property path=/vms --property role=vm-operator \
+  --property subject=ops --property subjectType=group --property propagate=true \
+  --dry-run -f json
+sylve auth realm set corp \
+  --property issuer=https://idp.example.test --property clientId=sylve-ui \
+  --property enabled=true --dry-run -f json
+```
+
 ## Cloud-init
 
 - `cloud-init/user-data.yaml`: user, SSH key, packages, guest agent

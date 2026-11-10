@@ -127,7 +127,8 @@ Manage local, PAM, and imported users, plus passkeys.
 Manage authentication groups and membership.
 .TP
 .BR "auth " \fISUBCOMMAND\fR
-Inspect user preferences and login configuration, create SSE tokens, and use passkeys.
+Inspect user preferences, permissions, and login configuration; manage roles,
+permission groups, grants, and OIDC realms; create SSE tokens; and use passkeys.
 .TP
 .BR "directory-services " \fISUBCOMMAND\fR
 Manage Active Directory, Kerberos realms, keytabs, and principals.

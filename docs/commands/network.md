@@ -23,7 +23,7 @@ reusable network objects, and WireGuard VPN servers, peers, and clients.
 |---|---|
 | (top-level) | `config show`, `config set` |
 | `interface` | `list`, `l3`, `l3-pending`, `l3-set`, `l3-delete`, `l3-reapply`, `l3-confirm`, `l3-revert` |
-| `switch` | `list`, `create-standard`, `create-manual`, `set-standard`, `delete`, `sync` |
+| `switch` | `list`, `create-standard`, `create-manual`, `set-standard`, `delete`, `sync`, `sync-status` |
 | `route` | `list`, `create`, `set`, `delete` |
 | `dhcp` | `config show/set`, `range list/create/set/delete`, `lease list/create/set/delete/delete-dynamic` |
 | `firewall` | `logs`, `traffic list/create/set/delete/bulk-delete/reorder/counters`, `nat list/create/set/delete/bulk-delete/reorder/counters/route-suggestions`, `advanced show/set/preview/rendered` |
@@ -149,6 +149,7 @@ sylve network switch create-standard \
 sylve network switch create-manual --name lab --bridge bridge0 --node node1.example.test
 sylve network switch delete 3 --type manual --node node1.example.test
 sylve network switch sync --node node1.example.test
+sylve network switch sync-status --node node1.example.test -f json
 ```
 
 Inspect DHCP configuration and blocked PF firewall log entries:

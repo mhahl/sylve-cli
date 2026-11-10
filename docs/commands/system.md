@@ -24,7 +24,7 @@ Most subcommands are generic API bindings that take their request payloads from
 
 | Category | Subcommands |
 |---|---|
-| Initialization & settings | `init`, `basic-settings` (from `/basic/settings`), `settings` (from `/system/basic-settings`), `settings-pools`, `service SERVICE` |
+| Initialization & settings | `init`, `init-host-state`, `basic-settings` (from `/basic/settings`), `settings` (from `/system/basic-settings`), `settings-pools`, `service SERVICE` |
 | Host notes | `note list`, `note show ID`, `note create`, `note set ID`, `note delete ID`, `note bulk-delete` |
 | Disks | `disk list`, `disk partition-delete PARTITION`, `disk gpt-init DEVICE`, `disk gpt-clear DEVICE`, `disk partition-create DEVICE` |
 | SMART | `disk smart-info`, `disk smart-start`, `disk smart-abort`, `disk smart-schedules`, `disk smart-schedule-create`, `disk smart-schedule-set ID`, `disk smart-schedule-delete ID` |

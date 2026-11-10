@@ -45,7 +45,7 @@ request unless you pass `-y` / `--yes` or `--dry-run`.
 | `rename VM NEW_NAME` | Rename a VM |
 | `snapshot list/create/rollback/delete` | Manage VM ZFS snapshots |
 | `template list/show/capture/delete` | Manage VM templates |
-| `description`, `domain`, `stats`, `stats-step` | Generic read/update API commands |
+| `simple`, `description`, `domain`, `stats`, `stats-step` | Generic read/update API commands |
 | `hardware cpu/ram/pci/vnc` | Generic hardware update commands |
 | `network attach/detach/set` | Generic NIC management commands |
 | `storage attach/from-image/set/delete` | Generic storage management commands |
@@ -275,7 +275,7 @@ need no JSON; see [sylve-options(7)](../global-options.md):
 | Subcommand | Path Arguments |
 |---|---|
 | `template show` | `templateId` |
-| `description`, `domain`, `stats` | `rid` |
+| `simple`, `description`, `domain`, `stats` | `rid` |
 | `stats-step` | `rid step` |
 | `hardware cpu`, `hardware ram`, `hardware pci`, `hardware vnc` | `rid` |
 | `network attach`, `storage attach`, `storage from-image` | `rid` |

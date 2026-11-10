@@ -44,7 +44,7 @@ as `man(1)` pages.
 | [notifications](commands/notifications.md) | Notification transports, rules, and active notifications |
 | [user](commands/user.md) | Local, PAM, and imported users, plus passkeys |
 | [group](commands/group.md) | Authentication groups and members |
-| [auth](commands/auth.md) | Login configuration, SSE tokens, and passkeys |
+| [auth](commands/auth.md) | Permissions, roles, grants, OIDC realms, SSE tokens, and passkeys |
 | [directory-services](commands/directory-services.md) | Active Directory, Kerberos realms, keytabs, and principals |
 | [cloud-init](commands/cloud-init.md) | Reusable cloud-init templates |
 

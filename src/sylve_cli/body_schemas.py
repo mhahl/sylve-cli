@@ -7,7 +7,43 @@ Do not edit; run ``make schemas`` instead.
 from __future__ import annotations
 
 BODY_SCHEMAS: dict[tuple[str, str], dict] = {
+    ('DELETE', '/auth/acl-groups/{name}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('DELETE', '/auth/grants'): {
+        "body": (
+            ('id', 'integer', False, (
+            )),
+            ('path', 'string', False, (
+            )),
+            ('propagate', 'boolean', False, (
+            )),
+            ('role', 'string', False, (
+            )),
+            ('subject', 'string', False, (
+            )),
+            ('subjectType', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('DELETE', '/auth/groups/{groupId}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('DELETE', '/auth/realms/{name}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('DELETE', '/auth/roles/{name}'): {
         "body": (
         ),
         "query": (
@@ -345,6 +381,18 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('GET', '/auth/acl-groups'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/auth/grants'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('GET', '/auth/groups'): {
         "body": (
         ),
@@ -357,7 +405,25 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('GET', '/auth/permissions'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('GET', '/auth/preferences'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/auth/realms'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/auth/roles'): {
         "body": (
         ),
         "query": (
@@ -390,6 +456,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         ),
     },
     ('GET', '/auth/users/{userId}/passkeys'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/basic/initialize/host-state'): {
         "body": (
         ),
         "query": (
@@ -445,8 +517,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "body": (
         ),
         "query": (
-            ('dataset', 'string', True, (
-            )),
         ),
     },
     ('GET', '/cluster/backups/targets/{id}/datasets/snapshots'): {
@@ -465,8 +535,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "body": (
         ),
         "query": (
-            ('dataset', 'string', True, (
-            )),
         ),
     },
     ('GET', '/cluster/backups/targets/{id}/readiness'): {
@@ -476,6 +544,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         ),
     },
     ('GET', '/cluster/backups/targets/{id}/running-jobs'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/cluster/guest-ids/next'): {
         "body": (
         ),
         "query": (
@@ -532,6 +606,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         ),
     },
     ('GET', '/container/registry-credentials'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/container/simple'): {
         "body": (
         ),
         "query": (
@@ -727,6 +807,18 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('GET', '/jail'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/jail/simple/{ctid}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('GET', '/jail/templates/{templateId}'): {
         "body": (
         ),
@@ -818,6 +910,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         ),
     },
     ('GET', '/network/interface/l3/pending'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('GET', '/network/switch/sync'): {
         "body": (
         ),
         "query": (
@@ -981,6 +1079,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             )),
         ),
     },
+    ('GET', '/vm/simple/{rid}'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('GET', '/vm/templates/{templateId}'): {
         "body": (
         ),
@@ -1089,6 +1193,14 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('PATCH', '/container/stack/{stack}'): {
+        "body": (
+            ('title', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('PATCH', '/container/{ocid}/options'): {
         "body": (
             ('cores', 'integer', False, (
@@ -1097,11 +1209,11 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             )),
             ('memory', 'integer', False, (
             )),
-            ('name', 'string', False, (
-            )),
             ('startAtBoot', 'boolean', False, (
             )),
             ('startOrder', 'integer', False, (
+            )),
+            ('title', 'string', False, (
             )),
         ),
         "query": (
@@ -1270,11 +1382,47 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('POST', '/auth/grants'): {
+        "body": (
+            ('id', 'integer', False, (
+            )),
+            ('path', 'string', False, (
+            )),
+            ('propagate', 'boolean', False, (
+            )),
+            ('role', 'string', False, (
+            )),
+            ('subject', 'string', False, (
+            )),
+            ('subjectType', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('POST', '/auth/groups'): {
         "body": (
             ('members', 'array of string', True, (
             )),
             ('name', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/auth/oidc/callback'): {
+        "body": (
+            ('code', 'string', True, (
+            )),
+            ('state', 'string', True, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/auth/oidc/{realm}/start'): {
+        "body": (
+            ('redirectUri', 'string', True, (
             )),
         ),
         "query": (
@@ -1318,6 +1466,30 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('POST', '/auth/realms/discover'): {
+        "body": (
+            ('issuer', 'string', True, (
+            )),
+            ('caCert', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/auth/realms/{name}/users'): {
+        "body": (
+            ('username', 'string', True, (
+            )),
+            ('email', 'string', False, (
+            )),
+            ('fullName', 'string', False, (
+            )),
+            ('notes', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('POST', '/auth/sse-tokens'): {
         "body": (
         ),
@@ -1326,9 +1498,9 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     },
     ('POST', '/auth/users'): {
         "body": (
-            ('admin', 'boolean', True, (
-            )),
             ('username', 'string', True, (
+            )),
+            ('admin', 'boolean', False, (
             )),
             ('auxGroupIds', 'array of integer', False, (
             )),
@@ -1366,9 +1538,9 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     },
     ('POST', '/auth/users/import'): {
         "body": (
-            ('admin', 'boolean', True, (
-            )),
             ('username', 'string', True, (
+            )),
+            ('admin', 'boolean', False, (
             )),
             ('confirmGuestActions', 'boolean', False, (
             )),
@@ -1380,8 +1552,6 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     },
     ('POST', '/auth/users/pam'): {
         "body": (
-            ('admin', 'boolean', True, (
-            )),
             ('homeDirPerms', 'integer', True, (
             )),
             ('password', 'string', True, (
@@ -1389,6 +1559,8 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('uid', 'integer', True, (
             )),
             ('username', 'string', True, (
+            )),
+            ('admin', 'boolean', False, (
             )),
             ('auxGroupIds', 'array of integer', False, (
             )),
@@ -1472,19 +1644,25 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
     },
     ('POST', '/cluster/accept-join'): {
         "body": (
+            ('nodeHostname', 'string', True, (
+            )),
             ('nodeId', 'string', True, (
             )),
             ('nodeIp', 'string', True, (
             )),
             ('nodeVersion', 'string', True, (
             )),
+            ('sshPublicKey', 'string', True, (
+            )),
             ('inventory', 'object', False, (
                 ('conflicts', 'array of GuestIdentityInventoryConflict', False, ()),
                 ('digest', 'string', False, ()),
                 ('entries', 'array of GuestIdentityInventoryEntry', False, ()),
-                ('inFlightGuestIds', 'array of integer', False, ()),
             )),
-            ('preflight', 'boolean', False, (
+            ('localUsers', 'array of string', False, (
+            )),
+            ('userClusters', 'object', False, (
+                ('**', 'string', False, ()),
             )),
         ),
         "query": (
@@ -1505,6 +1683,8 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('encrypted', 'boolean', False, (
             )),
             ('jailRootDataset', 'string', False, (
+            )),
+            ('pruneKeepGenerations', 'integer', False, (
             )),
             ('pruneKeepLast', 'integer', False, (
             )),
@@ -1556,6 +1736,8 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             )),
             ('operationId', 'string', False, (
             )),
+            ('rememberEncryptionKey', 'boolean', False, (
+            )),
             ('remoteDataset', 'string', False, (
             )),
             ('restoreNetwork', 'boolean', False, (
@@ -1568,9 +1750,37 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('POST', '/cluster/join-key'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/cluster/leave/cancel'): {
+        "body": (
+        ),
+        "query": (
+        ),
+    },
     ('POST', '/cluster/notes/bulk-delete'): {
         "body": (
             ('ids', 'array of integer', True, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/cluster/rebuild'): {
+        "body": (
+            ('candidate', 'boolean', False, (
+            )),
+            ('joinKey', 'boolean', False, (
+            )),
+            ('lastIndex', 'integer', False, (
+            )),
+            ('lastTerm', 'integer', False, (
+            )),
+            ('nodeId', 'string', False, (
             )),
         ),
         "query": (
@@ -1636,9 +1846,16 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             )),
             ('restartRetries', 'integer', False, (
             )),
+            ('secrets', 'object', False, (
+                ('**', 'string', False, ()),
+            )),
+            ('service', 'string', False, (
+            )),
             ('shmSize', 'string', False, (
             )),
             ('stack', 'string', False, (
+            )),
+            ('stackTitle', 'string', False, (
             )),
             ('startAfterCreate', 'boolean', False, (
             )),
@@ -1647,6 +1864,8 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('startOrder', 'integer', False, (
             )),
             ('stopTimeout', 'integer', False, (
+            )),
+            ('title', 'string', False, (
             )),
             ('user', 'string', False, (
             )),
@@ -1664,6 +1883,8 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "body": (
             ('choices', 'object', False, (
                 ('**', 'string', False, ()),
+            )),
+            ('stack', 'string', False, (
             )),
             ('values', 'object', False, (
                 ('**', 'string', False, ()),
@@ -1733,12 +1954,16 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
                 ('pullImage', 'boolean', False, ()),
                 ('restart', 'string', False, ()),
                 ('restartRetries', 'integer', False, ()),
+                ('secrets', 'object', False, (('**', 'string', False, ()),)),
+                ('service', 'string', False, ()),
                 ('shmSize', 'string', False, ()),
                 ('stack', 'string', False, ()),
+                ('stackTitle', 'string', False, ()),
                 ('startAfterCreate', 'boolean', False, ()),
                 ('startAtBoot', 'boolean', False, ()),
                 ('startOrder', 'integer', False, ()),
                 ('stopTimeout', 'integer', False, ()),
+                ('title', 'string', False, ()),
                 ('user', 'string', False, ()),
                 ('webHttps', 'boolean', False, ()),
                 ('webPort', 'integer', False, ()),
@@ -1752,6 +1977,12 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             )),
             ('startAtBoot', 'boolean', False, (
             )),
+        ),
+        "query": (
+        ),
+    },
+    ('POST', '/container/updates/check'): {
+        "body": (
         ),
         "query": (
         ),
@@ -2884,6 +3115,14 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('PUT', '/auth/acl-groups/{name}'): {
+        "body": (
+            ('members', 'array of string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('PUT', '/auth/groups/{groupId}/members'): {
         "body": (
             ('usernames', 'array of string', True, (
@@ -2892,9 +3131,65 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
         "query": (
         ),
     },
+    ('PUT', '/auth/realms/{name}'): {
+        "body": (
+            ('acrValues', 'string', False, (
+            )),
+            ('autoCreate', 'boolean', False, (
+            )),
+            ('caCert', 'string', False, (
+            )),
+            ('clientId', 'string', False, (
+            )),
+            ('clientSecret', 'string', False, (
+            )),
+            ('default', 'boolean', False, (
+            )),
+            ('enabled', 'boolean', False, (
+            )),
+            ('groupMappings', 'array of object', False, (
+                ('claim', 'string', False, ()),
+                ('group', 'string', False, ()),
+            )),
+            ('groupsClaim', 'string', False, (
+            )),
+            ('hasSecret', 'boolean', False, (
+            )),
+            ('hostedDomains', 'string', False, (
+            )),
+            ('id', 'integer', False, (
+            )),
+            ('issuer', 'string', False, (
+            )),
+            ('label', 'string', False, (
+            )),
+            ('name', 'string', False, (
+            )),
+            ('prompt', 'string', False, (
+            )),
+            ('queryUserInfo', 'boolean', False, (
+            )),
+            ('scopes', 'string', False, (
+            )),
+            ('sessionHours', 'integer', False, (
+            )),
+            ('usernameClaim', 'string', False, (
+            )),
+        ),
+        "query": (
+        ),
+    },
+    ('PUT', '/auth/roles/{name}'): {
+        "body": (
+            ('privileges', 'array of string', True, (
+            )),
+        ),
+        "query": (
+        ),
+    },
     ('PUT', '/auth/users/{userId}'): {
         "body": (
-            ('admin', 'boolean', True, (
+            ('admin', 'boolean', False, (
             )),
             ('auxGroupIds', 'array of integer', False, (
             )),
@@ -2949,6 +3244,8 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
             ('encrypted', 'boolean', False, (
             )),
             ('jailRootDataset', 'string', False, (
+            )),
+            ('pruneKeepGenerations', 'integer', False, (
             )),
             ('pruneKeepLast', 'integer', False, (
             )),
@@ -3079,6 +3376,8 @@ BODY_SCHEMAS: dict[tuple[str, str], dict] = {
                 ('source', 'string', False, ()),
                 ('target', 'string', False, ()),
                 ('type', 'MountType', False, ()),
+            )),
+            ('name', 'string', False, (
             )),
             ('network', 'string', False, (
             )),

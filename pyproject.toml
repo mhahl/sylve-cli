@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sylve-cli"
-version = "0.3.1"
+dynamic = ["version"]
 description = "CLI for managing Sylve FreeBSD clusters, Bhyve VMs, Jails, ZFS, Networking, and Backups"
 readme = "README.md"
 license = { text = "BSD-2-Clause" }
@@ -50,6 +50,9 @@ dev = [
 
 [project.scripts]
 sylve = "sylve_cli.main:run"
+
+[tool.setuptools.dynamic]
+version = { attr = "sylve_cli.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

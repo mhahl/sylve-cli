@@ -30,7 +30,7 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 | `note show NOTE_ID` | Display full details of a cluster note |
 | `note create` | Create a cluster note |
 | `note delete NOTE_ID` | Delete a cluster note |
-| `note set ID`, `note bulk-delete`, `accept-join` | Generic API commands |
+| `note set ID`, `note bulk-delete`, `accept-join`, `next-guest-id`, `join-key-generate`, `leave-cancel`, `rebuild` | Generic API commands |
 
 ## OPTIONS
 
@@ -138,14 +138,15 @@ bootstraps or modifies Raft cluster membership, and manages cluster-wide notes.
 
 ### Generic Subcommands
 
-`accept-join`, `note set ID`, and `note bulk-delete` accept `--data/-d`,
+`accept-join`, `next-guest-id`, `join-key-generate`, `leave-cancel`, `rebuild`,
+`note set ID`, and `note bulk-delete` accept `--data/-d`,
 `--property/--property/-s`, `--param/-p`, `--dry-run`, `-y/--yes` (destructive only), `-n/--node`, and
 `-f/--format`. Small updates need no JSON; see
 [sylve-options(7)](../global-options.md).
 
 | Subcommand | Path Arguments |
 |---|---|
-| `accept-join` | none |
+| `accept-join`, `next-guest-id`, `join-key-generate`, `leave-cancel`, `rebuild` | none |
 | `note set` | `id` |
 | `note bulk-delete` | none |
 
@@ -243,6 +244,9 @@ sylve cluster note delete 1
 Execute generic cluster API endpoints:
 
 ```sh
+sylve cluster next-guest-id -f json
+sylve cluster join-key-generate --dry-run -f json
+sylve cluster leave-cancel --dry-run -f json
 sylve cluster accept-join --property nodeId=2b7c... --property nodeIp=10.0.0.12 --property nodeVersion=0.3.1 --param dryRun=0 --node node1.example.test -f json
 sylve cluster note bulk-delete --property ids=1,2 --yes
 ```

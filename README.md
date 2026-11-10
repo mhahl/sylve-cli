@@ -114,7 +114,7 @@ Output flags (`-f`, `-c`, `--filter`) and request flags (`--data`, `--property`,
 | [notifications](docs/commands/notifications.md) | Notification transports, rules, and active notifications |
 | [user](docs/commands/user.md) | Local, PAM, and imported users, plus passkeys |
 | [group](docs/commands/group.md) | Authentication groups and membership |
-| [auth](docs/commands/auth.md) | Login configuration, SSE tokens, and passkeys |
+| [auth](docs/commands/auth.md) | Permissions, roles, grants, OIDC realms, SSE tokens, and passkeys |
 | [directory-services](docs/commands/directory-services.md) | Active Directory, Kerberos realms, keytabs, and principals |
 | [cloud-init](docs/commands/cloud-init.md) | Reusable cloud-init templates |
 
